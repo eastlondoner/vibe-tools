@@ -1,9 +1,10 @@
 import alchemy from 'alchemy';
 import { Exec } from 'alchemy/os';
-import { Assets, Worker, Pipeline, R2Bucket, WranglerJson } from 'alchemy/cloudflare';
+import { Assets, Worker, Pipeline, R2Bucket, WranglerJson, type TokenPolicy } from 'alchemy/cloudflare';
+import { AccountApiToken } from "alchemy/cloudflare";
 import fs from 'fs/promises';
-import fsSync from 'fs';
 import path from 'path';
+import { createBucketResourceIds } from './server/alchemy-utils';
 
 const STATIC_ASSETS_PATH = './.output/public/';
 const R2_BUCKET_NAME = 'vibe-tools-telemetry';
@@ -26,10 +27,25 @@ const staticAssets = await Assets('static-assets', {
   path: STATIC_ASSETS_PATH,
 });
 
+// Create the R2 bucket
 const bucket = await R2Bucket('bucket', {
   name: R2_BUCKET_NAME,
 });
 
+// Create the Account API token for the bucket
+// see https://developers.cloudflare.com/r2/api/tokens/
+const storageToken = await AccountApiToken("telemetry-pipeline-r2-access-token", {
+  name: "alchemy-account-access-token",
+  policies: [
+    {
+      effect: "allow",
+      permissionGroups: ["Workers R2 Storage Bucket Item Write"],
+      resources: createBucketResourceIds(bucket),
+    },
+  ],
+});
+
+// Create the pipeline
 const pipeline = await Pipeline('pipeline', {
   name: PIPELINE_NAME,
   source: [{ type: 'binding', format: 'json' }],
@@ -40,8 +56,8 @@ const pipeline = await Pipeline('pipeline', {
       bucket: bucket.name,
     },
     credentials: {
-      accessKeyId: alchemy.secret(process.env.R2_ACCESS_KEY_ID),
-      secretAccessKey: alchemy.secret(process.env.R2_SECRET_ACCESS_KEY),
+      accessKeyId: storageToken.accessKeyId,
+      secretAccessKey: storageToken.secretAccessKey,
     },
     batch: {
       maxMb: 10,
@@ -51,6 +67,7 @@ const pipeline = await Pipeline('pipeline', {
   },
 });
 
+// Create the worker
 export const worker = await Worker('worker', {
   name: WORKER_NAME,
   entrypoint: './app/index.ts',
@@ -80,6 +97,13 @@ if (worker.url) {
 
     // Write the updated content back
     await fs.writeFile(TELEMETRY_FILE_PATH, telemetryContent, 'utf-8');
+
+    // check that the new endpoint is in the file
+    const updatedTelemetryContent = await fs.readFile(TELEMETRY_FILE_PATH, 'utf-8');
+    if (!updatedTelemetryContent.includes(newEndpoint)) {
+      throw new Error('Failed to update TELEMETRY_ENDPOINT in src/telemetry/index.ts');
+    }
+
     console.log(`Successfully updated TELEMETRY_ENDPOINT in ${TELEMETRY_FILE_PATH}`);
   } catch (err) {
     console.error('Error updating telemetry file:', err);
