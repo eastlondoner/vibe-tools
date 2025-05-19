@@ -28,6 +28,7 @@ Thumbs.db
 
 # Typescript
 *.tsbuildinfo
+.typecheck
 
 # Other
 repomix-output.txt

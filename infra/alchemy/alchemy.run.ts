@@ -1,16 +1,22 @@
 import alchemy from 'alchemy';
 import { Exec } from 'alchemy/os';
-import { Assets, Worker, Pipeline, R2Bucket, WranglerJson, type TokenPolicy } from 'alchemy/cloudflare';
-import { AccountApiToken } from "alchemy/cloudflare";
+import {
+  Assets,
+  Worker,
+  Pipeline,
+  R2Bucket,
+  WranglerJson,
+  AccountApiToken,
+} from 'alchemy/cloudflare';
 import fs from 'fs/promises';
 import path from 'path';
-import { createBucketResourceIds } from './server/alchemy-utils';
+import { createBucketResourceIds } from './alchemy-utils';
 
 const STATIC_ASSETS_PATH = './.output/public/';
 const R2_BUCKET_NAME = 'vibe-tools-telemetry';
 const PIPELINE_NAME = 'vibe-tools-telemetry';
 const WORKER_NAME = 'vibe-tools-infra';
-const TELEMETRY_FILE_PATH = path.resolve(__dirname, '../src/telemetry/index.ts'); // Use absolute path
+const TELEMETRY_FILE_PATH = path.resolve(__dirname, '../../src/telemetry/index.ts'); // Use absolute path
 
 const app = await alchemy('vibe-tools-infra', {
   stage: 'dev',
@@ -34,12 +40,12 @@ const bucket = await R2Bucket('bucket', {
 
 // Create the Account API token for the bucket
 // see https://developers.cloudflare.com/r2/api/tokens/
-const storageToken = await AccountApiToken("telemetry-pipeline-r2-access-token", {
-  name: "alchemy-account-access-token",
+const storageToken = await AccountApiToken('telemetry-pipeline-r2-access-token', {
+  name: 'alchemy-account-access-token',
   policies: [
     {
-      effect: "allow",
-      permissionGroups: ["Workers R2 Storage Bucket Item Write"],
+      effect: 'allow',
+      permissionGroups: ['Workers R2 Storage Bucket Item Write'],
       resources: createBucketResourceIds(bucket),
     },
   ],

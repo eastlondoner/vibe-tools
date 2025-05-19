@@ -24,7 +24,6 @@ logs
 !.env.example
 
 .alchemy
-.cursor
 repomix-output.txt
 vibe-tools.config.json
-bun.lock
+.typecheck

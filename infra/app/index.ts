@@ -1,5 +1,7 @@
-/// <reference types="@cloudflare/workers-types" />
-import type { WorkerEnv } from './env.d';
+import type { ExecutionContext } from '@cloudflare/workers-types';
+
+import type { WorkerEnv } from '../env.ts';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - Suppress type errors if the module isn't found during editing/linting
 import nitroApp from '../.output/server/index.mjs';
 

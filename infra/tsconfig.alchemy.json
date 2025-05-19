@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "Preserve", // needed for top level await
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node", "@cloudflare/workers-types"]
+  },
+  "include": ["alchemy/", "env.ts"]
+}

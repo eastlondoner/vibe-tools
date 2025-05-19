@@ -1,4 +1,20 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
-  "extends": "./.nuxt/tsconfig.json"
+  "extends": "./.nuxt/tsconfig.json",
+  "include": [], // this stops this file doing anything itself.
+  // now we just reference the other tsconfigs for the parts of the app
+  "references": [
+    {
+      // this uses the alchemy types and deals with the contents of the alchemy folder
+      "path": "./tsconfig.alchemy.json"
+    },
+    {
+      // this uses the server types and deals with the contents of the server folder
+      "path": "./tsconfig.server.json"
+    },
+    {
+      // this uses the app types and deals with the contents of the app folder
+      "path": "./tsconfig.app.json"
+    }
+  ]
 }

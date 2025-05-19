@@ -1,0 +1,6 @@
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.server.json",
+  // Can't mess with includes because we have to inherit them from the nuxt provided tsconfig
+  "exclude": ["alchemy/", "app/", "nuxt.config.ts"]
+}
