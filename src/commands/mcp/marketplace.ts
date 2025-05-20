@@ -1,7 +1,8 @@
-import { NetworkError } from '../../errors';
-import { Config } from '../../types';
-import { createProvider } from '../../providers/base';
-import { once } from '../../utils/once';
+import { NetworkError } from '../../errors.js';
+import { Config } from '../../types.js';
+import { createProvider } from '../../providers/base.js';
+import { once } from '../../utils/once.js';
+import { GitHubMCPSearch, GitHubRepository } from './github-search.js';
 
 export interface MCPServer {
   // Marketplace metadata
@@ -52,7 +53,11 @@ const fetchFromMCPDirectory = once(async (): Promise<MarketplaceData> => {
 const MCP_OVERRIDES: Record<string, Partial<MCPServer>> = {};
 
 export class MarketplaceManager {
-  constructor(private config: Config) {}
+  private githubSearch: GitHubMCPSearch;
+
+  constructor(private config: Config) {
+    this.githubSearch = new GitHubMCPSearch(config);
+  }
 
   private getOverrides(): Record<string, Partial<MCPServer>> {
     // Start with hardcoded overrides
@@ -133,21 +138,81 @@ export class MarketplaceManager {
     }
   }
 
+  /**
+   * Convert GitHub repositories to MCP server format, including fetching READMEs
+   * @param repos GitHub repositories
+   * @returns Array of MCP servers converted from GitHub repositories
+   */
+  private async convertGitHubReposToMcpServers(repos: GitHubRepository[]): Promise<MCPServer[]> {
+    console.log(
+      `Converting ${repos.length} GitHub repositories to MCP server format and fetching READMEs...`
+    );
+
+    // Process all repositories in parallel
+    return Promise.all(
+      repos.map(async (repo) => {
+        // Try to fetch README content
+        const readme = await this.fetchReadmeContent(repo.html_url);
+        if (!readme) {
+          console.log(`No README found for ${repo.html_url}`);
+        } else {
+          console.log(`Successfully fetched README for ${repo.name}`);
+        }
+
+        return {
+          mcpId: `github-${repo.full_name.replace('/', '-')}`,
+          githubUrl: repo.html_url,
+          name: repo.name,
+          author: repo.full_name.split('/')[0],
+          description: repo.description || `GitHub repository: ${repo.full_name}`,
+          codiconIcon: 'github',
+          logoUrl: '',
+          category: 'GitHub Repository',
+          tags: repo.topics || [],
+          requiresApiKey: false,
+          isRecommended: false,
+          githubStars: repo.stargazers_count,
+          downloadCount: 0,
+          createdAt: repo.created_at,
+          updatedAt: repo.updated_at,
+          readme: readme || undefined, // Only include readme if it was found
+          command: 'npx',
+          args: [],
+        };
+      })
+    );
+  }
+
   async searchServers(query: string, options: { debug: boolean }): Promise<MCPServer[]> {
-    const marketplaceData = await this.getMarketplaceData();
+    try {
+      // 1. First, get MCP servers from the marketplace
+      const marketplaceData = await this.getMarketplaceData();
 
-    // Use Gemini to find semantic matches
-    const provider = createProvider('gemini');
+      // 2. Search GitHub repositories with the user's query using the new modular GitHubMCPSearch
+      console.log(`Searching GitHub repositories for query: "${query}"`);
+      const githubRepos = await this.githubSearch.findGitHubRepositories(query);
 
-    const prompt = `You are a semantic search expert. Given a list of MCP servers and a search query, return ONLY the mcpIds of servers that are very likely to be able to satisfy the users request or query.
+      // 3. Convert GitHub repos to MCP server format
+      let githubMcpServers: MCPServer[] = [];
+      if (githubRepos.length > 0) {
+        // Convert GitHub repos and fetch READMEs in parallel
+        githubMcpServers = await this.convertGitHubReposToMcpServers(githubRepos);
+      }
+
+      // 4. Combine marketplace and GitHub servers for semantic search
+      const allServers = [...marketplaceData.servers, ...githubMcpServers];
+
+      // 5. Use Gemini to find semantic matches across all servers
+      const provider = createProvider('gemini');
+
+      const prompt = `You are a semantic search expert. Given a list of MCP servers and a search query, return ONLY the mcpIds of servers that are very likely to be able to satisfy the users request or query.
 Do not include any explanation or other text, just return a JSON array of mcpId strings. If there are no suitable servers, return an empty json array.
 
 Search Query: "${query}"
 
 Available Servers:
-${JSON.stringify(marketplaceData.servers, null, 2)}`;
+${JSON.stringify(allServers, null, 2)}`;
 
-    try {
       const response = await provider.executePrompt(prompt, {
         model: this.config.marketplace?.model || 'gemini-2.0-flash',
         maxTokens: 1000,
@@ -156,7 +221,7 @@ ${JSON.stringify(marketplaceData.servers, null, 2)}`;
         debug: options.debug,
       });
 
-      // Parse the response by removing all possible formatting characters and splitting on commas
+      // 6. Parse the response to get matching IDs
       const matchingIds = new Set(
         response
           .replace(/[[\](){}"'`]/g, '') // Remove all brackets, braces, quotes
@@ -166,30 +231,27 @@ ${JSON.stringify(marketplaceData.servers, null, 2)}`;
           .filter((id) => id.length > 0)
       ); // Remove empty entries
 
-      // Get matching servers and fetch their READMEs
-      const matchingServers = marketplaceData.servers.filter(
+      // 7. Filter all servers (both marketplace and GitHub) by matching IDs
+      const matchingServers = allServers.filter(
         (server) =>
           matchingIds.has(server.mcpId.toLowerCase()) ||
           matchingIds.has(server.githubUrl.toLowerCase())
       );
 
-      // Fetch READMEs for all matching servers in parallel
-      const serversWithReadme = await Promise.all(
-        matchingServers.map(async (server) => {
-          const readme = await this.fetchReadmeContent(server.githubUrl);
-          if (!readme) {
-            console.log(`No README found for ${server.githubUrl}`);
-          }
-          return {
-            ...server,
-            readme: readme || undefined, // Only include readme if it was found
-          };
-        })
-      );
-
-      return serversWithReadme;
+      return matchingServers;
     } catch (error) {
-      console.error('Error using Gemini for semantic search, falling back to text search:', error);
+      console.error('Error in searchServers:', error);
+
+      // If Gemini fails, just return the GitHub results as a fallback
+      try {
+        const githubRepos = await this.githubSearch.findGitHubRepositories(query);
+        if (githubRepos.length > 0) {
+          return await this.convertGitHubReposToMcpServers(githubRepos);
+        }
+      } catch (githubError) {
+        console.error('Error fetching GitHub repositories:', githubError);
+      }
+
       throw error;
     }
   }
