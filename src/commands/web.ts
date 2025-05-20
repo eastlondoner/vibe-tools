@@ -10,11 +10,11 @@ import {
 } from '../utils/providerAvailability';
 
 const DEFAULT_WEB_MODELS: Record<Provider, string> = {
-  gemini: 'gemini-2.5-pro-exp',
+  gemini: 'gemini-2.5-pro-preview',
   openai: 'NO WEB SUPPORT',
   perplexity: 'sonar-pro',
-  openrouter: 'google/gemini-2.5-pro-exp-03-25',
-  modelbox: 'google/gemini-2.5-pro-exp',
+  openrouter: 'google/gemini-2.5-pro-preview',
+  modelbox: 'google/gemini-2.5-pro-preview',
   xai: 'NO WEB SUPPORT',
   anthropic: 'NO WEB SUPPORT',
 };

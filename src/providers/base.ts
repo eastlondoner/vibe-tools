@@ -1103,7 +1103,7 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
     if (unsupportedModels.has(modelName)) {
       return {
         supported: false,
-        model: 'gemini-2.5-pro-exp',
+        model: 'gemini-2.5-pro-preview',
         error: `Model ${modelName} does not support web search.`,
       };
     }
