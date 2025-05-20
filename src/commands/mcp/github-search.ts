@@ -122,6 +122,7 @@ IMPORTANT: Do not include any markdown formatting, code block markers, or other 
             : `[${cleanedResponse}]`;
           keywords = JSON.parse(jsonToTry);
         } catch (innerError) {
+          console.error('Failed to parse response:', innerError);
           // If that fails, try comma splitting
           keywords = cleanedResponse
             .split(',')

@@ -3,7 +3,6 @@ import { promisify } from 'util';
 import { exec as execCallback } from 'child_process';
 import * as fs from 'fs';
 import { mkdir } from 'fs/promises';
-import { glob } from 'glob';
 import { RetryConfig } from './types';
 import fastGlob from 'fast-glob';
 
@@ -63,7 +62,7 @@ export async function* findFeatureBehaviorFiles(
  * @deprecated Use the streaming version instead
  */
 export async function findFeatureBehaviorFilesArray(pattern: string): Promise<string[]> {
-  return glob(pattern);
+  return fastGlob(pattern);
 }
 
 /**
