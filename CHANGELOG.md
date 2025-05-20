@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.61.0] - 2025-05-20
+
+### Added
+
+- **Wait Command**: Added a new \`wait\` command (\`vibe-tools wait <seconds>\`) that pauses execution for the specified number of seconds.
+- **MCP GitHub Search**: The \`vibe-tools mcp search\` command now automatically includes searching GitHub repositories by default to discover more MCP servers.
+- **Opt-in Telemetry**: Added opt-in telemetry to help improve vibe-tools. More details can be found in \`TELEMETRY.md\`.
+- **Official vibe-tools MCP**: Announcing the official \`vibe-tools-mcp\` server, available at \`https://github.com/FutureExcited/vibe-tools-mcp\`. This server will house a collection of useful tools for AI agents.
+
 ## [0.60.9] - 2025-05-04
 
 ### Improved

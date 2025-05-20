@@ -13,6 +13,7 @@ import { XcodeCommand } from './xcode/xcode.ts';
 import { ClickUpCommand } from './clickup.ts';
 import TestCommand from './test/index.ts';
 import YouTubeCommand from './youtube/index.ts';
+import { WaitCommand } from './wait.ts';
 
 export const commands: CommandMap = {
   web: new WebCommand(),
@@ -28,4 +29,5 @@ export const commands: CommandMap = {
   clickup: new ClickUpCommand(),
   test: new TestCommand(),
   youtube: new YouTubeCommand(),
+  wait: new WaitCommand(),
 };
