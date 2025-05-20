@@ -94,12 +94,10 @@ export async function checkPackageVersion(): Promise<VersionInfo> {
       if (parseInt(currentMajor) < parseInt(latestMajor)) {
         isOutdated = true;
       }
-
-      if (!isOutdated && parseInt(currentMinor) < parseInt(latestMinor)) {
+      if (parseInt(currentMajor) === parseInt(latestMajor) && parseInt(currentMinor) < parseInt(latestMinor)) {
         isOutdated = true;
       }
-
-      if (!isOutdated && parseInt(currentPatch) < parseInt(latestPatch)) {
+      if (parseInt(currentMajor) === parseInt(latestMajor) && parseInt(currentMinor) === parseInt(latestMinor) && parseInt(currentPatch) < parseInt(latestPatch)) {
         isOutdated = true;
       }
 
