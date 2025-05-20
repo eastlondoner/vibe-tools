@@ -141,9 +141,10 @@ IMPORTANT: Do not include any markdown formatting, code block markers, or other 
 
             const keyword = k.toLowerCase().trim();
             if (keyword === 'mcp' || keyword === 'mcp server') {
-              return 'mcp'; // Don't add "tool" - just return "mcp"
+              return 'mcp';
             }
-            if (!keyword.includes('mcp')) {
+            // Ensure "mcp" is appended if not present, but don't append if keyword already ends with "mcp"
+            if (!keyword.endsWith('mcp')) {
               return `${keyword} mcp`;
             }
             return keyword;
