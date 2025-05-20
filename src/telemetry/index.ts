@@ -2,10 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-import fetch from 'node-fetch';
 import { getCurrentVersion } from '../utils/versionUtils';
 
-const TELEMETRY_ENDPOINT = 'https://vibe-tools-infra.flowisgreat.workers.dev/api/pipeline';
+const TELEMETRY_ENDPOINT = 'https://vibe-tools-infra.aejefferson.workers.dev/api/pipeline';
 const CONFIG_DIR = join(homedir(), '.vibe-tools');
 const DIAGNOSTICS_PATH = join(CONFIG_DIR, 'diagnostics.json');
 const SESSION_ID = randomUUID();

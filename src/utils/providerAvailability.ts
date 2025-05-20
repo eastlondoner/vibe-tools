@@ -9,7 +9,7 @@ interface ProviderInfo {
 // Default models for each provider when none specified in config
 const DEFAULT_MODELS: Record<Provider, string> = {
   perplexity: 'sonar-pro',
-  gemini: 'gemini-2.5-pro-exp-03-25',
+  gemini: 'gemini-2.5-pro-preview',
   openai: 'o3-mini',
   anthropic: 'claude-3-7-sonnet-latest',
   openrouter: 'anthropic/claude-3.7-sonnet',
