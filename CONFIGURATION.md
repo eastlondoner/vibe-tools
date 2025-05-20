@@ -39,7 +39,7 @@ Create this file in your project root to customize behavior. Here's a comprehens
     "maxTokens": 8000 // Maximum tokens for responses
   },
   "gemini": {
-    "model": "gemini-2.5-pro-exp", // Default model for repository analysis
+    "model": "gemini-2.5-pro-preview", // Default model for repository analysis
     "maxTokens": 10000 // Maximum tokens for responses
   },
   "plan": {
@@ -289,7 +289,7 @@ The `ask` command requires both a provider and a model to be specified. While th
 
 The plan command uses two different models:
 
-1. A file identification model (default: Gemini with gemini-2.5-pro-exp)
+1. A file identification model (default: Gemini with gemini-2.5-flash-preview)
 2. A thinking model for plan generation (default: OpenAI with o3-mini)
 
 You can configure both models and their providers:
@@ -299,8 +299,8 @@ You can configure both models and their providers:
   "plan": {
     "fileProvider": "gemini",
     "thinkingProvider": "openai",
-    "fileModel": "gemini-2.5-pro-exp",
-    "thinkingModel": "o3-mini",
+    "fileModel": "gemini-2.5-pro-preview",
+    "thinkingModel": "o3",
     "fileMaxTokens": 8192,
     "thinkingMaxTokens": 8192
   }

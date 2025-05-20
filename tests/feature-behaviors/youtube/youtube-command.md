@@ -147,7 +147,7 @@ Attempt to use vibe-tools to analyze this YouTube video: https://youtu.be/v_Kntn
 
 ### Scenario 10: Configuration - Using Config Options (Configuration)
 **Task Description:**
-Verify that vibe-tools respects the model and max token configuration options in vibe-tools.config.json for the YouTube command. Try calling it with different combinations of model and max tokens. Note: Valid model options for youtube are gemini-2.0-flash and gemini-2.5-pro-exp-03-25. gemini 2.5 has a max token limit of 60000 tokens, gemini 2.0 flash has a max token limit of 8000 tokens.
+Verify that vibe-tools respects the model and max token configuration options in vibe-tools.config.json for the YouTube command. Try calling it with different combinations of model and max tokens. Note: Valid model options for youtube are gemini-2.0-flash and gemini-2.5-pro-preview. gemini 2.5 has a max token limit of 60000 tokens, gemini 2.0 flash has a max token limit of 8000 tokens.
 
 **Expected Behavior:**
 - The command should use the model defined in the configuration if no command line --model param is set

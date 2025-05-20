@@ -60,14 +60,14 @@ export class ModelNotFoundError extends ProviderError {
         break;
       case 'gemini':
         message +=
-          '\nSuggested models:\n- gemini-2.0-flash\n- gemini-2.5-pro-exp\n- gemini-2.5-pro-exp-03-25';
+          '\nSuggested models:\n- gemini-2.0-flash\n- gemini-2.5-pro-preview\n- gemini-2.5-pro-preview';
         break;
       case 'perplexity':
         message += '\nSuggested models:\n- sonar-pro\n- sonar-reasoning-pro';
         break;
       case 'openrouter':
         message +=
-          '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-3.7-sonnet\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro-exp-03-25\n- mistral/mistral-large\n- groq/llama2-70b';
+          '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-3.7-sonnet\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro-preview\n- mistral/mistral-large\n- groq/llama2-70b';
         break;
       case 'modelbox':
         message +=

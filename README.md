@@ -731,7 +731,7 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
   // Commands
   "repo": {
     "provider": "openrouter",
-    "model": "google/gemini-2.5-pro-exp-03-25"
+    "model": "google/gemini-2.5-pro-preview"
   },
   "doc": {
     "provider": "openrouter",
@@ -740,7 +740,7 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
   },
   "web": {
     "provider": "gemini",
-    "model": "gemini-2.5-pro-exp"
+    "model": "gemini-2.5-pro-preview"
   },
   "plan": {
     "fileProvider": "gemini",
@@ -1219,7 +1219,7 @@ vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --type=review
 vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" "What libraries does the tutorial use for authentication?"
 
 # Use a specific model for analysis
-vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --model=gemini-2.5-pro-exp
+vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --model=gemini-2.5-pro-preview
 
 # Use custom analysis type for specialized insights
 vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --type=custom "Extract all code examples and explain them in detail"

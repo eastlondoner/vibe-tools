@@ -53,13 +53,13 @@ export const defaultConfig: Config = {
   //     maxTokens: 8192,
   //  },
   //  openrouter: {
-  //   model: 'google/gemini-2.5-pro-exp-03-25'
+  //   model: 'google/gemini-2.5-pro-preview'
   //   }
   //
   //  or
   //
   //   "gemini": {
-  //     "model": "gemini-2.5-pro-exp",
+  //     "model": "gemini-2.5-pro-preview",
   //     "maxTokens": 10000
   //   }
   //
