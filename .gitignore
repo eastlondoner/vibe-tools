@@ -43,3 +43,5 @@ test-xcode/
 
 #ignore the test reports
 tests/reports/
+# SpecStory explanation file
+.specstory/.what-is-this.md

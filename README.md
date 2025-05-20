@@ -14,6 +14,7 @@
 - [What is vibe-tools](#what-is-vibe-tools)
 - [Installation](#installation)
 - [Requirements](#requirements)
+- [Telemetry & Privacy](#telemetry--privacy)
 - [Tips](#tips)
 - [Additional Examples](#additional-examples)
   - [GitHub Skills](#github-skills)
@@ -192,6 +193,14 @@ This command will:
 `vibe-tools` uses Gemini-2.0 because it is the only good LLM with a context window that goes up to 2 million tokens - enough to handle and entire codebase in one shot. Gemini 2.0 experimental models that we use by default are currently free to use on Google and you need a Google Cloud project to create an API key.
 
 `vibe-tools` uses Perplexity because Perplexity has the best web search api and indexes and it does not hallucinate. Perplexity Pro users can get an API key with their pro account and recieve $5/month of free credits (at time of writing). Support for Google search grounding is coming soon but so far testing has shown it still frequently hallucinates things like APIs and libraries that don't exist.
+
+## Telemetry & Privacy
+
+`vibe-tools` collects **anonymous usage telemetry** to help improve the tool. You will be prompted during installation to enable or disable telemetry, and you can opt out at any time. No code, queries, file contents, or personal data are ever collected—only high-level command usage and error types (see [TELEMETRY.md](TELEMETRY.md) for full details).
+
+- Telemetry is **opt-in**: you choose during install.
+- You can change your choice later by setting the `VIBE_TOOLS_NO_TELEMETRY=1` environment variable.
+- For details on what is (and is not) collected, and how telemetry works, see [TELEMETRY.md](TELEMETRY.md).
 
 ## Tips:
 
