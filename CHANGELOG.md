@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file.
 - **Opt-in Telemetry**: Added opt-in telemetry to help improve vibe-tools. More details can be found in \`TELEMETRY.md\`.
 - **Official vibe-tools MCP**: Announcing the official \`vibe-tools-mcp\` server, available at \`https://github.com/FutureExcited/vibe-tools-mcp\`. This server will house a collection of useful tools for AI agents.
 
+## [0.61.1] - 2025-05-20
+
+### Changed
+
+- Removed a number of dependencies from package.json to speed up installation.
+
 ## [0.60.9] - 2025-05-04
 
 ### Improved
