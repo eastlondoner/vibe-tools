@@ -62,12 +62,15 @@ Note: The YouTube command requires a \`GEMINI_API_KEY\` to be set in your enviro
 **ClickUp Information:**
 \`vibe-tools clickup task <task_id>\` - Get detailed information about a ClickUp task including description, comments, status, assignees, and metadata (e.g., \`vibe-tools clickup task "task_id"\`)
 
+**Wait Command:**
+\`vibe-tools wait <seconds>\` - Pauses execution for the specified number of seconds (e.g., \`vibe-tools wait 5\` to wait for 5 seconds).
+
 **Model Context Protocol (MCP) Commands:**
 Use the following commands to interact with MCP servers and their specialized tools:
-\`vibe-tools mcp search "<query>"\` - Search the MCP Marketplace for available servers that match your needs (e.g., \`vibe-tools mcp search "git repository management"\`)
+\`vibe-tools mcp search "<query>"\` - Search the MCP Marketplace and GitHub for available servers that match your needs (e.g., \`vibe-tools mcp search "git repository management"\`)
 \`vibe-tools mcp run "<query>"\` - Execute MCP server tools using natural language queries (e.g., \`vibe-tools mcp run "list files in the current directory" --provider=openrouter\`). The query must include sufficient information for vibe-tools to determine which server to use, provide plenty of context.
 
-The \`search\` command helps you discover servers in the MCP Marketplace based on their capabilities and your requirements. The \`run\` command automatically selects and executes appropriate tools from these servers based on your natural language queries. If you want to use a specific server include the server name in your query. E.g. \`vibe-tools mcp run "using the mcp-server-sqlite list files in directory --provider=openrouter"\`
+The \`search\` command helps you discover servers in the MCP Marketplace and on GitHub based on their capabilities and your requirements. The \`run\` command automatically selects and executes appropriate tools from these servers based on your natural language queries. If you want to use a specific server include the server name in your query. E.g. \`vibe-tools mcp run "using the mcp-server-sqlite list files in directory --provider=openrouter"\`
 
 **Notes on MCP Commands:**
 - MCP commands require \`ANTHROPIC_API_KEY\` or \`OPENROUTER_API_KEY\` to be set in your environment

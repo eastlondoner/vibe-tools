@@ -42,6 +42,7 @@
   - [GitHub Integration](#github-integration)
   - [Xcode Tools](#xcode-tools)
   - [Documentation Generation](#documentation-generation-uses-gemini-20)
+  - [Wait Command](#wait-command)
 - [Configuration](#configuration)
   - [vibe-tools.config.json](#vibe-toolsconfigjson)
   - [GitHub Authentication](#github-authentication)
@@ -701,6 +702,10 @@ vibe-tools doc --from-github=reactjs/react-redux --with-doc=https://redux.js.org
 # Document using multiple web documents as context
 vibe-tools doc --from-github=some/repo --with-doc=https://example.com/spec1 --with-doc=https://example.com/spec2 --save-to=docs/MULTI_DOC.md
 ```
+
+### Wait Command
+
+- `vibe-tools wait <seconds>`: Pauses execution for the specified number of seconds. Useful for simple timing needs within scripts or chained commands.
 
 ## Configuration
 
