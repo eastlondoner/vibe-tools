@@ -5,7 +5,8 @@
     "module": "Preserve", // needed for top level await
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node", "@cloudflare/workers-types"]
+    "types": ["node", "@cloudflare/workers-types"],
+    "outDir": "./.typecheck/"
   },
   "include": ["alchemy/", "env.ts"]
 }

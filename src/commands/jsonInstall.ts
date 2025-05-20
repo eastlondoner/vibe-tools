@@ -379,7 +379,7 @@ export class JsonInstallCommand implements Command {
           // If provider is gemini and model is the old name, update it
           if (
             configVal.provider.toLowerCase() === 'gemini' &&
-            configVal.model === 'gemini-2.5-pro-exp-03-25'
+            configVal.model === 'gemini-2.5-pro-preview'
           ) {
             configVal.model = 'gemini-2.5-pro-preview-03-25';
           }
