@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.61.1] - 2025-05-20
+
+### Changed
+
+- Removed a number of dependencies from package.json to speed up installation.
+
 ## [0.61.0] - 2025-05-20
 
 ### Added

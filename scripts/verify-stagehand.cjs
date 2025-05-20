@@ -15,10 +15,10 @@ function verifyStagehandScript() {
   const bundledScript = scriptMatch[1];
 
   // Read the original script from node_modules
-  const originalScriptPath = resolve(__dirname, '../node_modules/@browserbasehq/stagehand/lib/dom/build/scriptContent.ts');
+  const originalScriptPath = resolve(__dirname, '../node_modules/@browserbasehq/stagehand/dist/lib/dom/build/scriptContent.d.ts');
   const originalScript = readFileSync(originalScriptPath, 'utf8');
   // export const scriptContent = 
-  const originalScriptContentMatch = originalScript.match(/export const scriptContent = "([\s\S]*)";/);
+  const originalScriptContentMatch = originalScript.match(/export declare const scriptContent = "([\s\S]*)";/);
   if (!originalScriptContentMatch) {
     throw new Error('Could not find scriptContent in original script');
   }
