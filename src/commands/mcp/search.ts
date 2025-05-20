@@ -1,10 +1,6 @@
 import type { Command, CommandGenerator, CommandOptions } from '../../types';
 import { MarketplaceManager } from './marketplace.js';
 
-export interface SearchCommandOptions extends CommandOptions {
-  includeGithub?: boolean;
-}
-
 export class SearchCommand implements Command {
   constructor(private marketplaceManager: MarketplaceManager) {}
 
