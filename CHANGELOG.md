@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.61.2] - 2025-05-20
+
+### Fixed
+
+- Patched version comparison logic in versionUtils.ts to correctly detect outdated versions.
+
 ## [0.61.1] - 2025-05-20
 
 ### Changed
