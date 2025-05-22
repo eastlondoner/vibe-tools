@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.61.4] - 2025-05-22
+
+### Added
+
+- **Web Search Flag**: Added `--web` flag to enable web search capabilities for supported models (currently Gemini models) across all commands.
+
+### Changed
+
+- **Claude 4 Model Updates**: Updated all references from Claude 3.7 Sonnet models to Claude 4 models throughout the codebase, including:
+  - Configuration files and documentation examples
+  - Default model settings for Anthropic provider in browser commands
+  - Model references in Stagehand configuration
+  - Updated default model from `claude-3-7-sonnet-latest` to `claude-sonnet-4-20250514`
+
 ## [0.61.3] - 2025-05-20
 
 ### Changed

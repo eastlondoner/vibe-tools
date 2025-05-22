@@ -299,7 +299,7 @@ Note: The ask command requires both --provider and --model parameters to be spec
 - `--provider=<provider>`: AI provider to use (required)
 - `--model=<model>`: Model to use (required)
 - `--max-tokens=<number>`: Maximum tokens for response
-- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 3.7 Sonnet). Higher values produce more thorough responses for complex questions.
+- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
 - `--with-doc=<doc_url>`: Fetch content from one or more document URLs and include it as context. Can be specified multiple times (e.g., `--with-doc=<url1> --with-doc=<url2>`).
 
 ## Authentication and API Keys
@@ -869,7 +869,7 @@ The `browser` commands support different AI models for processing. You can selec
 # Use gpt-4o
 vibe-tools browser act "Click Login" --url "https://example.com" --model=gpt-4o
 
-# Use Claude 3.7 Sonnet
+# Use Claude 4 Sonnet
 vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-sonnet-4-20250514
 ```
 
@@ -929,7 +929,7 @@ All commands support these general options:
 
 - `--model`: Specify an alternative model
 - `--max-tokens`: Control response length
-- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini and Claude 3.7 Sonnet). Higher values produce more thorough responses at the cost of increased token usage.
+- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini and Claude 4 Sonnet). Higher values produce more thorough responses at the cost of increased token usage.
 - `--save-to`: Save command output to a file (in addition to displaying it, like tee)
 - `--quiet`: Suppress stdout output (only useful with --save-to)
 - `--debug`: Show detailed error information
