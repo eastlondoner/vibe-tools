@@ -128,6 +128,7 @@ export class AskCommand implements Command {
         systemPrompt:
           'You are a helpful assistant. Answer the following question directly and concisely.',
         reasoningEffort: options?.reasoningEffort ?? this.config.reasoningEffort,
+        webSearch: options?.webSearch,
       };
 
       // Execute the prompt with the provider using the potentially modified query

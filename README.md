@@ -934,6 +934,7 @@ All commands support these general options:
 - `--quiet`: Suppress stdout output (only useful with --save-to)
 - `--debug`: Show detailed error information
 - `--provider`: AI provider to use. Valid values: openai, anthropic, perplexity, gemini, openrouter
+- `--web`: Enable web search capabilities for supported models (currently Gemini models) across all commands
 
 Documentation command specific options:
 

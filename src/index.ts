@@ -82,7 +82,8 @@ type CLIBooleanOption =
   | 'html'
   | 'network'
   | 'headless'
-  | 'text';
+  | 'text'
+  | 'webSearch';
 
 // Main CLI options interface
 interface CLIOptions {
@@ -92,6 +93,7 @@ interface CLIOptions {
   maxTokens?: number;
   debug?: boolean;
   reasoningEffort?: string;
+  webSearch?: boolean;
 
   // Output options
   output?: string;
@@ -180,6 +182,7 @@ const OPTION_KEYS: Record<string, CLIOptionKey> = {
   thinkingprovider: 'thinkingProvider',
   filemodel: 'fileModel',
   thinkingmodel: 'thinkingModel',
+  web: 'webSearch',
 
   // YouTube options
   type: 'type',
@@ -199,6 +202,7 @@ const BOOLEAN_OPTIONS = new Set<CLIBooleanOption>([
   'network',
   'headless',
   'text',
+  'webSearch',
 ]);
 
 // Set of option keys that require numeric values

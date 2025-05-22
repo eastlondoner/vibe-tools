@@ -148,6 +148,7 @@ HOWEVER if the server details show that you cannot run with uvx or npx, or if yo
         systemPrompt:
           'You are an expert at generating MCP server arguments. You only return a raw JSON object, no markdown, no backticks, no other text.',
         debug: options.debug,
+        webSearch: options.webSearch,
       });
 
       // Clean the response of any markdown formatting

@@ -1199,6 +1199,13 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
           const grounding = data.candidates[0]?.groundingMetadata as GeminiGroundingMetadata;
           const webSearchQueries = grounding?.webSearchQueries;
 
+          // Debug: Log the raw model response content
+          if (options.debug) {
+            console.log('\n===== RAW MODEL RESPONSE START =====');
+            console.log(content);
+            console.log('===== RAW MODEL RESPONSE END =====\n');
+          }
+
           let webSearchText = '';
           if (webSearchQueries && webSearchQueries.length > 0) {
             webSearchText = '\nWeb search queries:\n';
@@ -1223,33 +1230,29 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
               }
             });
 
-            // Format text with citations
-            let formattedText = '';
-            grounding.groundingSupports.forEach((support: GeminiGroundingSupport) => {
-              const segment = support.segment;
-              const citations = support.groundingChunkIndices
-                .map((idx: number) => {
-                  const source = citationSources.get(idx);
-                  return source ? `[${idx + 1}]` : '';
-                })
-                .filter(Boolean)
-                .join('');
+            // SIMPLIFIED: Preserve original content and just append citations
+            // This ensures we don't lose or truncate any content
+            let formattedText = content || '';
 
-              formattedText += segment.text + (citations ? ` ${citations}` : '') + ' ';
-            });
-
-            // Add citations list
+            // Add citations at the end
             if (citationSources.size > 0) {
-              let citationsText = '\nCitations:\n';
+              let citationsText = '\n\nCitations:\n';
               citationSources.forEach((source, idx) => {
                 citationsText += `[${idx + 1}]: ${source.uri}${source.title ? ` ${source.title}` : ''}\n`;
               });
-              formattedText = citationsText + '\n' + webSearchText + formattedText;
+              formattedText = formattedText + '\n\n' + webSearchText + citationsText;
             } else {
-              formattedText = webSearchText + formattedText;
+              formattedText = formattedText + '\n\n' + webSearchText;
             }
             // replace the original content with the formatted text
             formattedContent = formattedText.trim();
+
+            // Debug: Log the formatted response for comparison
+            if (options.debug) {
+              console.log('\n===== FORMATTED RESPONSE START =====');
+              console.log(formattedContent);
+              console.log('===== FORMATTED RESPONSE END =====\n');
+            }
           }
 
           // Track token usage from usageMetadata if available

@@ -116,6 +116,7 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 --max-tokens=<number>: Control response length
 --save-to=<file path>: Save command output to a file (in *addition* to displaying it)
 --debug: Show detailed logs and error information
+--web: Enable web search capabilities for supported models (currently Gemini models) across all commands
 
 **Repository Command Options:**
 --provider=<provider>: AI provider to use (gemini, openai, openrouter, perplexity, modelbox, anthropic, or xai)

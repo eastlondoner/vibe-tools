@@ -117,6 +117,7 @@ export class YouTubeCommand implements Command {
           maxTokens,
           systemPrompt,
           debug: options?.debug,
+          webSearch: options?.webSearch,
         });
 
         yield response;

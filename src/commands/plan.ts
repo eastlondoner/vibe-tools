@@ -295,6 +295,7 @@ export class PlanCommand implements Command {
           maxTokens: effectiveFileMaxTokens,
           debug: options?.debug,
           reasoningEffort: options?.reasoningEffort ?? this.config.reasoningEffort,
+          webSearch: options?.webSearch,
         };
 
         yield `Asking ${fileProviderName} to identify relevant files using model: ${fileModel} with max tokens: ${effectiveFileMaxTokens}...\n`;
@@ -389,6 +390,7 @@ export class PlanCommand implements Command {
         maxTokens: effectiveThinkingMaxTokens,
         debug: options?.debug,
         reasoningEffort: options?.reasoningEffort ?? this.config.reasoningEffort,
+        webSearch: options?.webSearch,
       };
 
       yield `Generating plan using ${thinkingProviderName} with max tokens: ${effectiveThinkingMaxTokens}...\n`;
