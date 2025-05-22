@@ -735,7 +735,7 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
   },
   "doc": {
     "provider": "openrouter",
-    "model": "anthropic/claude-3.7-sonnet",
+    "model": "anthropic/claude-4-sonnet",
     "maxTokens": 4096
   },
   "web": {
@@ -754,7 +754,7 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
 
   // Providers
   "stagehand": {
-    "model": "claude-3-7-sonnet-latest", // For Anthropic provider
+    "model": "claude-sonnet-4-20250514", // For Anthropic provider
     "provider": "anthropic", // or "openai"
     "timeout": 90000
   },
@@ -870,7 +870,7 @@ The `browser` commands support different AI models for processing. You can selec
 vibe-tools browser act "Click Login" --url "https://example.com" --model=gpt-4o
 
 # Use Claude 3.7 Sonnet
-vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-3-7-sonnet-latest
+vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-sonnet-4-20250514
 ```
 
 You can set a default provider in your `vibe-tools.config.json` file under the `stagehand` section:
@@ -878,7 +878,7 @@ You can set a default provider in your `vibe-tools.config.json` file under the `
 ```json
 {
   "stagehand": {
-    "model": "claude-3-7-sonnet-latest", // For Anthropic provider
+    "model": "claude-sonnet-4-20250514", // For Anthropic provider
     "provider": "anthropic", // or "openai"
     "timeout": 90000
   }
@@ -899,7 +899,7 @@ You can also set a default model in your `vibe-tools.config.json` file under the
 If no model is specified (either on the command line or in the config), a default model will be used based on your configured provider:
 
 - **OpenAI:** `o3-mini`
-- **Anthropic:** `claude-3-7-sonnet-latest`
+- **Anthropic:** `claude-sonnet-4-20250514`
 
 Available models depend on your configured provider (OpenAI or Anthropic) in `vibe-tools.config.json` and your API key.
 
@@ -1104,7 +1104,7 @@ vibe-tools ask "What is the capital of France?" --provider openai --model o3-min
 vibe-tools ask "Explain the quicksort algorithm and analyze its time complexity in different scenarios" --provider openai --model o3-mini --reasoning-effort high
 
 # Comparative analysis with Claude model and enhanced reasoning
-vibe-tools ask "Compare and contrast microservices vs monolithic architecture" --provider anthropic --model claude-3-7-sonnet --reasoning-effort medium
+vibe-tools ask "Compare and contrast microservices vs monolithic architecture" --provider anthropic --model claude-sonnet-4-20250514 --reasoning-effort medium
 
 # Ask with context from multiple documents
 vibe-tools ask "Based on these specs, what is the main goal?" --provider openai --model o3-mini --with-doc=https://example.com/specA.txt --with-doc=https://example.com/specB.txt

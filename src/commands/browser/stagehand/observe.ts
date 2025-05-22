@@ -74,7 +74,7 @@ export class ObserveCommand implements Command {
         verbose: options?.debug || stagehandConfig.verbose ? 1 : 0,
         modelName: getStagehandModel(stagehandConfig, {
           model: options?.model,
-        }) as 'claude-3-7-sonnet-20250219',
+        }) as 'claude-sonnet-4-20250514',
         apiKey: getStagehandApiKey(stagehandConfig),
         enableCaching: stagehandConfig.enableCaching,
         logger: stagehandLogger(options?.debug ?? stagehandConfig.verbose),

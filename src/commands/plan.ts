@@ -35,7 +35,7 @@ const DEFAULT_FILE_MODELS: Record<FileProvider, string> = {
   perplexity: 'sonar-pro', // largest context window (200k tokens)
   openrouter: 'google/gemini-2.5-flash-preview', // largest context window (1M tokens)
   modelbox: 'google/gemini-2.5-flash-preview',
-  anthropic: 'claude-3-7-sonnet-latest',
+  anthropic: 'claude-sonnet-4-20250514',
 };
 
 const DEFAULT_THINKING_MODELS: Record<ThinkingProvider, string> = {
@@ -43,8 +43,8 @@ const DEFAULT_THINKING_MODELS: Record<ThinkingProvider, string> = {
   openai: 'o3-mini',
   perplexity: 'r1-1776',
   openrouter: 'openai/o3-mini',
-  modelbox: 'anthropic/claude-3-7-sonnet-thinking',
-  anthropic: 'claude-3-7-sonnet-latest',
+  modelbox: 'anthropic/claude-sonnet-4-20250514',
+  anthropic: 'claude-sonnet-4-20250514',
 };
 
 // Helper function to infer provider from model name

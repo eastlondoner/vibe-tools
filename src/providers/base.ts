@@ -412,10 +412,10 @@ export abstract class BaseProvider implements BaseModelProvider {
 
     // Claude models that support extended thinking
     const claudeModelsSupported =
-      modelWithoutPrefix.includes('claude-3-7-sonnet') ||
-      modelWithoutPrefix.includes('claude-3.7-sonnet') ||
-      model.includes('claude-3-7-sonnet') ||
-      model.includes('claude-3.7-sonnet');
+      modelWithoutPrefix.includes('claude-4-opus') ||
+      modelWithoutPrefix.includes('claude-4-sonnet') ||
+      model.includes('claude-4-opus') ||
+      model.includes('claude-4-sonnet');
 
     return openAIModelsSupported || claudeModelsSupported;
   }
@@ -1477,7 +1477,7 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
     }
     // Suggest larger model if available and appropriate (example logic)
     // if (tokenCount > 1_000_000) { // Example threshold
-    //   return { model: 'gemini-1.5-pro-latest' }; // Suggest a larger model if needed
+    //   return { model: 'gemini-2.5-pro-preview-05-20' }; // Suggest a larger model if needed
     // }
     return {}; // No changes needed if within limits
   }

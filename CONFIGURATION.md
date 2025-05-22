@@ -66,7 +66,7 @@ Create this file in your project root to customize behavior. Here's a comprehens
       "verbose": 1, // Logging verbosity (0-2)
       "debugDom": false, // Enable DOM debugging
       "enableCaching": false, // Enable response caching
-      "model": "claude-3-7-sonnet-latest", // Default Stagehand model
+      "model": "claude-sonnet-4-20250514", // Default Stagehand model
       "provider": "anthropic", // AI provider (anthropic or openai)
       "timeout": 30000 // Operation timeout
     }
@@ -94,7 +94,7 @@ Create this file in your project root to customize behavior. Here's a comprehens
 
 - `model`: The AI model for repository analysis
 - `maxTokens`: Maximum tokens in responses
-- Note: For repositories >800K tokens, automatically switches to gemini-1.5-pro
+- Note: For repositories >800K tokens, automatically switches to gemini-2.5-pro
 
 ### Plan Command Settings
 
@@ -221,7 +221,7 @@ The `browser` commands support different AI models for processing. You can selec
 vibe-tools browser act "Click Login" --url "https://example.com" --model=gpt-4o
 
 # Use Claude 3.7 Sonnet
-vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-3-7-sonnet-latest
+vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-sonnet-4-20250514
 ```
 
 You can set a default provider in your `vibe-tools.config.json` file under the `stagehand` section:
@@ -248,7 +248,7 @@ You can also set a default model in your `vibe-tools.config.json` file under the
 If no model is specified (either on the command line or in the config), a default model will be used based on your configured provider:
 
 - **OpenAI:** `o3-mini`
-- **Anthropic:** `claude-3-7-sonnet-latest`
+- **Anthropic:** `claude-sonnet-4-20250514`
 
 Available models depend on your configured provider (OpenAI or Anthropic) in `vibe-tools.config.json` and your API key.
 

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { exhaustiveMatchGuard } from '../../../utils/exhaustiveMatchGuard';
 
 // Define available models
-export const availableModels = z.enum(['claude-3-7-sonnet-latest', 'o3-mini', 'gpt-4o']);
+export const availableModels = z.enum(['claude-sonnet-4-20250514', 'o3-mini', 'gpt-4o']);
 
 export type AvailableModel = z.infer<typeof availableModels>;
 
@@ -133,7 +133,7 @@ export function getStagehandApiKey(config: StagehandConfig): string {
  * Get the Stagehand model to use based on the following precedence:
  * 1. Command line option (--model)
  * 2. Configuration file (vibe-tools.config.json)
- * 3. Default model based on provider (claude-3-7-sonnet for Anthropic, o3-mini for OpenAI)
+ * 3. Default model based on provider (claude-sonnet-4-20250514 for Anthropic, o3-mini for OpenAI)
  *
  * If both command line and config models are invalid, falls back to the default model for the provider.
  *
@@ -154,7 +154,7 @@ export function getStagehandModel(
     }
     console.warn(
       `Warning: Using unfamiliar model "${modelToUse}" this may be a mistake. ` +
-        `Typical models are "claude-3-7-sonnet-latest" for Anthropic and "o3-mini" or "gpt-4o" for OpenAI.`
+        `Typical models are "claude-sonnet-4-20250514" for Anthropic and "o3-mini" or "gpt-4o" for OpenAI.`
     );
     return modelToUse as AvailableModel;
   }
@@ -162,7 +162,7 @@ export function getStagehandModel(
   // Otherwise use defaults based on provider
   switch (config.provider) {
     case 'anthropic': {
-      return 'claude-3-7-sonnet-latest';
+      return 'claude-sonnet-4-20250514';
     }
     case 'openai': {
       return 'o3-mini';

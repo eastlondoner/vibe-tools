@@ -389,20 +389,25 @@ export class InstallCommand implements Command {
           type: 'select',
           options: [
             {
-              value: 'gemini:gemini-2.5-flash-preview-04-17',
+              value: 'gemini:gemini-2.5-flash-preview-05-20',
               label: 'Gemini Flash 2.5',
               hint: 'recommended',
             },
             {
-              value: 'anthropic:claude-3-7-sonnet-20250219',
-              label: 'Claude 3.7 Sonnet',
+              value: 'anthropic:claude-sonnet-4-20250514',
+              label: 'Claude 4 Sonnet',
               hint: 'recommended',
+            },
+            {
+              value: 'anthropic:claude-opus-4-20250514',
+              label: 'Claude 4 Opus',
+              hint: 'expensive',
             },
             { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro' },
             { value: 'openai:gpt-4.1-2025-04-14', label: 'GPT-4.1' },
             {
-              value: 'openrouter:anthropic/claude-3.7-sonnet',
-              label: 'OpenRouter - Claude 3.7 Sonnet',
+              value: 'openrouter:anthropic/claude-4-sonnet',
+              label: 'OpenRouter - Claude 4 Sonnet',
             },
             {
               value: 'openrouter:x-ai/grok-3-beta',
@@ -413,7 +418,7 @@ export class InstallCommand implements Command {
               label: 'OpenRouter - Grok 3 Mini',
             },
           ],
-          initial: 'gemini:gemini-2.5-flash-preview-04-17',
+          initial: 'gemini:gemini-2.5-flash-preview-05-20',
         });
 
         // Web search (web command)
@@ -424,7 +429,7 @@ export class InstallCommand implements Command {
             options: [
               { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro', hint: 'recommended' },
               { value: 'perplexity:sonar', label: 'Perplexity Sonar', hint: 'recommended' },
-              { value: 'gemini:gemini-2.0-flash', label: 'Gemini Flash 2.0' },
+              { value: 'gemini:gemini-2.5-flash-preview-05-20', label: 'Gemini Flash 2.5' },
               {
                 value: 'openrouter:perplexity/sonar-pro',
                 label: 'OpenRouter - Perplexity Sonar Pro',
@@ -439,19 +444,19 @@ export class InstallCommand implements Command {
           type: 'select',
           options: [
             {
-              value: 'anthropic:claude-3-7-sonnet',
-              label: 'Claude 3.7 Sonnet',
+              value: 'anthropic:claude-sonnet-4-20250514',
+              label: 'Claude 4 Sonnet',
               hint: 'recommended',
             },
             {
-              value: 'gemini:gemini-2.5-pro-preview-03-25',
+              value: 'gemini:gemini-2.5-pro-preview-05-06',
               label: 'Gemini Pro 2.5',
               hint: 'recommended',
             },
             { value: 'openai:gpt-4o', label: 'GPT-4o' },
             {
-              value: 'openrouter:anthropic/claude-3.7-sonnet',
-              label: 'OpenRouter - Claude 3.7 Sonnet',
+              value: 'openrouter:anthropic/claude-4-sonnet',
+              label: 'OpenRouter - Claude 4 Sonnet',
             },
             {
               value: 'openrouter:x-ai/grok-3-beta',
@@ -462,7 +467,7 @@ export class InstallCommand implements Command {
               label: 'OpenRouter - Grok 3 Mini',
             },
           ],
-          initial: 'anthropic:claude-3-7-sonnet',
+          initial: 'anthropic:claude-sonnet-4-20250514',
         });
 
         // Large context (doc command)
@@ -472,19 +477,13 @@ export class InstallCommand implements Command {
             type: 'select',
             options: [
               {
-                value: 'gemini:gemini-2.5-pro-preview-03-25',
+                value: 'gemini:gemini-2.5-pro-preview-05-06',
                 label: 'Gemini Pro 2.5',
                 hint: 'recommended',
               },
               {
-                value: 'anthropic:claude-3-7-sonnet',
-                label: 'Claude 3.7 Sonnet',
-                hint: 'recommended',
-              },
-              {
-                value: 'gemini:gemini-1.5-pro',
-                label: 'Gemini 2.0 Pro',
-                hint: 'recommended',
+                value: 'anthropic:claude-sonnet-4-20250514',
+                label: 'Claude 4 Sonnet',
               },
               { value: 'perplexity:sonar', label: 'Perplexity Sonar' },
               { value: 'openai:gpt-4o', label: 'GPT-4o' },
@@ -493,7 +492,7 @@ export class InstallCommand implements Command {
                 label: 'OpenRouter - Grok 3',
               },
             ],
-            initial: 'gemini:gemini-2.5-pro-preview-03-25',
+            initial: 'gemini:gemini-2.5-pro-preview-05-06',
           }
         );
 

@@ -31,7 +31,7 @@ pnpm dev test tests/feature-behaviors/test/test-command-parallel-example.md --pa
 
 - `--output`: Directory to store test reports (default: `tests/reports`)
 - `--branch`: Branch name for report organization (default: current git branch)
-- `--model`: LLM model to use for test execution (default: `claude-3-7-sonnet-latest`)
+- `--model`: LLM model to use for test execution (default: `claude-sonnet-4-20250514`)
 - `--timeout`: Maximum execution time in seconds for a test scenario (default: 300)
 - `--retries`: Number of retries for failed test scenarios (default: 3)
 - `--tag`: Filter scenarios by tags (comma-separated list)
@@ -48,20 +48,24 @@ Feature behavior files define test scenarios for vibe-tools commands. These file
 # Feature Behavior: Web Command
 
 ## Description
+
 This test verifies that the web command can query online information correctly.
 
 ## Test Scenarios
 
 ### Scenario 1: Basic Web Query
+
 **Task Description:**
 Use vibe-tools to search for information about climate change.
 
 **Expected Behavior:**
+
 - The AI agent should use the web command
 - Response should include information about climate change
 - The command should complete successfully
 
 **Success Criteria:**
+
 - AI agent correctly uses the vibe-tools web command
 - Response contains relevant information about climate change
 - Command completes without errors
@@ -169,4 +173,4 @@ jobs:
 3. **Use appropriate timeouts**: Some tests may take longer than others
 4. **Clean up after tests**: Ensure tests don't leave artifacts behind
 5. **Use parallelism wisely**: Running tests in parallel can speed up execution but may cause resource contention
-6. **Use appropriate tags**: Tags can help organize and filter tests 
+6. **Use appropriate tags**: Tags can help organize and filter tests

@@ -61,20 +61,20 @@ Use this exact query: "A cryptographic hash function takes an input and returns 
 
 **Tags:** extended-reasoning, anthropic
 **Task Description:**
-Use vibe-tools to ask a complex critical analysis question using Anthropic provider with claude-3.7-sonnet model and high reasoning effort.
+Use vibe-tools to ask a complex critical analysis question using Anthropic provider with claude-4-sonnet model and high reasoning effort.
 
 Use this exact query: "Compare and contrast three major frameworks for ethical AI development: utilitarian, deontological, and virtue ethics approaches. Analyze how each framework would address issues of privacy, bias, and automation of decision-making. Then, propose a hybrid framework that combines strengths from each approach while addressing their limitations."
 
 **Expected Behavior:**
 
-- The AI agent should use the ask command with Anthropic provider, claude-3-7-sonnet-latest model, and high reasoning effort
+- The AI agent should use the ask command with Anthropic provider, claude-sonnet-4-20250514 model, and high reasoning effort
 - The response should include a comprehensive comparison of ethical frameworks with detailed analysis
 - The command should complete successfully without errors
 - The response should show evidence of extended thinking (thorough comparison, nuanced analysis, thoughtful hybrid proposal)
 
 **Success Criteria:**
 
-- AI agent correctly uses ask command with Anthropic provider and claude-3-7-sonnet-latest model
+- AI agent correctly uses ask command with Anthropic provider and claude-sonnet-4-20250514 model
 - AI agent correctly sets the reasoning effort parameter to high (maps to extended thinking)
 - Response includes comparison of three ethical frameworks
 - Response analyzes how each framework addresses specific ethical issues
