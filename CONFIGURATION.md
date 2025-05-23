@@ -289,7 +289,7 @@ The `ask` command requires both a provider and a model to be specified. While th
 
 The plan command uses two different models:
 
-1. A file identification model (default: Gemini with gemini-2.5-flash-preview)
+1. A file identification model (default: Gemini with gemini-2.5-flash-preview-05-20)
 2. A thinking model for plan generation (default: OpenAI with o3-mini)
 
 You can configure both models and their providers:
