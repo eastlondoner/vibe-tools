@@ -1,10 +1,7 @@
 import type { Command, CommandGenerator } from '../../../types';
 import { formatOutput, ActionError, NavigationError } from './stagehandUtils';
 import {
-  BrowserResult,
   ConstructorParams,
-  InitResult,
-  LogLine,
   Stagehand,
 } from '@browserbasehq/stagehand';
 import { loadConfig } from '../../../config';
@@ -57,6 +54,10 @@ export class ActCommand implements Command {
 
     try {
       const videoDir = await setupVideoRecording(options);
+      
+      // Get API key and set environment variables explicitly for Stagehand
+      const apiKey = getStagehandApiKey(stagehandConfig);
+      
       const config = {
         env: 'LOCAL',
         localBrowserLaunchOptions: {
@@ -71,18 +72,14 @@ export class ActCommand implements Command {
         verbose: options?.debug || stagehandConfig.verbose ? 1 : 0,
         modelName: getStagehandModel(stagehandConfig, {
           model: options?.model,
-        }) as 'claude-sonnet-4-20250514', // This is needed temporarily because the types for stagehand haven't been updated to include the latest models
-        apiKey: getStagehandApiKey(stagehandConfig),
+        }),
+        modelClientOptions: {
+          apiKey: apiKey,
+        },
+        useAPI: false, // this stops it trying to use the browserbase api
         enableCaching: stagehandConfig.enableCaching,
         logger: stagehandLogger(options?.debug ?? stagehandConfig.verbose),
       } satisfies ConstructorParams;
-
-      if (config.modelName.startsWith('claude-sonnet-4')) {
-        console.log(
-          'using claude-sonnet-4-20250514 because this is what stagehand supports right now'
-        );
-        config.modelName = 'claude-sonnet-4-20250514';
-      }
 
       // Set default values for network and console options
       options = {
@@ -92,7 +89,7 @@ export class ActCommand implements Command {
       };
 
       if (options?.debug) {
-        console.log('using stagehand config', { ...config, apiKey: 'REDACTED' });
+        console.log('using stagehand config', { ...config, apiKey: 'REDACTED', modelClientOptions: { ...config.modelClientOptions, apiKey: 'REDACTED' } });
       }
       stagehand = new Stagehand(config);
 

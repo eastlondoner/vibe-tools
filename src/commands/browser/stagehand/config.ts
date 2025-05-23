@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { exhaustiveMatchGuard } from '../../../utils/exhaustiveMatchGuard';
 
 // Define available models
-export const availableModels = z.enum(['claude-sonnet-4-20250514', 'o3-mini', 'gpt-4o']);
+export const availableModels = z.enum(['claude-3-7-sonnet-latest', 'o3', 'o3-mini', 'o4-mini', 'gpt-4o', 'gpt-4.1', 'gpt-4.1-mini', 'gemini-2.5-flash-preview-04-17', 'groq-llama-3.3-70b-versatile', 'anthropic/claude-sonnet-4-20250514']);
 
 export type AvailableModel = z.infer<typeof availableModels>;
 
 export interface StagehandConfig {
-  provider: 'anthropic' | 'openai';
+  provider: 'anthropic' | 'openai' | 'gemini' | 'openrouter';
   headless: boolean;
   verbose: boolean;
   debugDom: boolean;
@@ -115,13 +115,30 @@ export function validateStagehandConfig(config: StagehandConfig): void {
 }
 
 export function getStagehandApiKey(config: StagehandConfig): string {
-  const apiKey =
-    config.provider === 'anthropic' ? process.env.ANTHROPIC_API_KEY : process.env.OPENAI_API_KEY;
+  let apiKey: string | undefined;
+  switch(config.provider){
+    case 'anthropic': {
+      apiKey = process.env.ANTHROPIC_API_KEY;
+      break;
+    }
+    case 'openai': {
+      apiKey = process.env.OPENAI_API_KEY;
+      break;
+    }
+    case 'gemini': {
+      apiKey = process.env.GEMINI_API_KEY;
+      break;
+    }
+    case 'openrouter': {
+      apiKey = process.env.OPENROUTER_API_KEY;
+      break;
+    }
+  }
 
   if (!apiKey) {
     throw new Error(
       `API key not found for ${config.provider} provider. ` +
-        `Please set ${config.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'} ` +
+        `Please set ${config.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : config.provider === 'openai' ? 'OPENAI_API_KEY' : config.provider === 'gemini' ? 'GEMINI_API_KEY' : 'OPENROUTER_API_KEY'} ` +
         `in your .vibe-tools.env file.`
     );
   }
@@ -154,18 +171,29 @@ export function getStagehandModel(
     }
     console.warn(
       `Warning: Using unfamiliar model "${modelToUse}" this may be a mistake. ` +
-        `Typical models are "claude-sonnet-4-20250514" for Anthropic and "o3-mini" or "gpt-4o" for OpenAI.`
+        `Typical models are "claude-3-7-sonnet-latest" for Anthropic and "o3-mini" or "gpt-4o" for OpenAI.`
     );
+
+    if(!modelToUse.includes('/')){
+      const provider = config.provider;
+      return `${provider}/${modelToUse}` as AvailableModel;
+    }
     return modelToUse as AvailableModel;
   }
 
   // Otherwise use defaults based on provider
   switch (config.provider) {
     case 'anthropic': {
-      return 'claude-sonnet-4-20250514';
+      return 'anthropic/claude-sonnet-4-20250514';
     }
     case 'openai': {
       return 'o3-mini';
+    }
+    case 'gemini': {
+      return 'gemini-2.5-flash-preview-04-17';
+    }
+    case 'openrouter': {
+      return 'groq-llama-3.3-70b-versatile';
     }
   }
 }
