@@ -143,7 +143,7 @@ HOWEVER if the server details show that you cannot run with uvx or npx, or if yo
 
     try {
       const response = await provider.executePrompt(prompt, {
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash-preview-05-20',
         maxTokens: 1000,
         systemPrompt:
           'You are an expert at generating MCP server arguments. You only return a raw JSON object, no markdown, no backticks, no other text.',

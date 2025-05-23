@@ -93,7 +93,7 @@ Return ONLY a JSON array of strings with the extracted keywords.
 IMPORTANT: Do not include any markdown formatting, code block markers, or other text. Return only the JSON array.`;
 
       const response = await provider.executePrompt(prompt, {
-        model: this.config.marketplace?.model || 'gemini-2.0-flash',
+        model: this.config.marketplace?.model || 'gemini-2.5-flash-preview-05-20',
         maxTokens: 200,
         systemPrompt:
           'Extract ONLY explicitly mentioned technologies as keywords. No guessing. Max 2 keywords. Return only a JSON array of strings.',

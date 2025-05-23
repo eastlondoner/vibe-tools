@@ -340,7 +340,7 @@ Note: The ask command requires both --provider and --model parameters to be spec
      ```env
      GEMINI_API_KEY="./path/to/service-account.json"
      ```
-   - This method enables access to the latest Gemini models available through Vertex AI, such as `gemini-2.0-flash`.
+   - This method enables access to the latest Gemini models available through Vertex AI, such as `gemini-2.5-flash-preview-05-20`.
 
 3. **Application Default Credentials (ADC) (Recommended for Google Cloud Environments)**
    - ADC is ideal when running `vibe-tools` within Google Cloud environments (e.g., Compute Engine, Kubernetes Engine) or for local development using `gcloud`.

@@ -60,7 +60,7 @@ export class ModelNotFoundError extends ProviderError {
         break;
       case 'gemini':
         message +=
-          '\nSuggested models:\n- gemini-2.0-flash\n- gemini-2.5-pro-preview\n- gemini-2.5-pro-preview';
+          '\nSuggested models:\n- gemini-2.5-flash-preview-05-20\n- gemini-2.5-pro-preview\n- gemini-2.5-pro-preview';
         break;
       case 'perplexity':
         message += '\nSuggested models:\n- sonar-pro\n- sonar-reasoning-pro';

@@ -49,7 +49,7 @@ export const defaultConfig: Config = {
   // command specific configuration always overrides the provider specific
   // configuration
   //   modelbox: {
-  //     model: 'google/gemini-2.0-flash', // Default model, can be overridden per command
+  //     model: 'google/gemini-2.5-flash-preview-05-20', // Default model, can be overridden per command
   //     maxTokens: 8192,
   //  },
   //  openrouter: {
