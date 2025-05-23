@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.61.5] - 2025-05-23
+
+### Improved
+
+- **Enhanced Browser Model Support**: Improved Stagehand model handling in browser commands with:
+  - Added support for additional providers (Gemini, OpenRouter) in browser commands
+  - Expanded available model options including `claude-3-7-sonnet-latest`, `o3`, `o4-mini`, `gpt-4.1`, `gpt-4.1-mini`, `gemini-2.5-flash-preview-04-17`, and `groq-llama-3.3-70b-versatile`
+  - Better API key handling for different providers (Anthropic, OpenAI, Gemini, OpenRouter)
+  - Improved model configuration structure with `modelClientOptions` for better compatibility
+  - Enhanced model name resolution with automatic provider prefix handling
+  - Better error handling when providers or models are not recognized
+
+
 ## [0.61.4] - 2025-05-22
 
 ### Added
