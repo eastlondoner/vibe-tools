@@ -2,7 +2,21 @@
   <img height="72" src="https://github.com/user-attachments/assets/45eff178-242f-4d84-863e-247b080cc6f5" />
 </div>
 
-<div align=center><h1>Give Cursor Agent an AI team and advanced skills</h1></div>
+<div align=center><h1>Give AI Agents an AI team and advanced skills</h1></div>
+
+
+| Summary | Prompt it |
+|---------|-----------|
+| Essential information to understand what vibe-tools is and how to get started using it | [![](https://b.lmpify.com/getting_started)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3DREADME.md%26pathPatterns%3DCONFIGURATION.md%26pathPatterns%3Dpackage.json%26pathPatterns%3Dvibe-tools.config.json%26pathPatterns%3D.cursor-tools.env.example%26pathPatterns%3Dsrc%252Fvibe-rules.ts%0A%0AI'm%20new%20to%20vibe-tools.%20Can%20you%20explain%20what%20it%20is%2C%20how%20to%20install%20it%2C%20and%20how%20to%20get%20started%20with%20basic%20commands%3F) |
+| Overview of available commands and their basic functionality | [![](https://b.lmpify.com/command_overview)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fcommands%252Findex.ts%26pathPatterns%3Dsrc%252Ftypes.ts%26pathPatterns%3Dsrc%252Fvibe-rules.ts%26pathPatterns%3DREADME.md%0A%0AWhat%20commands%20are%20available%20in%20vibe-tools%20and%20what%20does%20each%20one%20do%3F) |
+| Browser automation commands and capabilities | [![](https://b.lmpify.com/browser_commands)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fcommands%252Fbrowser%252F**%252F*.ts%26pathPatterns%3Dtests%252Fcommands%252Fbrowser%252F*.html%26excludePathPatterns%3Dsrc%252Fcommands%252Fbrowser%252Fstagehand%252FstagehandScript.ts%0A%0AHow%20do%20I%20use%20the%20browser%20commands%20in%20vibe-tools%3F%20What%20browser%20automation%20capabilities%20are%20available%3F) |
+| LLM provider integration and configuration | [![](https://b.lmpify.com/llm_integration)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Futils%252Ftool-enabled-llm%252F**%26pathPatterns%3Dsrc%252Fproviders%252F**%26pathPatterns%3Dsrc%252Fllms%252F**%26pathPatterns%3D.cursor-tools.env.example%0A%0AHow%20do%20I%20configure%20different%20LLM%20providers%20with%20vibe-tools%3F%20What%20providers%20are%20supported%3F) |
+| Model Context Protocol (MCP) commands and tools | [![](https://b.lmpify.com/mcp_commands)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fcommands%252Fmcp%252F**%252F*.ts%0A%0AHow%20do%20I%20use%20the%20MCP%20commands%20in%20vibe-tools%3F%20What%20is%20MCP%20and%20how%20does%20it%20work%3F) |
+| Testing framework and capabilities | [![](https://b.lmpify.com/testing)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fcommands%252Ftest%252F**%252F*.ts%26pathPatterns%3Dtests%252Ffeature-behaviors%252F**%252F*.md%26pathPatterns%3DTESTING.md%0A%0AHow%20do%20I%20use%20the%20testing%20capabilities%20in%20vibe-tools%3F%20How%20can%20I%20create%20and%20run%20tests%3F) |
+| Configuration options and customization | [![](https://b.lmpify.com/configuration)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fconfig.ts%26pathPatterns%3Dvibe-tools.config.json%26pathPatterns%3D.cursor-tools.env.example%26pathPatterns%3DCONFIGURATION.md%26pathPatterns%3Dsrc%252Fvibe-rules.ts%0A%0AHow%20do%20I%20configure%20vibe-tools%3F%20What%20configuration%20options%20are%20available%3F) |
+| Telemetry implementation and infrastructure | [![](https://b.lmpify.com/telemetry)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Ftelemetry%252F**%26pathPatterns%3Dinfra%252F**%26pathPatterns%3DTELEMETRY.md%0A%0AHow%20does%20telemetry%20work%20in%20vibe-tools%3F%20What%20data%20is%20collected%20and%20how%20is%20it%20used%3F) |
+| Example usage | [![](https://b.lmpify.com/examples)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fvibe-rules.ts%26pathPatterns%3DREADME.md%26pathPatterns%3DCONFIGURATION.md%0A%0ACan%20you%20show%20me%20some%20examples%20of%20how%20to%20use%20vibe-tools%20commands%20effectively%3F) |
+
 
 ## Table of Contents
 
