@@ -74,7 +74,7 @@
 
 - Perplexity to search the web and perform deep research
 - Gemini 2.0 for huge whole-codebase context window, search grounding and reasoning
-- Stagehand for browser operation to test and debug web apps (uses Anthropic or OpenAI models)
+- Stagehand for browser operation to test and debug web apps (uses Anthropic, OpenAI, Gemini, or OpenRouter models)
 - OpenRouter for access to a variety of models through a unified API (for MCP commands)
 
 ### New Skills for your existing Agent
@@ -863,7 +863,7 @@ If both a .repomixignore and an ignore section in `repomix.config.json` are pres
 
 #### Model Selection
 
-The `browser` commands support different AI models for processing. You can select the model using the `--model` option:
+The `browser` commands support different AI models for processing from multiple providers (Anthropic, OpenAI, Gemini, OpenRouter). You can select the model using the `--model` option:
 
 ```bash
 # Use gpt-4o
@@ -871,6 +871,12 @@ vibe-tools browser act "Click Login" --url "https://example.com" --model=gpt-4o
 
 # Use Claude 4 Sonnet
 vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-sonnet-4-20250514
+
+# Use Gemini model
+vibe-tools browser act "Click Login" --url "https://example.com" --model=gemini-2.5-flash-preview-04-17
+
+# Use OpenRouter model
+vibe-tools browser act "Click Login" --url "https://example.com" --model=groq-llama-3.3-70b-versatile
 ```
 
 You can set a default provider in your `vibe-tools.config.json` file under the `stagehand` section:
@@ -879,7 +885,7 @@ You can set a default provider in your `vibe-tools.config.json` file under the `
 {
   "stagehand": {
     "model": "claude-sonnet-4-20250514", // For Anthropic provider
-    "provider": "anthropic", // or "openai"
+    "provider": "anthropic", // "openai", "gemini", or "openrouter"
     "timeout": 90000
   }
 }
@@ -890,7 +896,7 @@ You can also set a default model in your `vibe-tools.config.json` file under the
 ```json
 {
   "stagehand": {
-    "provider": "openai", // or "anthropic"
+    "provider": "openai", // "anthropic", "gemini", or "openrouter"
     "model": "gpt-4o"
   }
 }
@@ -898,8 +904,10 @@ You can also set a default model in your `vibe-tools.config.json` file under the
 
 If no model is specified (either on the command line or in the config), a default model will be used based on your configured provider:
 
+- **Anthropic:** `anthropic/claude-sonnet-4-20250514`
 - **OpenAI:** `o3-mini`
-- **Anthropic:** `claude-sonnet-4-20250514`
+- **Gemini:** `gemini-2.5-flash-preview-04-17`
+- **OpenRouter:** `groq-llama-3.3-70b-versatile`
 
 Available models depend on your configured provider (OpenAI or Anthropic) in `vibe-tools.config.json` and your API key.
 
