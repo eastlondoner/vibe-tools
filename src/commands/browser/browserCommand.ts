@@ -1,4 +1,5 @@
 import type { Command, CommandGenerator, CommandOptions, CommandMap } from '../../types';
+import { loadEnv } from '../../config';
 import { OpenCommand } from './open.ts';
 import { ElementCommand } from './element.ts';
 import { ActCommand } from './stagehand/act.ts';
@@ -15,6 +16,8 @@ export class BrowserCommand implements Command {
   };
 
   async *execute(query: string, options: CommandOptions): CommandGenerator {
+    loadEnv();
+    
     const [subcommand, ...rest] = query.split(' ');
     const subQuery = rest.join(' ');
 
