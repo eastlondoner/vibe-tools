@@ -1,0 +1,75 @@
+{
+  "$schema": "https://contextjson.com/context.schema.json",
+  "extends": "https://contextjson.com/default.context.json",
+  "context": {
+    "getting-started": {
+      "summary": "Essential information to understand what vibe-tools is and how to get started using it",
+      "pathPatterns": [
+        "README.md",
+        "CONFIGURATION.md",
+        "package.json",
+        "vibe-tools.config.json",
+        ".cursor-tools.env.example",
+        "src/vibe-rules.ts"
+      ],
+      "prompt": "I'm new to vibe-tools. Can you explain what it is, how to install it, and how to get started with basic commands?"
+    },
+    "command-overview": {
+      "summary": "Overview of available commands and their basic functionality",
+      "pathPatterns": ["src/commands/index.ts", "src/types.ts", "src/vibe-rules.ts", "README.md"],
+      "prompt": "What commands are available in vibe-tools and what does each one do?"
+    },
+    "browser-commands": {
+      "summary": "Browser automation commands and capabilities",
+      "pathPatterns": ["src/commands/browser/**/*.ts", "tests/commands/browser/*.html"],
+      "excludePathPatterns": ["src/commands/browser/stagehand/stagehandScript.ts"],
+      "prompt": "How do I use the browser commands in vibe-tools? What browser automation capabilities are available?"
+    },
+    "llm-integration": {
+      "summary": "LLM provider integration and configuration",
+      "pathPatterns": [
+        "src/utils/tool-enabled-llm/**",
+        "src/providers/**",
+        "src/llms/**",
+        ".cursor-tools.env.example"
+      ],
+      "prompt": "How do I configure different LLM providers with vibe-tools? What providers are supported?"
+    },
+    "mcp-commands": {
+      "summary": "Model Context Protocol (MCP) commands and tools",
+      "pathPatterns": ["src/commands/mcp/**/*.ts"],
+      "prompt": "How do I use the MCP commands in vibe-tools? What is MCP and how does it work?"
+    },
+    "testing": {
+      "summary": "Testing framework and capabilities",
+      "pathPatterns": [
+        "src/commands/test/**/*.ts",
+        "tests/feature-behaviors/**/*.md",
+        "TESTING.md"
+      ],
+      "prompt": "How do I use the testing capabilities in vibe-tools? How can I create and run tests?"
+    },
+    "configuration": {
+      "summary": "Configuration options and customization",
+      "pathPatterns": [
+        "src/config.ts",
+        "vibe-tools.config.json",
+        ".cursor-tools.env.example",
+        "CONFIGURATION.md",
+        "src/vibe-rules.ts"
+      ],
+      "prompt": "How do I configure vibe-tools? What configuration options are available?"
+    },
+    "telemetry": {
+      "summary": "Telemetry implementation and infrastructure",
+      "pathPatterns": ["src/telemetry/**", "infra/**", "TELEMETRY.md"],
+      "prompt": "How does telemetry work in vibe-tools? What data is collected and how is it used?"
+    },
+    "examples": {
+      "summary": "Example usage",
+      "pathPatterns": ["src/vibe-rules.ts", "README.md", "CONFIGURATION.md"],
+      "prompt": "Can you show me some examples of how to use vibe-tools commands effectively?"
+    }
+  },
+  "attribution": "https://github.com/eastlondoner/cursor-tools"
+}
