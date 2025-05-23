@@ -67,11 +67,11 @@ export class ModelNotFoundError extends ProviderError {
         break;
       case 'openrouter':
         message +=
-          '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-4-sonnet\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro-preview\n- mistral/mistral-large\n- groq/llama2-70b';
+          '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro-preview\n- mistral/mistral-large\n- groq/llama2-70b';
         break;
       case 'modelbox':
         message +=
-          '\nSuggested models:\n- perplexity/sonar-pro\n- openai/gpt-4o\n- anthropic/claude-4-sonnet'; // it's 3-7 on modelbox
+          '\nSuggested models:\n- perplexity/sonar-pro\n- openai/gpt-4o\n- anthropic/claude-sonnet-4';
         break;
       case 'xai':
         message += '\nSuggested models:\n- grok-3-latest\n- grok-3-mini-latest';

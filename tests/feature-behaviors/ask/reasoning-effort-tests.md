@@ -61,7 +61,7 @@ Use this exact query: "A cryptographic hash function takes an input and returns 
 
 **Tags:** extended-reasoning, anthropic
 **Task Description:**
-Use vibe-tools to ask a complex critical analysis question using Anthropic provider with claude-4-sonnet model and high reasoning effort.
+Use vibe-tools to ask a complex critical analysis question using Anthropic provider with claude-sonnet-4 model and high reasoning effort.
 
 Use this exact query: "Compare and contrast three major frameworks for ethical AI development: utilitarian, deontological, and virtue ethics approaches. Analyze how each framework would address issues of privacy, bias, and automation of decision-making. Then, propose a hybrid framework that combines strengths from each approach while addressing their limitations."
 

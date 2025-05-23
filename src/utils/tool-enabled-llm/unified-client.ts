@@ -272,7 +272,7 @@ export class UnifiedLLMClient {
       const provider = this.config.provider;
       const model =
         this.config.model ||
-        (provider === 'anthropic' ? 'claude-sonnet-4-20250514' : 'anthropic/claude-4-sonnet');
+        (provider === 'anthropic' ? 'claude-sonnet-4-20250514' : 'anthropic/claude-sonnet-4');
 
       // Track API call count if maxApiCalls is specified
       let apiCallCount = 0;

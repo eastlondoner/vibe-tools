@@ -406,7 +406,7 @@ export class InstallCommand implements Command {
             { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro' },
             { value: 'openai:gpt-4.1-2025-04-14', label: 'GPT-4.1' },
             {
-              value: 'openrouter:anthropic/claude-4-sonnet',
+              value: 'openrouter:anthropic/claude-sonnet-4',
               label: 'OpenRouter - Claude 4 Sonnet',
             },
             {
@@ -455,7 +455,7 @@ export class InstallCommand implements Command {
             },
             { value: 'openai:gpt-4o', label: 'GPT-4o' },
             {
-              value: 'openrouter:anthropic/claude-4-sonnet',
+              value: 'openrouter:anthropic/claude-sonnet-4',
               label: 'OpenRouter - Claude 4 Sonnet',
             },
             {

@@ -412,10 +412,10 @@ export abstract class BaseProvider implements BaseModelProvider {
 
     // Claude models that support extended thinking
     const claudeModelsSupported =
-      modelWithoutPrefix.includes('claude-4-opus') ||
-      modelWithoutPrefix.includes('claude-4-sonnet') ||
-      model.includes('claude-4-opus') ||
-      model.includes('claude-4-sonnet');
+      modelWithoutPrefix.includes('claude-opus-4') ||
+      modelWithoutPrefix.includes('claude-sonnet-4') ||
+      model.includes('claude-opus-4') ||
+      model.includes('claude-sonnet-4');
 
     return openAIModelsSupported || claudeModelsSupported;
   }

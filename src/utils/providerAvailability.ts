@@ -11,9 +11,9 @@ const DEFAULT_MODELS: Record<Provider, string> = {
   perplexity: 'sonar-pro',
   gemini: 'gemini-2.5-pro-preview',
   openai: 'o3-mini',
-  anthropic: 'claude-4-sonnet-latest',
-  openrouter: 'anthropic/claude-4-sonnet',
-  modelbox: 'anthropic/claude-4-sonnet',
+  anthropic: 'claude-sonnet-4-20250514',
+  openrouter: 'anthropic/claude-sonnet-4',
+  modelbox: 'anthropic/claude-sonnet-4',
   xai: 'grok-3-mini-latest',
 };
 

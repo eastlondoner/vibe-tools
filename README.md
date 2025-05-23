@@ -735,7 +735,7 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
   },
   "doc": {
     "provider": "openrouter",
-    "model": "anthropic/claude-4-sonnet",
+    "model": "anthropic/claude-sonnet-4",
     "maxTokens": 4096
   },
   "web": {
