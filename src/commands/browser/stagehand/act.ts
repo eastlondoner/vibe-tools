@@ -1,9 +1,6 @@
 import type { Command, CommandGenerator } from '../../../types';
 import { formatOutput, ActionError, NavigationError } from './stagehandUtils';
-import {
-  ConstructorParams,
-  Stagehand,
-} from '@browserbasehq/stagehand';
+import { ConstructorParams, Stagehand } from '@browserbasehq/stagehand';
 import { loadConfig } from '../../../config';
 import {
   loadStagehandConfig,
@@ -54,10 +51,10 @@ export class ActCommand implements Command {
 
     try {
       const videoDir = await setupVideoRecording(options);
-      
+
       // Get API key and set environment variables explicitly for Stagehand
       const apiKey = getStagehandApiKey(stagehandConfig);
-      
+
       const config = {
         env: 'LOCAL',
         localBrowserLaunchOptions: {
@@ -89,7 +86,11 @@ export class ActCommand implements Command {
       };
 
       if (options?.debug) {
-        console.log('using stagehand config', { ...config, apiKey: 'REDACTED', modelClientOptions: { ...config.modelClientOptions, apiKey: 'REDACTED' } });
+        console.log('using stagehand config', {
+          ...config,
+          apiKey: 'REDACTED',
+          modelClientOptions: { ...config.modelClientOptions, apiKey: 'REDACTED' },
+        });
       }
       stagehand = new Stagehand(config);
 

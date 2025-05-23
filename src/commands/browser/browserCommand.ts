@@ -17,7 +17,7 @@ export class BrowserCommand implements Command {
 
   async *execute(query: string, options: CommandOptions): CommandGenerator {
     loadEnv();
-    
+
     const [subcommand, ...rest] = query.split(' ');
     const subQuery = rest.join(' ');
 

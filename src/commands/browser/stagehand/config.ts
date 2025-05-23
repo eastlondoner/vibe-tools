@@ -2,7 +2,18 @@ import { z } from 'zod';
 import { exhaustiveMatchGuard } from '../../../utils/exhaustiveMatchGuard';
 
 // Define available models
-export const availableModels = z.enum(['claude-3-7-sonnet-latest', 'o3', 'o3-mini', 'o4-mini', 'gpt-4o', 'gpt-4.1', 'gpt-4.1-mini', 'gemini-2.5-flash-preview-04-17', 'groq-llama-3.3-70b-versatile', 'anthropic/claude-sonnet-4-20250514']);
+export const availableModels = z.enum([
+  'claude-3-7-sonnet-latest',
+  'o3',
+  'o3-mini',
+  'o4-mini',
+  'gpt-4o',
+  'gpt-4.1',
+  'gpt-4.1-mini',
+  'gemini-2.5-flash-preview-04-17',
+  'groq-llama-3.3-70b-versatile',
+  'anthropic/claude-sonnet-4-20250514',
+]);
 
 export type AvailableModel = z.infer<typeof availableModels>;
 
@@ -116,7 +127,7 @@ export function validateStagehandConfig(config: StagehandConfig): void {
 
 export function getStagehandApiKey(config: StagehandConfig): string {
   let apiKey: string | undefined;
-  switch(config.provider){
+  switch (config.provider) {
     case 'anthropic': {
       apiKey = process.env.ANTHROPIC_API_KEY;
       break;
@@ -174,7 +185,7 @@ export function getStagehandModel(
         `Typical models are "claude-3-7-sonnet-latest" for Anthropic and "o3-mini" or "gpt-4o" for OpenAI.`
     );
 
-    if(!modelToUse.includes('/')){
+    if (!modelToUse.includes('/')) {
       const provider = config.provider;
       return `${provider}/${modelToUse}` as AvailableModel;
     }

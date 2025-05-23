@@ -267,7 +267,7 @@ const oldInit = Stagehand.prototype.init;
 export const patchStagehand = once(async () => {
   const tempStagehand = new Stagehand({
     env: 'LOCAL',
-    modelClientOptions:{
+    modelClientOptions: {
       apiKey: 'test',
     },
     verbose: 0,
@@ -277,7 +277,7 @@ export const patchStagehand = once(async () => {
     logger: () => {},
   });
   await oldInit.call(tempStagehand);
-  type StagehandPageType = Parameters<typeof tempStagehand['setActivePage']>[0]
+  type StagehandPageType = Parameters<(typeof tempStagehand)['setActivePage']>[0];
   const StagehandPage = tempStagehand['stagehandPage']!.constructor;
   const StagehandContext = tempStagehand['stagehandContext']!.constructor;
   tempStagehand.context.addInitScript;
@@ -342,9 +342,11 @@ export function overrideStagehandInit() {
         const defaultPage =
           pages.length > 0 ? pages[pages.length - 1] : await browserResult.context.newPage();
 
-          if(!this['llmClient']){
-            throw new Error('llmClient not found. This is usually because the provider or model name is not recognized by this version of stagehand.')
-          }
+        if (!this['llmClient']) {
+          throw new Error(
+            'llmClient not found. This is usually because the provider or model name is not recognized by this version of stagehand.'
+          );
+        }
         // constructor(page: Page$1, stagehand: Stagehand, context: StagehandContext, llmClient: LLMClient, userProvidedInstructions?: string, api?: StagehandAPI, waitForCaptchaSolves?: boolean);
         this['stagehandPage'] = await new StagehandPage(
           defaultPage,
