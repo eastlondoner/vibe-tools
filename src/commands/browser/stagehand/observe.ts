@@ -12,6 +12,7 @@ import {
   validateStagehandConfig,
   getStagehandApiKey,
   getStagehandModel,
+  StagehandConfig,
 } from './config';
 import type { SharedBrowserCommandOptions } from '../browserOptions';
 import {
@@ -21,7 +22,7 @@ import {
   outputMessages,
   setupVideoRecording,
 } from '../utilsShared';
-import { stagehandLogger } from './initOverride';
+import { StagehandInitOverride, stagehandLogger } from './initOverride';
 import { overrideStagehandInit } from './initOverride';
 
 overrideStagehandInit();
@@ -59,6 +60,7 @@ export class ObserveCommand implements Command {
     let networkMessages: string[] = [];
 
     const videoDir = await setupVideoRecording(options);
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
     try {
       const config = {
         env: 'LOCAL',
@@ -74,8 +76,13 @@ export class ObserveCommand implements Command {
         verbose: options?.debug || stagehandConfig.verbose ? 1 : 0,
         modelName: getStagehandModel(stagehandConfig, {
           model: options?.model,
-        }) as 'claude-sonnet-4-20250514',
-        apiKey: getStagehandApiKey(stagehandConfig),
+          provider: options?.provider as StagehandConfig['provider'] | undefined,
+        }),
+        apiKey: getStagehandApiKey({
+          provider:
+            (options?.provider as StagehandConfig['provider'] | undefined) ??
+            stagehandConfig.provider,
+        }),
         enableCaching: stagehandConfig.enableCaching,
         logger: stagehandLogger(options?.debug ?? stagehandConfig.verbose),
       } satisfies ConstructorParams;
@@ -99,19 +106,35 @@ export class ObserveCommand implements Command {
             options?.connectTo ? undefined : stagehand?.page.close(),
             stagehand?.close(),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Page close timeout')), 5000)
+              timeouts.push(setTimeout(() => reject(new Error('Page close timeout')), 5000))
             ),
           ]);
-          console.log('stagehand closed');
+          console.error('stagehand closed');
         },
       };
 
       // Initialize with timeout
-      const initPromise = stagehand.init();
+      const initOptions: StagehandInitOverride = {
+        recordVideo:
+          options?.video && videoDir
+            ? {
+                dir: videoDir,
+              }
+            : undefined,
+        connectTo: options?.connectTo,
+        viewport: options?.viewport,
+      };
+      // @ts-expect-error
+      const initPromise = stagehand.init(initOptions);
       const initTimeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Initialization timeout')), 30000)
+        timeouts.push(setTimeout(() => reject(new Error('Initialization timeout')), 30000))
       );
       await Promise.race([initPromise, initTimeoutPromise]);
+
+      for (const timeout of timeouts) {
+        clearTimeout(timeout);
+      }
+      timeouts.length = 0;
 
       // Setup console and network monitoring
       consoleMessages = await setupConsoleLogging(stagehand.page, options);
@@ -125,12 +148,18 @@ export class ObserveCommand implements Command {
             // Navigate with timeout
             const gotoPromise = stagehand.page.goto(options.url);
             const gotoTimeoutPromise = new Promise((_, reject) =>
-              setTimeout(
-                () => reject(new Error('Navigation timeout')),
-                stagehandConfig.timeout ?? 30000
+              timeouts.push(
+                setTimeout(
+                  () => reject(new Error('Navigation timeout')),
+                  stagehandConfig.timeout ?? 30000
+                )
               )
             );
             await Promise.race([gotoPromise, gotoTimeoutPromise]);
+            for (const timeout of timeouts) {
+              clearTimeout(timeout);
+            }
+            timeouts.length = 0;
           } else {
             if (options?.debug) {
               console.log('Skipping navigation - already on correct page');
@@ -191,9 +220,12 @@ export class ObserveCommand implements Command {
     instruction?: string,
     timeout = 30000
   ): Promise<ObservationResult> {
+    const observationTimeouts: ReturnType<typeof setTimeout>[] = [];
     try {
       const timeoutPromise = new Promise<ObserveResult[]>((_, reject) =>
-        setTimeout(() => reject(new Error('Observation timeout')), timeout)
+        observationTimeouts.push(
+          setTimeout(() => reject(new Error('Observation timeout')), timeout)
+        )
       );
 
       const observeOptions = {
@@ -206,6 +238,11 @@ export class ObserveCommand implements Command {
         stagehand.page.observe(observeOptions),
         timeoutPromise,
       ]);
+
+      for (const timeout of observationTimeouts) {
+        clearTimeout(timeout);
+      }
+      observationTimeouts.length = 0;
 
       if (!observations || observations.length === 0) {
         throw new ObservationError('No interactive elements found on the page', {
@@ -273,6 +310,9 @@ export class ObserveCommand implements Command {
         summary: `Found ${elements.length} unique interactive elements on the page`,
       };
     } catch (error) {
+      for (const timeout of observationTimeouts) {
+        clearTimeout(timeout);
+      }
       if (error instanceof ObservationError) {
         throw error;
       }

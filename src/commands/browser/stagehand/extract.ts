@@ -12,6 +12,7 @@ import {
   validateStagehandConfig,
   getStagehandApiKey,
   getStagehandModel,
+  StagehandConfig,
 } from './config';
 import type { SharedBrowserCommandOptions } from '../browserOptions';
 import {
@@ -21,7 +22,7 @@ import {
   outputMessages,
   setupVideoRecording,
 } from '../utilsShared';
-import { stagehandLogger } from './initOverride';
+import { StagehandInitOverride, stagehandLogger } from './initOverride';
 import { overrideStagehandInit } from './initOverride';
 
 overrideStagehandInit();
@@ -64,8 +65,13 @@ export class ExtractCommand implements Command {
         verbose: options?.debug || stagehandConfig.verbose ? 1 : 0,
         modelName: getStagehandModel(stagehandConfig, {
           model: options?.model,
-        }) as 'claude-sonnet-4-20250514',
-        apiKey: getStagehandApiKey(stagehandConfig),
+          provider: options?.provider as StagehandConfig['provider'] | undefined,
+        }),
+        apiKey: getStagehandApiKey({
+          provider:
+            (options?.provider as StagehandConfig['provider'] | undefined) ??
+            stagehandConfig.provider,
+        }),
         enableCaching: stagehandConfig.enableCaching,
         logger: stagehandLogger(options?.debug ?? stagehandConfig.verbose),
       } satisfies ConstructorParams;
@@ -97,7 +103,18 @@ export class ExtractCommand implements Command {
       };
 
       // Initialize with timeout
-      const initPromise = stagehand.init();
+      const initOptions: StagehandInitOverride = {
+        recordVideo:
+          options?.video && videoDir
+            ? {
+                dir: videoDir,
+              }
+            : undefined,
+        connectTo: options?.connectTo,
+        viewport: options?.viewport,
+      };
+      // @ts-expect-error
+      const initPromise = stagehand.init(initOptions);
       const initTimeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Initialization timeout')), 30000)
       );

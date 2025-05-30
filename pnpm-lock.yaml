@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  playwright-core: 1.52.0
+  '@playwright/test': 1.52.0
+  playwright: 1.52.0
+
 importers:
 
   .:
@@ -18,11 +23,11 @@ importers:
         specifier: ^9.15.1
         version: 9.15.1
       playwright:
-        specifier: 1.50.1
-        version: 1.50.1
+        specifier: 1.52.0
+        version: 1.52.0
       playwright-core:
-        specifier: 1.50.1
-        version: 1.50.1
+        specifier: 1.52.0
+        version: 1.52.0
       punycode:
         specifier: ^2.3.1
         version: 2.3.1
@@ -38,13 +43,16 @@ importers:
         version: 2.6.0
       '@browserbasehq/stagehand':
         specifier: ^2.2.1
-        version: 2.2.1(@playwright/test@1.50.1)(deepmerge@4.3.1)(dotenv@16.5.0)(react@19.1.0)(zod@3.24.3)
+        version: 2.2.1(@playwright/test@1.52.0)(deepmerge@4.3.1)(dotenv@16.5.0)(react@19.1.0)(zod@3.24.3)
       '@eslint/js':
         specifier: ^9.25.1
         version: 9.27.0
       '@modelcontextprotocol/sdk':
         specifier: ^1.10.2
         version: 1.10.2
+      '@playwright/test':
+        specifier: 1.52.0
+        version: 1.52.0
       '@types/bun':
         specifier: ^1.2.10
         version: 1.2.10
@@ -213,7 +221,7 @@ packages:
   '@browserbasehq/stagehand@2.2.1':
     resolution: {integrity: sha512-RwxhvlXKdEVf8cQpHnA05pj+PA92lGLCA1bkqZwri2GDzWWiDx7WTVf0QPWfAD6T8E3cD4hVHIVQpbCmogwxFg==}
     peerDependencies:
-      '@playwright/test': ^1.42.1
+      '@playwright/test': 1.52.0
       deepmerge: ^4.3.1
       dotenv: ^16.4.5
       zod: ^3.23.8
@@ -559,8 +567,8 @@ packages:
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
 
-  '@playwright/test@1.50.1':
-    resolution: {integrity: sha512-Jii3aBg+CEDpgnuDxEp/h7BimHcUTDlpEtce89xEumlJ5ef2hqepZ+PWp1DDpYC/VO9fmWVI1IlEaoI5fK9FXQ==}
+  '@playwright/test@1.52.0':
+    resolution: {integrity: sha512-uh6W7sb55hl7D6vsAeA+V2p5JnlAqzhqFyF0VcJkKZXkgnFcVG9PziERRHQfPLfNGx1C292a4JqbWzhR8L4R1g==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1787,18 +1795,8 @@ packages:
     resolution: {integrity: sha512-ueGLflrrnvwB3xuo/uGob5pd5FN7l0MsLf0Z87o/UQmRtwjvfylfc9MurIxRAWywCYTgrvpXBcqjV4OfCYGCIQ==}
     engines: {node: '>=16.20.0'}
 
-  playwright-core@1.50.1:
-    resolution: {integrity: sha512-ra9fsNWayuYumt+NiM069M6OkcRb1FZSK8bgi66AtpFoWkg2+y0bJSNmkFrWhMbEBbVKC/EruAHH3g0zmtwGmQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.52.0:
     resolution: {integrity: sha512-l2osTgLXSMeuLZOML9qYODUQoPPnUsKsb5/P6LJ2e6uPKXUdPK5WYhN4z03G+YNbWmGDY4YENauNu4ZKczreHg==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.50.1:
-    resolution: {integrity: sha512-G8rwsOQJ63XG6BbKj2w5rHeavFjy5zynBA9zsJMMtBoe/Uf757oG12NXz6e6OirF7RCrTVAKFXbLmn1RbL7Qaw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2434,12 +2432,12 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@browserbasehq/stagehand@2.2.1(@playwright/test@1.50.1)(deepmerge@4.3.1)(dotenv@16.5.0)(react@19.1.0)(zod@3.24.3)':
+  '@browserbasehq/stagehand@2.2.1(@playwright/test@1.52.0)(deepmerge@4.3.1)(dotenv@16.5.0)(react@19.1.0)(zod@3.24.3)':
     dependencies:
       '@anthropic-ai/sdk': 0.39.0
       '@browserbasehq/sdk': 2.6.0
       '@google/genai': 0.8.0
-      '@playwright/test': 1.50.1
+      '@playwright/test': 1.52.0
       ai: 4.3.16(react@19.1.0)(zod@3.24.3)
       deepmerge: 4.3.1
       dotenv: 16.5.0
@@ -2722,9 +2720,9 @@ snapshots:
 
   '@opentelemetry/api@1.9.0': {}
 
-  '@playwright/test@1.50.1':
+  '@playwright/test@1.52.0':
     dependencies:
-      playwright: 1.50.1
+      playwright: 1.52.0
 
   '@rollup/rollup-android-arm-eabi@4.40.0':
     optional: true
@@ -3969,15 +3967,7 @@ snapshots:
 
   pkce-challenge@5.0.0: {}
 
-  playwright-core@1.50.1: {}
-
   playwright-core@1.52.0: {}
-
-  playwright@1.50.1:
-    dependencies:
-      playwright-core: 1.50.1
-    optionalDependencies:
-      fsevents: 2.3.2
 
   playwright@1.52.0:
     dependencies:

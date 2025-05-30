@@ -126,8 +126,18 @@ export async function setupNetworkMonitoring(
           try {
             const text = await response.text();
             message += `\n    Response: ${text.slice(0, 200)}${text.length > 200 ? '...' : ''}`;
+            await route.fulfill({
+              body: text,
+              headers: response.headers(),
+              status: status,
+              contentType: response.headers()['content-type'],
+            });
+            networkMessages.push(message);
+            return;
           } catch {
             message += '\n    Could not read response body';
+            await route.abort();
+            return;
           }
         }
 
@@ -161,6 +171,7 @@ export async function captureScreenshot(
   options: SharedBrowserCommandOptions
 ): Promise<void> {
   if (options.screenshot) {
+    console.log('capturing screenshot', options.screenshot);
     await page.screenshot({ path: options.screenshot, fullPage: true });
   }
 }
