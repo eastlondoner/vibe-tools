@@ -202,8 +202,15 @@ export class OpenCommand implements Command {
         }
 
         // Set up console and network monitoring
+        if (url === 'current' && options.connectTo) {
+          console.log(
+            `Setting up console and network monitoring. In some cases this can cause chrome to crash. Use --no-console and --no-network to disable.`
+          );
+        }
         consoleMessages = await setupConsoleLogging(page, options);
+        debug(`Console messages: ${consoleMessages.length}`, consoleMessages);
         networkMessages = await setupNetworkMonitoring(page, options);
+        debug(`Network messages: ${networkMessages.length}`, networkMessages);
 
         // Handle navigation based on URL type
         if (url === 'current' && options.connectTo) {

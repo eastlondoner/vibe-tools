@@ -296,7 +296,6 @@ export function overrideStagehandInit() {
   Stagehand.prototype.init = async function myinit(
     initOptions: undefined | StagehandInitOverride
   ): Promise<{ debugUrl: string; sessionUrl: string; sessionId: string }> {
-    console.log('initOverride', initOptions);
     try {
       const { StagehandPage, StagehandContext } = await patchStagehand();
       const viewport = initOptions?.viewport?.toLowerCase().split('x').map(Number);
