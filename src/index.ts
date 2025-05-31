@@ -52,6 +52,8 @@ type CLIStringOption =
   | 'wait'
   | 'video'
   | 'evaluate'
+  | 'startUrl'
+  | 'copyProfile'
   // Plan options
   | 'fileProvider'
   | 'thinkingProvider'
@@ -86,7 +88,8 @@ type CLIBooleanOption =
   | 'headless'
   | 'text'
   | 'webSearch'
-  | 'withDiff';
+  | 'withDiff'
+  | 'copyDefaultProfile';
 
 // Main CLI options interface
 interface CLIOptions {
@@ -125,6 +128,9 @@ interface CLIOptions {
   network?: boolean;
   headless?: boolean;
   text?: boolean;
+  startUrl?: string;
+  copyProfile?: string;
+  copyDefaultProfile?: boolean;
 
   // Plan options
   fileProvider?: string;
@@ -183,6 +189,9 @@ const OPTION_KEYS: Record<string, CLIOptionKey> = {
   network: 'network',
   headless: 'headless',
   text: 'text',
+  starturl: 'startUrl',
+  copyprofile: 'copyProfile',
+  copydefaultprofile: 'copyDefaultProfile',
 
   // Plan options
   fileprovider: 'fileProvider',
@@ -215,6 +224,7 @@ const BOOLEAN_OPTIONS = new Set<CLIBooleanOption>([
   'text',
   'webSearch',
   'withDiff',
+  'copyDefaultProfile',
 ]);
 
 // Set of option keys that require numeric values
@@ -329,6 +339,8 @@ async function main() {
     wait: undefined,
     video: undefined,
     evaluate: undefined,
+    startUrl: undefined,
+    copyProfile: undefined,
     // Plan command options
     fileProvider: undefined,
     thinkingProvider: undefined,
@@ -348,6 +360,7 @@ async function main() {
     debug: undefined,
     quiet: undefined,
     json: undefined,
+    copyDefaultProfile: undefined,
     reasoningEffort: undefined,
     subdir: undefined,
     withDoc: undefined,

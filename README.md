@@ -476,6 +476,24 @@ vibe-tools browser extract "Get article text" --url "https://example.com/blog" -
 vibe-tools browser extract "Get API responses" --url "https://example.com/api-test" --network
 ```
 
+5. `mac-chrome` - Start a Chrome instance with remote debugging (macOS only):
+
+```bash
+# Launch Chrome with remote debugging on port 9222
+vibe-tools browser mac-chrome
+
+# Launch with debug output to see the full command
+vibe-tools browser mac-chrome --debug
+```
+
+This command:
+- Only works on macOS (shows clear error on other platforms)
+- Creates an isolated temporary profile for clean testing
+- Launches Chrome with comprehensive automation-optimized flags
+- Enables remote debugging on port 9222
+- Provides connection instructions for Playwright/CDP tools
+- Uses proven Chrome configuration for reliable automation
+
 #### Browser Command Options
 
 All browser commands (`open`, `act`, `observe`, `extract`) support these options:

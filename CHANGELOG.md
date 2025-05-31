@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.61.6] - 2025-05-31
+
+### Added
+
+- **Browser Mac Chrome Command**: Added `vibe-tools browser mac-chrome` command to start a Chrome instance with remote debugging on macOS.
+  - Only supported on macOS systems - provides clear error message on other platforms
+  - Launches Chrome with comprehensive debugging flags optimized for automation
+  - Creates isolated temporary profile for clean testing environment
+  - Enables remote debugging on port 9222 for Playwright/CDP connections
+  - Includes extensive Chrome flags from proven automation configurations
+  - Provides clear instructions for connecting with Playwright after launch
+
 ## [0.61.5] - 2025-05-23
 
 ### Improved

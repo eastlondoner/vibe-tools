@@ -35,3 +35,15 @@ export interface OpenCommandOptions extends SharedBrowserCommandOptions {
   /** Wait condition after page load (time duration or CSS selector) */
   wait?: string;
 }
+
+/**
+ * Options specific to the browser mac-chrome command
+ */
+export interface MacChromeCommandOptions extends CommandOptions {
+  /** URL to open Chrome with initially */
+  startUrl?: string;
+  /** Copy the default Chrome profile to temporary directory */
+  copyDefaultProfile?: boolean;
+  /** Copy a specific Chrome profile by email to temporary directory */
+  copyProfile?: string;
+}

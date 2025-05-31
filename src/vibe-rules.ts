@@ -84,9 +84,11 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 \`vibe-tools browser act "<instruction>" --url=<url | 'current'> [options]\` - Execute actions on a webpage using natural language instructions (e.g., \`vibe-tools browser act "Click Login" --url=https://example.com\`)
 \`vibe-tools browser observe "<instruction>" --url=<url> [options]\` - Observe interactive elements on a webpage and suggest possible actions (e.g., \`vibe-tools browser observe "interactive elements" --url=https://example.com\`)
 \`vibe-tools browser extract "<instruction>" --url=<url> [options]\` - Extract data from a webpage based on natural language instructions (e.g., \`vibe-tools browser extract "product names" --url=https://example.com/products\`)
+\`vibe-tools browser mac-chrome [options]\` - Start a Chrome instance with remote debugging (macOS only) (e.g., \`vibe-tools browser mac-chrome --debug\`)
 
 **Notes on Browser Commands:**
 - All browser commands are stateless unless --connect-to is used to connect to a long-lived interactive session. In disconnected mode each command starts with a fresh browser instance and closes it when done.
+- If you want to start a new long-lived session 
 - When using \`--connect-to\`, special URL values are supported:
   - \`current\`: Use the existing page without reloading
   - \`reload-current\`: Use the existing page and refresh it (useful in development)
