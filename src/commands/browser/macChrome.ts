@@ -132,7 +132,7 @@ export class MacChromeCommand implements Command {
           // Additional check: verify the process is actually Chrome
           if (
             command.toLowerCase().includes('chrome') ||
-            command.toLowerCase().includes('google chrome')
+            command.toLowerCase().includes('google')
           ) {
             return {
               running: true,
@@ -222,13 +222,14 @@ export class MacChromeCommand implements Command {
         yield `Continuing with temporary profile.`;
       }
     }
+    const selectedProfile = options.copyDefaultProfile ? 'Default' : options.copyProfile || 'Default';
 
     const liteFlags = [
-      '--remote-debugging-port=9222',
-      '--user-data-dir=/tmp/chrome-debug-profile',
-      '--profile-directory=Default',
-      '--no-first-run',
-      '--no-default-browser-check',
+        `--remote-debugging-port=${REMOTE_PORT}`,
+        `--user-data-dir=${TMP_DIR}`,
+        `--profile-directory=${selectedProfile}`,
+        '--no-first-run',
+        '--no-default-browser-check',
       '--disable-search-engine-choice-screen',
     ];
 
@@ -262,7 +263,7 @@ export class MacChromeCommand implements Command {
 
     // Pick which flag set to use
     const selectedFlags = options.lite ? liteFlags : [...liteFlags, ...fullFlags];
-    
+
     if (options.lite && options.debug) {
       yield 'ℹ️  Running in --lite mode (reduced Chrome flags)';
     }
