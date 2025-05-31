@@ -46,4 +46,6 @@ export interface MacChromeCommandOptions extends CommandOptions {
   copyDefaultProfile?: boolean;
   /** Copy a specific Chrome profile by email to temporary directory */
   copyProfile?: string;
+  /** Launch Chrome with only the lite flag set (faster start-up, fewer overrides) */
+  lite?: boolean;
 }

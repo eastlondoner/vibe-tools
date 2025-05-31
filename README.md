@@ -484,15 +484,19 @@ vibe-tools browser mac-chrome
 
 # Launch with debug output to see the full command
 vibe-tools browser mac-chrome --debug
+
+# Fast start-up with a minimal flag set
+vibe-tools browser mac-chrome --lite
 ```
 
 This command:
 - Only works on macOS (shows clear error on other platforms)
 - Creates an isolated temporary profile for clean testing
-- Launches Chrome with comprehensive automation-optimized flags
+- Launches Chrome with comprehensive automation-optimized flags (or minimal flags with `--lite`)
 - Enables remote debugging on port 9222
 - Provides connection instructions for Playwright/CDP tools
 - Uses proven Chrome configuration for reliable automation
+- `--lite` option launches Chrome with a reduced set of flags for quicker startup and fewer side-effects
 
 #### Browser Command Options
 

@@ -89,7 +89,8 @@ type CLIBooleanOption =
   | 'text'
   | 'webSearch'
   | 'withDiff'
-  | 'copyDefaultProfile';
+  | 'copyDefaultProfile'
+  | 'lite';
 
 // Main CLI options interface
 interface CLIOptions {
@@ -131,6 +132,7 @@ interface CLIOptions {
   startUrl?: string;
   copyProfile?: string;
   copyDefaultProfile?: boolean;
+  lite?: boolean;
 
   // Plan options
   fileProvider?: string;
@@ -192,6 +194,7 @@ const OPTION_KEYS: Record<string, CLIOptionKey> = {
   starturl: 'startUrl',
   copyprofile: 'copyProfile',
   copydefaultprofile: 'copyDefaultProfile',
+  lite: 'lite',
 
   // Plan options
   fileprovider: 'fileProvider',
@@ -225,6 +228,7 @@ const BOOLEAN_OPTIONS = new Set<CLIBooleanOption>([
   'webSearch',
   'withDiff',
   'copyDefaultProfile',
+  'lite',
 ]);
 
 // Set of option keys that require numeric values
@@ -361,6 +365,7 @@ async function main() {
     quiet: undefined,
     json: undefined,
     copyDefaultProfile: undefined,
+    lite: undefined,
     reasoningEffort: undefined,
     subdir: undefined,
     withDoc: undefined,

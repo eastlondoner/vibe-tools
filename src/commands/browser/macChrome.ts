@@ -6,10 +6,10 @@ import { execAsync } from '../../utils/execAsync';
 import type { MacChromeCommandOptions } from './browserOptions';
 
 export class MacChromeCommand implements Command {
-  private async discoverChromeProfiles(): Promise<Array<{profile: string, email: string}>> {
+  private async discoverChromeProfiles(): Promise<Array<{ profile: string; email: string }>> {
     const CHROME_DIR = join(homedir(), 'Library', 'Application Support', 'Google', 'Chrome');
-    const profiles: Array<{profile: string, email: string}> = [];
-    
+    const profiles: Array<{ profile: string; email: string }> = [];
+
     try {
       // Check Default profile
       const defaultDir = join(CHROME_DIR, 'Default');
@@ -17,7 +17,7 @@ export class MacChromeCommand implements Command {
         const email = await this.getProfileEmail(defaultDir);
         profiles.push({ profile: 'Default', email });
       }
-      
+
       // Check Profile* directories
       const chromeContents = await fs.readdir(CHROME_DIR);
       for (const item of chromeContents) {
@@ -33,7 +33,7 @@ export class MacChromeCommand implements Command {
     } catch {
       // Chrome directory doesn't exist or can't be read
     }
-    
+
     return profiles;
   }
 
@@ -43,7 +43,7 @@ export class MacChromeCommand implements Command {
       if (!existsSync(preferencesPath)) {
         return '(no email found)';
       }
-      
+
       const preferences = await fs.readFile(preferencesPath, 'utf-8');
       const emailMatch = preferences.match(/"email":\s*"([^"]+)"/);
       return emailMatch ? emailMatch[1] : '(no email found)';
@@ -55,11 +55,11 @@ export class MacChromeCommand implements Command {
   private async copyProfile(sourceProfile: string, tempDir: string): Promise<void> {
     const CHROME_DIR = join(homedir(), 'Library', 'Application Support', 'Google', 'Chrome');
     const sourceDir = join(CHROME_DIR, sourceProfile);
-    
+
     if (!existsSync(sourceDir)) {
       throw new Error(`Profile ${sourceProfile} not found`);
     }
-    
+
     // Copy essential Chrome files
     const filesToCopy = ['Local State', 'Secure Preferences', 'First Run', 'Consent To Send Stats'];
     for (const file of filesToCopy) {
@@ -73,7 +73,7 @@ export class MacChromeCommand implements Command {
         // Skip files that can't be copied
       }
     }
-    
+
     // Copy component_crx_cache directory if it exists
     const componentCacheSource = join(CHROME_DIR, 'component_crx_cache');
     const componentCacheDest = join(tempDir, 'component_crx_cache');
@@ -84,27 +84,28 @@ export class MacChromeCommand implements Command {
     } catch {
       // Skip if can't copy
     }
-    
+
     // Copy the selected profile
     const profileDestDir = join(tempDir, sourceProfile);
     await fs.cp(sourceDir, profileDestDir, { recursive: true });
   }
 
-  private async checkPortInUse(port: number): Promise<{inUse: boolean, processInfo?: string}> {
+  private async checkPortInUse(port: number): Promise<{ inUse: boolean; processInfo?: string }> {
     try {
       const { stdout } = await execAsync(`lsof -i :${port}`);
       if (stdout.trim()) {
         // Parse lsof output to get process information
         const lines = stdout.trim().split('\n');
-        if (lines.length > 1) { // Skip header line
+        if (lines.length > 1) {
+          // Skip header line
           const processLine = lines[1];
           const parts = processLine.split(/\s+/);
           const command = parts[0];
           const pid = parts[1];
           const user = parts[2];
-          return { 
-            inUse: true, 
-            processInfo: `${command} (PID: ${pid}, User: ${user})` 
+          return {
+            inUse: true,
+            processInfo: `${command} (PID: ${pid}, User: ${user})`,
           };
         }
       }
@@ -115,7 +116,9 @@ export class MacChromeCommand implements Command {
     }
   }
 
-  private async verifyChromeIsRunning(port: number): Promise<{running: boolean, processInfo?: string}> {
+  private async verifyChromeIsRunning(
+    port: number
+  ): Promise<{ running: boolean; processInfo?: string }> {
     try {
       const { stdout } = await execAsync(`lsof -i :${port}`);
       if (stdout.trim()) {
@@ -125,12 +128,15 @@ export class MacChromeCommand implements Command {
           const parts = processLine.split(/\s+/);
           const command = parts[0];
           const pid = parts[1];
-          
+
           // Additional check: verify the process is actually Chrome
-          if (command.toLowerCase().includes('chrome') || command.toLowerCase().includes('google chrome')) {
-            return { 
-              running: true, 
-              processInfo: `${command} (PID: ${pid})` 
+          if (
+            command.toLowerCase().includes('chrome') ||
+            command.toLowerCase().includes('google chrome')
+          ) {
+            return {
+              running: true,
+              processInfo: `${command} (PID: ${pid})`,
             };
           }
         }
@@ -142,12 +148,14 @@ export class MacChromeCommand implements Command {
   }
 
   private async wait(seconds: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
   }
 
   async *execute(query: string, options: MacChromeCommandOptions): CommandGenerator {
-    if(query.trim() !== '') {
-      throw new Error('This command does not accept a query. Supported options are --start-url, --copy-default-profile and --copy-profile');
+    if (query.trim() !== '') {
+      throw new Error(
+        'This command does not accept a query. Supported options are --start-url, --copy-default-profile, --copy-profile and --lite'
+      );
     }
 
     if (platform() !== 'darwin') {
@@ -163,7 +171,9 @@ export class MacChromeCommand implements Command {
     yield `Checking if port ${REMOTE_PORT} is available...`;
     const portCheck = await this.checkPortInUse(REMOTE_PORT);
     if (portCheck.inUse) {
-      throw new Error(`Port ${REMOTE_PORT} is already in use by process: ${portCheck.processInfo}. Please close the existing process or use a different port.`);
+      throw new Error(
+        `Port ${REMOTE_PORT} is already in use by process: ${portCheck.processInfo}. Please close the existing process or use a different port.`
+      );
     }
     yield `Port ${REMOTE_PORT} is available.`;
 
@@ -176,8 +186,6 @@ export class MacChromeCommand implements Command {
       yield `Warning: Could not clean temporary directory: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
 
-    let selectedProfile = 'Default'; // Default profile directory name
-    
     // Handle profile copying options
     if (options.copyDefaultProfile) {
       yield `Copying default Chrome profile...`;
@@ -192,15 +200,14 @@ export class MacChromeCommand implements Command {
       yield `Looking for Chrome profile with email: ${options.copyProfile}...`;
       try {
         const profiles = await this.discoverChromeProfiles();
-        const matchingProfile = profiles.find(p => 
+        const matchingProfile = profiles.find((p) =>
           p.email.toLowerCase().includes(options.copyProfile!.toLowerCase())
         );
-        
+
         if (matchingProfile) {
           yield `Found profile: ${matchingProfile.profile} (${matchingProfile.email})`;
           yield `Copying profile...`;
           await this.copyProfile(matchingProfile.profile, TMP_DIR);
-          selectedProfile = matchingProfile.profile;
           yield `Profile copied successfully.`;
         } else {
           yield `Profile with email "${options.copyProfile}" not found.`;
@@ -216,13 +223,16 @@ export class MacChromeCommand implements Command {
       }
     }
 
-    // Build CLI arguments based on the gist
-    const flags = [
-      `--remote-debugging-port=${REMOTE_PORT}`,
-      `--user-data-dir=${TMP_DIR}`,
-      `--profile-directory=${selectedProfile}`,
+    const liteFlags = [
+      '--remote-debugging-port=9222',
+      '--user-data-dir=/tmp/chrome-debug-profile',
+      '--profile-directory=Default',
       '--no-first-run',
       '--no-default-browser-check',
+      '--disable-search-engine-choice-screen',
+    ];
+
+    const fullFlags = [
       '--disable-field-trial-config',
       '--disable-background-timer-throttling',
       '--disable-backgrounding-occluded-windows',
@@ -243,17 +253,24 @@ export class MacChromeCommand implements Command {
       '--enable-automation',
       '--no-service-autorun',
       '--export-tagged-pdf',
-      '--disable-search-engine-choice-screen',
       '--unsafely-disable-devtools-self-xss-warnings',
       '--enable-logging',
       '--v=3',
       `--log-file=${process.cwd()}/chrome_debug.log`,
       `--crash-dumps-dir=${process.cwd()}/chrome_crash_reports`,
-      startUrl
-    ].join(' ');
+    ];
+
+    // Pick which flag set to use
+    const selectedFlags = options.lite ? liteFlags : [...liteFlags, ...fullFlags];
+    
+    if (options.lite && options.debug) {
+      yield 'ℹ️  Running in --lite mode (reduced Chrome flags)';
+    }
+
+    const flags = [...selectedFlags, startUrl].join(' ');
 
     const command = `open -a "Google Chrome" --args ${flags}`;
-    
+
     yield `Launching Chrome with remote debugging...`;
     if (options.debug) {
       yield `Command: ${command}`;
@@ -263,18 +280,20 @@ export class MacChromeCommand implements Command {
       const { stdout, stderr } = await execAsync(command);
       if (stdout) yield `stdout: ${stdout}`;
       if (stderr) yield `stderr: ${stderr}`;
-      
+
       yield `Chrome launch command completed. Waiting 3 seconds for Chrome to initialize...`;
       await this.wait(3);
-      
+
       // Verify Chrome is actually running and listening on the debug port
       yield `Verifying Chrome is running and listening on port ${REMOTE_PORT}...`;
       const verification = await this.verifyChromeIsRunning(REMOTE_PORT);
-      
+
       if (!verification.running) {
-        throw new Error(`Chrome failed to start properly or is not listening on port ${REMOTE_PORT}. Please check the Chrome debug logs at ${process.cwd()}/chrome_debug.log for more details.`);
+        throw new Error(
+          `Chrome failed to start properly or is not listening on port ${REMOTE_PORT}. Please check the Chrome debug logs at ${process.cwd()}/chrome_debug.log for more details.`
+        );
       }
-      
+
       yield `✓ Chrome is running successfully: ${verification.processInfo}`;
       yield `✓ Chrome is listening on port ${REMOTE_PORT}`;
       yield `You can now connect to it using Playwright: chromium.connectOverCDP('http://localhost:${REMOTE_PORT}')`;
@@ -287,4 +306,4 @@ export class MacChromeCommand implements Command {
       }
     }
   }
-} 
+}

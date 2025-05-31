@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.61.7] - 2025-01-XX
+
+### Added
+
+- **Browser Mac-Chrome Lite Mode**: Added `--lite` flag to `vibe-tools browser mac-chrome` command for faster startup and minimal side-effects.
+  - Launches Chrome with only essential debugging flags for quicker initialization
+  - Reduces automation overhead while maintaining remote debugging capability
+  - Ideal for lightweight testing scenarios where full automation flags aren't needed
+
 ## [0.61.6] - 2025-05-31
 
 ### Added
