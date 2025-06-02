@@ -242,7 +242,7 @@ Use Cursor Composer in agent mode with command execution (not sure what this mea
 
 - `vibe-tools ask` allows direct querying of any model from any provider. It's best for simple questions where you want to use a specific model or compare responses from different models.
 - `vibe-tools web` uses an AI teammate with web search capability to answer questions. `web` is best for finding up-to-date information from the web that is not specific to the repository such as how to use a library to search for known issues and error messages or to get suggestions on how to do something. Web is a teammate who knows tons of stuff and is always up to date.
-- `vibe-tools repo` uses an AI teammate with large context window capability to answer questions. `repo` sends the entire repo as context so it is ideal for questions about how things work or where to find something, it is also great for code review, debugging and planning. is a teammate who knows the entire codebase inside out and understands how everything works together.
+- `vibe-tools repo` uses an AI teammate with large context window capability to answer questions. `repo` sends the entire repo as context so it is ideal for questions about how things work or where to find something, it is also great for code review, debugging and planning. With the `--with-diff` flag, it can also include git diff information for focused code review that keeps the AI focused on current changes while maintaining full codebase understanding. is a teammate who knows the entire codebase inside out and understands how everything works together.
 - `vibe-tools plan` uses an AI teammate with reasoning capability to plan complex tasks. Plan uses a two step process. First it does a whole repo search with a large context window model to find relevant files. Then it sends only those files as context to a thinking model to generate a plan it is great for planning complex tasks and for debugging and refactoring. Plan is a teammate who is really smart on a well defined problem, although doesn't consider the bigger picture.
 - `vibe-tools doc` uses an AI teammate with large context window capability to generate documentation for local or github hosted repositories by sending the entire repo as context. `doc` can be given precise documentation tasks or can be asked to generate complete docs from scratch it is great for generating docs updates or for generating local documentation for a libary or API that you use! Doc is a teammate who is great at summarising and explaining code, in this repo or in any other repo!
 - `vibe-tools browser` uses an AI teammate with browser control (aka operator) capability to operate web browsers. `browser` can operate in a hidden (headless) mode to invisibly test and debug web apps or it can be used to connect to an existing browser session to interactively share your browser with Cursor agent it is great for testing and debugging web apps and for carrying out any task that can be done in a browser such as reading information from a bug ticket or even filling out a form. Browser is a teammate who can help you test and debug web apps, and can share control of your browser to perform small browser-based tasks.
@@ -271,6 +271,10 @@ Note: in most cases you can say "ask Perplexity" instead of "use vibe-tools web"
 "Use vibe-tools repo to analyze how authentication is implemented in the Next.js repository. Use --from-github=vercel/next.js."
 
 "Use vibe-tools repo to explain this React component with documentation from the official React docs. Use --with-doc=https://react.dev/reference/react/useState"
+
+"Use vibe-tools repo to review my recent changes and suggest improvements. Use --with-diff to include the git diff."
+
+"Use vibe-tools repo to check if my changes are compatible with the main branch. Use --with-diff --base=main."
 
 Note: in most cases you can say "ask Gemini" instead of "use vibe-tools repo" and it will work the same.
 
@@ -991,6 +995,8 @@ Repository command specific options:
 - `--from-github=<GitHub username>/<repository name>[@<branch>]`: Analyze a remote GitHub repository without cloning it locally
 - `--subdir=<path>`: Analyze a specific subdirectory instead of the entire repository
 - `--with-doc=<doc_url>`: Fetch content from one or more web URLs and include it as context. Can be specified multiple times.
+- `--with-diff`: Include git diff information along with repository context for focused code review
+- `--base=<branch>`: Specify base branch for diff comparison (used with --with-diff)
 
 Plan command specific options:
 
@@ -1193,6 +1199,15 @@ vibe-tools repo "Help me implement useState in my component" --with-doc=https://
 
 # Include multiple documents as context
 vibe-tools repo "Summarize these two specifications" --with-doc=https://example.com/spec1.md --with-doc=https://example.com/spec2.pdf
+
+# Git diff integration for code review
+vibe-tools repo "Review my recent changes for potential issues" --with-diff
+
+# Compare changes against specific branch
+vibe-tools repo "Check compatibility with main branch" --with-diff --base=main
+
+# Combine diff with external documentation for comprehensive review
+vibe-tools repo "Does my implementation follow the API specification?" --with-diff --with-doc=https://api.example.com/docs
 ```
 
 #### Xcode Command Examples

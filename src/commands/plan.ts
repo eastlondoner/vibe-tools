@@ -361,6 +361,7 @@ export class PlanCommand implements Command {
         const repomixConfig = await loadFileConfigWithOverrides(repomixDirectory, {
           output: {
             filePath: tempFile,
+            compress: false, // always uncompressed on plan
           },
           include: filePaths,
         });

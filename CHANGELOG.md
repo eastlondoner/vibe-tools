@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file.
   - Reduces automation overhead while maintaining remote debugging capability
   - Ideal for lightweight testing scenarios where full automation flags aren't needed
 
+- **Git Diff Integration for Repo Command**: Added `--with-diff` flag to `vibe-tools repo` command for enhanced code review capabilities.
+  - Includes git diff information along with full repository context from repomix
+  - Keeps AI focus on current scope of changes while maintaining full codebase understanding
+  - Added `--base` flag to specify different branch for diff comparison
+  - Works with external documentation via `--with-doc` flag for comprehensive analysis
+
 ## [0.61.6] - 2025-05-31
 
 ### Added
