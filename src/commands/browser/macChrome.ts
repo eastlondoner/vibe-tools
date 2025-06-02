@@ -222,14 +222,16 @@ export class MacChromeCommand implements Command {
         yield `Continuing with temporary profile.`;
       }
     }
-    const selectedProfile = options.copyDefaultProfile ? 'Default' : options.copyProfile || 'Default';
+    const selectedProfile = options.copyDefaultProfile
+      ? 'Default'
+      : options.copyProfile || 'Default';
 
     const liteFlags = [
-        `--remote-debugging-port=${REMOTE_PORT}`,
-        `--user-data-dir=${TMP_DIR}`,
-        `--profile-directory=${selectedProfile}`,
-        '--no-first-run',
-        '--no-default-browser-check',
+      `--remote-debugging-port=${REMOTE_PORT}`,
+      `--user-data-dir=${TMP_DIR}`,
+      `--profile-directory=${selectedProfile}`,
+      '--no-first-run',
+      '--no-default-browser-check',
       '--disable-search-engine-choice-screen',
     ];
 
