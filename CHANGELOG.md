@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.61.7] - 2025-01-XX
+## [0.62.4] - 2025-06-02
+
+### Changed
+
+- Updated release process and documentation
 
 ### Added
 
@@ -17,7 +21,7 @@ All notable changes to this project will be documented in this file.
   - Added `--base` flag to specify different branch for diff comparison
   - Works with external documentation via `--with-doc` flag for comprehensive analysis
 
-## [0.61.6] - 2025-05-31
+## [0.62.3] - 2025-05-31
 
 ### Added
 
@@ -29,7 +33,7 @@ All notable changes to this project will be documented in this file.
   - Includes extensive Chrome flags from proven automation configurations
   - Provides clear instructions for connecting with Playwright after launch
 
-## [0.61.5] - 2025-05-23
+## [0.62.0] - 2025-05-23
 
 ### Improved
 
