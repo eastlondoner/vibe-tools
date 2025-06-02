@@ -245,11 +245,17 @@ export class ActCommand implements Command {
         });
         const actPromise = stagehand.page.observe(instruct).then(async (r) => {
           const results: ActResult[] = [];
+          if (r.length === 0) {
+            throw new Error(
+              `Unable to determine how to carry out the action ${instruction} on the current page. Please try again with a more specific instruction.`
+            );
+          }
           for (const observation of r) {
             this.debug('Acting on observation', observation);
             const stepResult = await stagehand.page.act(observation);
             results.push(stepResult);
           }
+          return results;
         });
         const result = await Promise.race([actPromise, totalTimeoutPromise, stepTimeoutPromise]);
         console.log('step result', result);
