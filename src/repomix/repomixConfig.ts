@@ -22,7 +22,7 @@ export const ignorePatterns = [
   '**/package-lock.*',
   '**/pnpm-lock.*',
   '**/*.tsbuildinfo',
-  '**/certdata.txt'
+  '**/certdata.txt',
 ];
 
 export const includePatterns = [

@@ -207,9 +207,8 @@ export class ExtractCommand implements Command {
   ): Promise<unknown> {
     const extractionTimeouts: ReturnType<typeof setTimeout>[] = [];
     try {
-      const totalTimeoutPromise = new Promise(
-        (_, reject) =>
-          extractionTimeouts.push(setTimeout(() => reject(new Error('Extraction timeout')), timeout))
+      const totalTimeoutPromise = new Promise((_, reject) =>
+        extractionTimeouts.push(setTimeout(() => reject(new Error('Extraction timeout')), timeout))
       );
 
       if (evaluate) {

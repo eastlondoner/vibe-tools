@@ -438,7 +438,13 @@ export class RepoCommand implements Command {
 
 async function analyzeRepository(
   provider: BaseModelProvider,
-  props: { query: string; repoContext: string; cursorRules: string; docContent: string; diffContent?: string },
+  props: {
+    query: string;
+    repoContext: string;
+    cursorRules: string;
+    docContent: string;
+    diffContent?: string;
+  },
   options: Omit<ModelOptions, 'systemPrompt'> & { model: string } // Expect partial options + model
 ): Promise<string> {
   const { query, repoContext, cursorRules, docContent, diffContent } = props;
