@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
   - Browser instances remain open and functional after command completion when using `--connect-to`
   - Improved reliability for browser automation workflows that reuse existing Chrome instances
 
+
 ## [0.62.4] - 2025-06-02
 
 ### Changed
