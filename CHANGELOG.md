@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.62.5] - 2025-06-04
+
+### Fixed
+
+- **Browser Open Command Timeout**: Fixed timeout issue when using `vibe-tools browser open --connect-to` with existing Chrome instances.
+  - Commands now complete successfully without hanging when connecting to existing browser sessions
+  - Browser instances remain open and functional after command completion when using `--connect-to`
+  - Improved reliability for browser automation workflows that reuse existing Chrome instances
+
 ## [0.62.4] - 2025-06-02
 
 ### Changed

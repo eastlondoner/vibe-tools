@@ -149,4 +149,32 @@ Use vibe-tools to perform a sequence of actions on a page (click a button, enter
 - AI agent correctly identifies how to perform sequential actions
 - Output indicates that all actions were performed successfully
 - Actions are performed in the correct sequence
-- Command completes successfully 
+- Command completes successfully
+
+### Scenario 11: Connect to Existing Browser Instance with Screenshot (Edge Case)
+**Tags:** connect-to, screenshot, edge-case
+**Task Description:**
+First, start Chrome in debug mode manually:
+```
+open -a "Google Chrome" --args --remote-debugging-port=9222 --no-first-run --no-default-browser-check --user-data-dir="/tmp/chrome-remote-debugging"
+```
+
+Then use vibe-tools to connect to the existing Chrome instance on port 9222, open a webpage (like https://example.com), and take a screenshot. The command should complete successfully without timing out.
+
+**Expected Behavior:**
+- The AI agent should figure out how to connect to an existing Chrome instance using the --connect-to parameter
+- The page should open successfully in the existing browser
+- A screenshot should be captured and saved
+- The command should complete without timing out
+- The browser instance should remain open after the command completes
+
+**Success Criteria:**
+- AI agent correctly identifies how to use the --connect-to parameter with a port number
+- AI agent correctly includes the --screenshot parameter with a file path
+- Output indicates successful connection to existing Chrome instance
+- Output confirms the page was opened successfully
+- Output confirms the screenshot was saved
+- Command completes within a reasonable time (under 30 seconds)
+- No timeout errors are displayed
+- The existing Chrome browser remains open and functional after the command
+- The screenshot file is created and contains the expected page content 

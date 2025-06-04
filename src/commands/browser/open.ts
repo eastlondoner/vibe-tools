@@ -72,6 +72,7 @@ export class OpenCommand implements Command {
 
   async *execute(query: string, options: OpenCommandOptions): CommandGenerator {
     const debug = options.debug ? (...args: any[]) => console.log(...args) : (...args: any[]) => {};
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     try {
       // Check for Playwright availability first
@@ -247,6 +248,12 @@ export class OpenCommand implements Command {
           }
         }
 
+        // Clear any pending timeouts
+        for (const timeout of timeouts) {
+          clearTimeout(timeout);
+        }
+        timeouts.length = 0;
+
         // Output console and network messages
         for (const message of outputMessages(consoleMessages, networkMessages, options)) {
           yield message;
@@ -267,17 +274,30 @@ export class OpenCommand implements Command {
           yield `Screenshot saved to ${options.screenshot}\n`;
         }
       } catch (error) {
+        // Clear any pending timeouts on error
+        for (const timeout of timeouts) {
+          clearTimeout(timeout);
+        }
+        timeouts.length = 0;
         yield `Browser command error: ${error instanceof Error ? error.message : 'Unknown error'}`;
       } finally {
+        // Clear any remaining timeouts
+        for (const timeout of timeouts) {
+          clearTimeout(timeout);
+        }
+        timeouts.length = 0;
+        
         if (videoPath && page) {
           const videoMessage = await stopVideoRecording(page, videoPath);
           if (videoMessage) {
             yield videoMessage;
           }
         }
-        if (browser) {
+        if (browser && !options.connectTo) {
           await browser.close();
           yield 'Browser closed.\n';
+        } else if (options.connectTo) {
+          yield 'Keeping browser open (connected to existing instance).\n';
         }
       }
     } catch (error) {
