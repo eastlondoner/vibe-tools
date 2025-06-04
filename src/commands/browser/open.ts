@@ -286,7 +286,7 @@ export class OpenCommand implements Command {
           clearTimeout(timeout);
         }
         timeouts.length = 0;
-        
+
         if (videoPath && page) {
           const videoMessage = await stopVideoRecording(page, videoPath);
           if (videoMessage) {
