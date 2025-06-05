@@ -12,11 +12,15 @@ import { checkPackageVersion, getCurrentVersion } from './utils/versionUtils';
 import type { CommandOptions, Provider } from './types';
 import { reasoningEffortSchema } from './types';
 import { promises as fsPromises } from 'node:fs';
+import util from 'node:util';
 import consola from 'consola';
 import { spawn } from 'node:child_process';
 import { startCommand, updateCommandState, recordError, endCommand } from './telemetry/index';
 // Get the directory name of the current module
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// ensure that console logs print json to arbitrary depth
+util.inspect.defaultOptions.depth = null;
 
 // Helper function to normalize argument keys
 function normalizeArgKey(key: string): string {
