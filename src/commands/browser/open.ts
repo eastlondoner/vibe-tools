@@ -297,7 +297,7 @@ export class OpenCommand implements Command {
           await browser.close();
           yield 'Browser closed.\n';
         } else if (options.connectTo) {
-          yield 'Keeping browser open (connected to existing instance).\n';
+          await browser?.close();
         }
       }
     } catch (error) {
