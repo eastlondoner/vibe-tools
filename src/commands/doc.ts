@@ -263,7 +263,7 @@ export class DocCommand implements Command {
     yield `Trying provider: ${provider}\n`;
     const providerInstance = createProvider(provider);
 
-    const model = options?.model || getDefaultModel(provider);
+    const model = options?.model || this.config.doc?.model || getDefaultModel(provider);
     const maxTokens = options?.maxTokens || this.config.doc?.maxTokens || defaultMaxTokens;
 
     // Enable webSearch only for Gemini models when the web flag is provided
