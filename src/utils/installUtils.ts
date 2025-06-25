@@ -170,10 +170,10 @@ export function getVibeToolsLogo(): string {
 // Collect required providers from config
 export function collectRequiredProviders(config: {
   ide?: string;
-  coding?: { provider: Provider; model: string };
-  websearch?: { provider: Provider; model: string };
-  tooling?: { provider: Provider; model: string };
-  largecontext?: { provider: Provider; model: string };
+  coding?: { provider: Provider; model?: string };
+  websearch?: { provider: Provider; model?: string };
+  tooling?: { provider: Provider; model?: string };
+  largecontext?: { provider: Provider; model?: string };
 }): Provider[] {
   const providers = new Set<Provider>();
 
@@ -405,10 +405,10 @@ export function shouldRunNonInteractive(): boolean {
 
 export function getDefaultConfigForNonInteractive(): {
   ide: string;
-  coding: { provider: Provider; model: string };
-  websearch: { provider: Provider; model: string };
-  tooling: { provider: Provider; model: string };
-  largecontext: { provider: Provider; model: string };
+  coding: { provider: Provider; model?: string };
+  websearch: { provider: Provider; model?: string };
+  tooling: { provider: Provider; model?: string };
+  largecontext: { provider: Provider; model?: string };
 } {
   // Auto-detect IDE
   const ide = isRunningInCursor() ? 'cursor' : 'cursor'; // Default to cursor
@@ -416,8 +416,7 @@ export function getDefaultConfigForNonInteractive(): {
   return {
     ide,
     coding: {
-      provider: 'gemini' as Provider,
-      model: 'gemini-2.5-flash',
+      provider: 'openai' as Provider,
     },
     websearch: {
       provider: 'perplexity' as Provider,
@@ -425,11 +424,9 @@ export function getDefaultConfigForNonInteractive(): {
     },
     tooling: {
       provider: 'anthropic' as Provider,
-      model: 'claude-sonnet-4-20250514',
     },
     largecontext: {
       provider: 'gemini' as Provider,
-      model: 'gemini-2.5-pro',
     },
   };
 }

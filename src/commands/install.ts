@@ -27,7 +27,6 @@ import {
   setupClinerules,
   handleLegacyMigration,
   shouldRunNonInteractive,
-  isRunningInCursor,
   getExistingConfig,
   getDefaultConfigForNonInteractive,
 } from '../utils/installUtils';
@@ -144,16 +143,18 @@ export class InstallCommand implements Command {
   private async createConfig(
     config: {
       ide?: string;
-      coding?: { provider: Provider; model: string };
-      websearch?: { provider: Provider; model: string };
-      tooling?: { provider: Provider; model: string };
-      largecontext?: { provider: Provider; model: string };
+      coding?: { provider: Provider; model?: string };
+      websearch?: { provider: Provider; model?: string };
+      tooling?: { provider: Provider; model?: string };
+      largecontext?: { provider: Provider; model?: string };
     },
     nonInteractive = false,
     preferLocal = false
   ): Promise<{ isLocalConfig: boolean }> {
     const finalConfig: Config = {
-      web: {},
+      web: {
+        provider: 'perplexity',
+      },
       plan: {
         fileProvider: 'gemini',
         thinkingProvider: 'openai',
@@ -162,7 +163,13 @@ export class InstallCommand implements Command {
         provider: 'gemini',
       },
       doc: {
-        provider: 'perplexity',
+        provider: 'gemini',
+      },
+      stagehand: {
+        provider: 'anthropic',
+      },
+      mcp: {
+        provider: 'anthropic',
       },
     };
 
@@ -172,19 +179,18 @@ export class InstallCommand implements Command {
     }
 
     if (config.coding) {
-      finalConfig.repo = {
-        provider: config.coding.provider,
-        model: config.coding.model,
-      };
+      finalConfig.plan!.thinkingProvider = config.coding.provider;
+      if (config.coding.model) {
+        finalConfig.plan!.thinkingModel = config.coding.model;
+      }
     }
 
     if (config.tooling) {
-      finalConfig.plan = {
-        fileProvider: config.tooling.provider,
-        thinkingProvider: config.tooling.provider,
-        fileModel: config.tooling.model,
-        thinkingModel: config.tooling.model,
-      };
+      finalConfig.mcp!.provider = config.tooling.provider;
+      finalConfig.stagehand!.provider = config.tooling.provider as 'openai' | 'anthropic';
+      if (config.tooling.model) {
+        finalConfig.mcp!.model = config.tooling.model;
+      }
     }
 
     if (config.websearch) {
@@ -196,9 +202,14 @@ export class InstallCommand implements Command {
 
     if (config.largecontext) {
       // This could apply to several commands that need large context
-      if (!finalConfig.doc) finalConfig.doc = { provider: 'perplexity' };
-      finalConfig.doc.provider = config.largecontext.provider;
-      finalConfig.doc.model = config.largecontext.model;
+      finalConfig.doc!.provider = config.largecontext.provider;
+      finalConfig.repo!.provider = config.largecontext.provider;
+      finalConfig.plan!.fileProvider = config.largecontext.provider;
+      if (config.largecontext.model) {
+        finalConfig.doc!.model = config.largecontext.model;
+        finalConfig.repo!.model = config.largecontext.model;
+        finalConfig.plan!.fileModel = config.largecontext.model;
+      }
     }
 
     // Ensure the VIBE_HOME_DIR exists
@@ -393,56 +404,17 @@ export class InstallCommand implements Command {
         if (existingConfig) {
           consola.success(`Using existing ${existingIsLocal ? 'local' : 'global'} configuration`);
 
-          // Create config from existing one, but detect IDE if running in Cursor
-          const selectedIde = isRunningInCursor() ? 'cursor' : existingConfig.ide || 'cursor';
-
-          const config = {
-            ide: selectedIde,
-            coding: existingConfig.repo
-              ? {
-                  provider: existingConfig.repo.provider as Provider,
-                  model: existingConfig.repo.model || 'gemini-2.5-flash',
-                }
-              : undefined,
-            websearch:
-              existingConfig.web && existingConfig.web.provider
-                ? {
-                    provider: existingConfig.web.provider as Provider,
-                    model: existingConfig.web.model || 'sonar-pro',
-                  }
-                : undefined,
-            tooling:
-              existingConfig.plan && existingConfig.plan.thinkingProvider
-                ? {
-                    provider: existingConfig.plan.thinkingProvider as Provider,
-                    model: existingConfig.plan.thinkingModel || 'claude-sonnet-4-20250514',
-                  }
-                : undefined,
-            largecontext:
-              existingConfig.doc && existingConfig.doc.provider
-                ? {
-                    provider: existingConfig.doc.provider as Provider,
-                    model: existingConfig.doc.model || 'gemini-2.5-pro',
-                  }
-                : undefined,
-          };
-
-          // Skip to API key setup and config creation
-          const requiredProviders = collectRequiredProviders(config);
-          yield* this.setupApiKeys(requiredProviders, true);
-          const { isLocalConfig } = await this.createConfig(config, true, existingIsLocal);
-
           // Install Playwright browsers
           if (!process.env.SKIP_PLAYWRIGHT) {
             await ensurePlaywrightBrowsers();
           }
 
           // Handle IDE rules
-          await this.handleIDERules(absolutePath, selectedIde, isLocalConfig);
+          await this.handleIDERules(absolutePath, existingConfig.ide ?? 'cursor', existingIsLocal);
 
           // Success message
           consola.success(
-            `${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(isLocalConfig ? 'Local' : 'Global')}, IDE: ${colors.cyan(selectedIde)}`
+            `${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(existingIsLocal ? 'Local' : 'Global')}, IDE: ${colors.cyan(existingConfig.ide ?? 'cursor')}`
           );
           return;
         } else {
@@ -564,10 +536,10 @@ export class InstallCommand implements Command {
       // Create initial config with defaults
       let config: {
         ide?: string;
-        coding?: { provider: Provider; model: string };
-        websearch?: { provider: Provider; model: string };
-        tooling?: { provider: Provider; model: string };
-        largecontext?: { provider: Provider; model: string };
+        coding?: { provider: Provider; model?: string };
+        websearch?: { provider: Provider; model?: string };
+        tooling?: { provider: Provider; model?: string };
+        largecontext?: { provider: Provider; model?: string };
       } = {
         ide: selectedIde,
       };
@@ -614,31 +586,33 @@ export class InstallCommand implements Command {
       else if (useExistingGlobal && existingGlobalConfig) {
         config = {
           ide: selectedIde,
-          coding: existingGlobalConfig.repo
+          coding: existingGlobalConfig.plan?.thinkingProvider
             ? {
-                provider: existingGlobalConfig.repo.provider as Provider,
-                model: existingGlobalConfig.repo.model || '',
+                provider: existingGlobalConfig.plan.thinkingProvider as Provider,
+                ...(existingGlobalConfig.plan.thinkingModel
+                  ? { model: existingGlobalConfig.plan.thinkingModel }
+                  : {}),
               }
             : undefined,
           websearch:
-            existingGlobalConfig.web && existingGlobalConfig.web.provider
+            existingGlobalConfig.web?.provider
               ? {
                   provider: existingGlobalConfig.web.provider as Provider,
-                  model: existingGlobalConfig.web.model || '',
+                  ...(existingGlobalConfig.web.model ? { model: existingGlobalConfig.web.model } : {}),
                 }
               : undefined,
           tooling:
-            existingGlobalConfig.plan && existingGlobalConfig.plan.thinkingProvider
+            existingGlobalConfig.mcp?.provider
               ? {
-                  provider: existingGlobalConfig.plan.thinkingProvider as Provider,
-                  model: existingGlobalConfig.plan.thinkingModel || '',
+                  provider: existingGlobalConfig.mcp.provider as Provider,
+                  ...(existingGlobalConfig.mcp.model ? { model: existingGlobalConfig.mcp.model } : {}),
                 }
               : undefined,
           largecontext:
-            existingGlobalConfig.doc && existingGlobalConfig.doc.provider
+            existingGlobalConfig.repo && existingGlobalConfig.repo.provider
               ? {
-                  provider: existingGlobalConfig.doc.provider as Provider,
-                  model: existingGlobalConfig.doc.model || '',
+                  provider: existingGlobalConfig.repo.provider as Provider,
+                  ...(existingGlobalConfig.repo.model ? { model: existingGlobalConfig.repo.model } : {}),
                 }
               : undefined,
         };
@@ -653,8 +627,8 @@ export class InstallCommand implements Command {
           type: 'select',
           options: [
             {
-              value: 'gemini:gemini-2.5-flash',
-              label: 'Gemini Flash 2.5',
+              value: 'gemini:gemini-2.5-pro',
+              label: 'Gemini Pro 2.5',
               hint: 'recommended',
             },
             {
@@ -673,6 +647,7 @@ export class InstallCommand implements Command {
               hint: 'expensive',
             },
             { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro' },
+            { value: 'openai:o3', label: 'OpenAI o3', hint: 'recommended' },
             { value: 'openai:gpt-4.1', label: 'GPT-4.1' },
             {
               value: 'openrouter:anthropic/claude-sonnet-4',
@@ -687,7 +662,7 @@ export class InstallCommand implements Command {
               label: 'OpenRouter - Grok 3 Mini',
             },
           ],
-          initial: 'gemini:gemini-2.5-flash',
+          initial: 'openai:o3',
         });
 
         // Web search (web command)
@@ -698,6 +673,7 @@ export class InstallCommand implements Command {
             options: [
               { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro', hint: 'recommended' },
               { value: 'perplexity:sonar', label: 'Perplexity Sonar', hint: 'recommended' },
+              { value: 'gemini:gemini-2.5-pro', label: 'Gemini Pro 2.5', hint: 'recommended' },
               { value: 'gemini:gemini-2.5-flash', label: 'Gemini Flash 2.5' },
               {
                 value: 'gemini:gemini-2.5-flash-lite-preview-06-17',
@@ -724,9 +700,10 @@ export class InstallCommand implements Command {
             {
               value: 'gemini:gemini-2.5-pro',
               label: 'Gemini Pro 2.5',
-              hint: 'recommended',
             },
             { value: 'openai:gpt-4o', label: 'GPT-4o' },
+            { value: 'openai:o3', label: 'OpenAI o3', hint: 'recommended' },
+            { value: 'openai:gpt-4.1', label: 'GPT-4.1', hint: 'recommended' },
             {
               value: 'openrouter:anthropic/claude-sonnet-4',
               label: 'OpenRouter - Claude 4 Sonnet',
@@ -750,22 +727,27 @@ export class InstallCommand implements Command {
             type: 'select',
             options: [
               {
+                value: 'gemini:gemini-2.5-flash',
+                label: 'Gemini Flash 2.5',
+                hint: 'recommended',
+              },
+              {
                 value: 'gemini:gemini-2.5-pro',
                 label: 'Gemini Pro 2.5',
-                hint: 'recommended',
+                hint: 'expensive',
               },
               {
                 value: 'anthropic:claude-sonnet-4-20250514',
                 label: 'Claude 4 Sonnet',
               },
               { value: 'perplexity:sonar', label: 'Perplexity Sonar' },
-              { value: 'openai:gpt-4o', label: 'GPT-4o' },
+              { value: 'openai:gpt-4.1', label: 'GPT-4.1', hint: 'recommended' },
               {
                 value: 'openrouter:x-ai/grok-3-beta',
                 label: 'OpenRouter - Grok 3',
               },
             ],
-            initial: 'gemini:gemini-2.5-pro',
+            initial: 'gemini:gemini-2.5-flash',
           }
         );
 
