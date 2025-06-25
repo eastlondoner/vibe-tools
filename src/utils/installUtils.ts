@@ -367,8 +367,8 @@ export function isRunningInCI(): boolean {
     process.env.DEBIAN_FRONTEND === 'noninteractive',
     process.env.NONINTERACTIVE === 'true' || process.env.NONINTERACTIVE === '1',
   ];
-  
-  return ciIndicators.some(indicator => indicator);
+
+  return ciIndicators.some((indicator) => indicator);
 }
 
 export function isRunningInCursor(): boolean {
@@ -385,7 +385,7 @@ export function getExistingConfig(): { config: Config | null; isLocal: boolean }
       consola.warn(`Warning: Error reading local config: ${error}`);
     }
   }
-  
+
   // Check global config
   if (existsSync(VIBE_HOME_CONFIG_PATH)) {
     try {
@@ -395,7 +395,7 @@ export function getExistingConfig(): { config: Config | null; isLocal: boolean }
       consola.warn(`Warning: Error reading global config: ${error}`);
     }
   }
-  
+
   return { config: null, isLocal: false };
 }
 
@@ -412,24 +412,24 @@ export function getDefaultConfigForNonInteractive(): {
 } {
   // Auto-detect IDE
   const ide = isRunningInCursor() ? 'cursor' : 'cursor'; // Default to cursor
-  
+
   return {
     ide,
     coding: {
       provider: 'gemini' as Provider,
-      model: 'gemini-2.5-flash-preview-05-20'
+      model: 'gemini-2.5-flash-preview-05-20',
     },
     websearch: {
       provider: 'perplexity' as Provider,
-      model: 'sonar-pro'
+      model: 'sonar-pro',
     },
     tooling: {
       provider: 'anthropic' as Provider,
-      model: 'claude-sonnet-4-20250514'
+      model: 'claude-sonnet-4-20250514',
     },
     largecontext: {
       provider: 'gemini' as Provider,
-      model: 'gemini-2.5-pro-preview-05-06'
-    }
+      model: 'gemini-2.5-pro-preview-05-06',
+    },
   };
 }

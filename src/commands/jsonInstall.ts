@@ -99,7 +99,10 @@ function parseJsonConfig(
 }
 
 export class JsonInstallCommand implements Command {
-  private async *setupApiKeys(requiredProviders: Provider[], nonInteractive = false): CommandGenerator {
+  private async *setupApiKeys(
+    requiredProviders: Provider[],
+    nonInteractive = false
+  ): CommandGenerator {
     try {
       loadEnv(); // Load existing env files if any
 
@@ -149,7 +152,9 @@ export class JsonInstallCommand implements Command {
 
       // Skip writing to files in non-interactive mode (CI environments)
       if (nonInteractive) {
-        consola.info(`Skipping API key file storage in non-interactive mode (using environment variables only)`);
+        consola.info(
+          `Skipping API key file storage in non-interactive mode (using environment variables only)`
+        );
         return;
       }
 
@@ -258,10 +263,12 @@ export class JsonInstallCommand implements Command {
 
     // Ask user where to save the config or use default for non-interactive
     let isLocalConfig: boolean;
-    
+
     if (nonInteractive) {
       isLocalConfig = preferLocal;
-      consola.info(`Configuration will be saved ${isLocalConfig ? 'locally' : 'globally'} (auto-detected)`);
+      consola.info(
+        `Configuration will be saved ${isLocalConfig ? 'locally' : 'globally'} (auto-detected)`
+      );
     } else {
       consola.info('');
       const answer = await consola.prompt(
@@ -338,7 +345,7 @@ export class JsonInstallCommand implements Command {
 
       // Check if we should run in non-interactive mode
       const runNonInteractive = shouldRunNonInteractive();
-      
+
       // Check telemetry status - handle non-interactive mode or prompt
       const currentTelemetryStatus = isTelemetryEnabled();
 

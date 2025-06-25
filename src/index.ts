@@ -39,17 +39,20 @@ function detectPackageManager(): string {
   try {
     // Resolve the actual path of the vibe-tools executable
     const resolvedFilename = resolveSymlink(__filename);
-    
+
     // Check for bun
     if (resolvedFilename.includes('/.bun/install/global/')) {
       return 'bun';
     }
-    
+
     // Check for pnpm
-    if (resolvedFilename.includes('/pnpm/vibe-tools') || resolvedFilename.endsWith('/pnpm/vibe-tools')) {
+    if (
+      resolvedFilename.includes('/pnpm/vibe-tools') ||
+      resolvedFilename.endsWith('/pnpm/vibe-tools')
+    ) {
       return 'pnpm';
     }
-    
+
     // Check PNPM_HOME environment variable
     if (process.env.PNPM_HOME) {
       const pnpmHomePath = resolveSymlink(process.env.PNPM_HOME);
@@ -57,12 +60,12 @@ function detectPackageManager(): string {
         return 'pnpm';
       }
     }
-    
+
     // Check for yarn
     if (resolvedFilename.includes('/yarn/global/')) {
       return 'yarn';
     }
-    
+
     // Default to npm
     return 'npm';
   } catch {
@@ -585,7 +588,7 @@ async function main() {
       // Detect package manager based on environment or ask user
       const runNonInteractive = shouldRunNonInteractive();
       let selectedPackageManager: string;
-      
+
       if (runNonInteractive) {
         selectedPackageManager = detectPackageManager();
         consola.info(`Auto-detected package manager: ${selectedPackageManager}`);
@@ -594,7 +597,6 @@ async function main() {
           type: 'select',
           options: ['npm', 'bun', 'yarn', 'pnpm'],
           initial: detectPackageManager(), // Use detection as default suggestion
-
         });
       }
 
@@ -676,7 +678,7 @@ async function main() {
           if (command === 'install') {
             const isNonInteractive = shouldRunNonInteractive();
             let proceedWithInstall: boolean;
-            
+
             if (isNonInteractive) {
               proceedWithInstall = true;
               consola.info('Non-interactive mode: Automatically proceeding with install...');
@@ -688,7 +690,7 @@ async function main() {
                 initial: false, // Default to not re-running install actions
               });
             }
-            
+
             if (proceedWithInstall) {
               consola.info('Proceeding with original install command...');
               const rerunProcess = spawn('vibe-tools', originalArgs, {
