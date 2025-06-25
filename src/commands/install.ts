@@ -2,7 +2,7 @@ import type { Command, CommandGenerator, CommandOptions, Provider, Config } from
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadEnv } from '../config';
-import { generateRules } from '../vibe-rules';
+import { generateRules, isRulesContentUpToDate } from '../vibe-rules';
 import { consola } from 'consola';
 import { colors } from 'consola/utils';
 import { JsonInstallCommand } from './jsonInstall';
@@ -281,6 +281,21 @@ export class InstallCommand implements Command {
     selectedIde: string,
     isLocalConfig: boolean
   ): Promise<void> {
+    // Check if rules file needs updating based on version
+    const updateCheck = isRulesContentUpToDate(absolutePath, selectedIde);
+
+    if (!updateCheck.needsUpdate) {
+      consola.info(
+        `${colors.cyan(selectedIde)} rules file is already up to date (${updateCheck.path})`
+      );
+      return;
+    }
+
+    // Log the reason for update if available
+    if (updateCheck.message) {
+      consola.info(`${colors.yellow('Update needed:')} ${updateCheck.message}`);
+    }
+
     // Handle IDE-specific rules setup using switch-case
     // Declare variables outside switch to avoid lexical declaration errors
     let rulesPath: string;
@@ -299,7 +314,7 @@ export class InstallCommand implements Command {
         cursorPath = join(rulesDir, 'vibe-tools.mdc');
         try {
           writeFileSync(cursorPath, generateRules('cursor'));
-          consola.success(`Rules written to ${colors.cyan(cursorPath)}`);
+          consola.success(`Rules updated to ${colors.cyan(cursorPath)}`);
         } catch (error) {
           consola.error(`${colors.red('Error writing rules for cursor:')}`, error);
           throw error;
@@ -594,25 +609,29 @@ export class InstallCommand implements Command {
                   : {}),
               }
             : undefined,
-          websearch:
-            existingGlobalConfig.web?.provider
-              ? {
-                  provider: existingGlobalConfig.web.provider as Provider,
-                  ...(existingGlobalConfig.web.model ? { model: existingGlobalConfig.web.model } : {}),
-                }
-              : undefined,
-          tooling:
-            existingGlobalConfig.mcp?.provider
-              ? {
-                  provider: existingGlobalConfig.mcp.provider as Provider,
-                  ...(existingGlobalConfig.mcp.model ? { model: existingGlobalConfig.mcp.model } : {}),
-                }
-              : undefined,
+          websearch: existingGlobalConfig.web?.provider
+            ? {
+                provider: existingGlobalConfig.web.provider as Provider,
+                ...(existingGlobalConfig.web.model
+                  ? { model: existingGlobalConfig.web.model }
+                  : {}),
+              }
+            : undefined,
+          tooling: existingGlobalConfig.mcp?.provider
+            ? {
+                provider: existingGlobalConfig.mcp.provider as Provider,
+                ...(existingGlobalConfig.mcp.model
+                  ? { model: existingGlobalConfig.mcp.model }
+                  : {}),
+              }
+            : undefined,
           largecontext:
             existingGlobalConfig.repo && existingGlobalConfig.repo.provider
               ? {
                   provider: existingGlobalConfig.repo.provider as Provider,
-                  ...(existingGlobalConfig.repo.model ? { model: existingGlobalConfig.repo.model } : {}),
+                  ...(existingGlobalConfig.repo.model
+                    ? { model: existingGlobalConfig.repo.model }
+                    : {}),
                 }
               : undefined,
         };
