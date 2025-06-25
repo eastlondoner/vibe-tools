@@ -11,21 +11,21 @@ we should be logging what is happening as well
 Automatic addition of missing provider
 
 ```
-pnpm dev ask --provider modelbox --model gemini-2.5-flash-preview-05-20 "what is today's date"
+pnpm dev ask --provider modelbox --model gemini-2.5-flash "what is today's date"
 ```
 
 Automatic Removal of -exp suffix
 
 ```
-pnpm dev ask --provider gemini --model gemini-2.5-flash-preview-05-20 "what is today's date"
+pnpm dev ask --provider gemini --model gemini-2.5-flash "what is today's date"
 ```
 
 ```
-pnpm dev ask --provider gemini --model gemini-2.5-flash-preview-05-20 "what is today's date"
+pnpm dev ask --provider gemini --model gemini-2.5-flash "what is today's date"
 ```
 
 Automatic detection of exact substring match
 
 ```
-pnpm dev doc "what does this do" --debug --provider=openrouter --model=gemini-2.5-pro-preview
+pnpm dev doc "what does this do" --debug --provider=openrouter --model=gemini-2.5-pro
 ```

@@ -23,7 +23,7 @@ export function isModelNotFoundError(error: unknown): boolean {
       typeof error.type === 'string' &&
       ['invalid_request_error', 'model_error'].includes(error.type)
     ) {
-      // For these error types, we should check if the message relates to model not found
+      // We check if the message relates to model not found
       if ('message' in error && typeof error.message === 'string') {
         return isModelNotFoundErrorMessage(error.message);
       }

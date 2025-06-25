@@ -9,12 +9,12 @@ interface ProviderInfo {
 // Default models for each provider when none specified in config
 const DEFAULT_MODELS: Record<Provider, string> = {
   perplexity: 'sonar-pro',
-  gemini: 'gemini-2.5-pro-preview',
-  openai: 'o3-mini',
+  gemini: 'gemini-2.5-pro',
+  openai: 'gpt-4.1', // largest context window (1M tokens) so best chance of working
   anthropic: 'claude-sonnet-4-20250514',
-  openrouter: 'anthropic/claude-sonnet-4',
-  modelbox: 'anthropic/claude-sonnet-4',
-  xai: 'grok-3-mini-latest',
+  openrouter: 'google/gemini-2.5-pro', // largest context window (1M tokens) so best chance of working
+  modelbox: 'google/gemini-2.5-pro', // largest context window (1M tokens) so best chance of working
+  xai: 'grok-3-latest',
 };
 
 // Provider preference order for each command type

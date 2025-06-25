@@ -417,7 +417,7 @@ export function getDefaultConfigForNonInteractive(): {
     ide,
     coding: {
       provider: 'gemini' as Provider,
-      model: 'gemini-2.5-flash-preview-05-20',
+      model: 'gemini-2.5-flash',
     },
     websearch: {
       provider: 'perplexity' as Provider,
@@ -429,7 +429,7 @@ export function getDefaultConfigForNonInteractive(): {
     },
     largecontext: {
       provider: 'gemini' as Provider,
-      model: 'gemini-2.5-pro-preview-05-06',
+      model: 'gemini-2.5-pro',
     },
   };
 }

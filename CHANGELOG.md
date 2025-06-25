@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Increased Default Max Tokens**: Raised the default maximum output tokens from 8,000 to 24,000 across all commands for more comprehensive responses.
+  - All commands now generate longer, more detailed outputs by default
+  - Anthropic provider automatically uses streaming API for requests above 21,000 tokens
+  - Users can still override with the `--max-tokens` flag for specific needs
+  - Tested and verified compatibility across all major providers (Perplexity, Gemini, xAI, OpenRouter, Anthropic)
+
+- **Updated Gemini Model Names to Stable Versions**: Migrated all Gemini 2.5 model references from preview versions to stable versions throughout the codebase.
+  - `gemini-2.5-flash-preview-*` → `gemini-2.5-flash`
+  - `gemini-2.5-pro-preview*` → `gemini-2.5-pro`
+  - Updated default models in all commands (ask, web, plan, repo, doc, youtube, mcp, test)
+  - Updated error message suggestions to recommend stable model names
+  - Updated installation prompts and configuration examples
+  - Maintained full backward compatibility - preview model names continue to work
+
+- **Updated Default Models to latest versions**:
+  - Gemini: 2.5 production models (no longer preview)
+  - Anthropic: Claude 4 series
+  - OpenAI: GPT-4o and o3 series
+
+### Added
+
+- **New Gemini Flash Lite Preview Model**: Added support for `gemini-2.5-flash-lite-preview-06-17` as a lightweight option.
+  - Available in installation prompts for coding and web search agents
+  - Added to model suggestions in error messages for Gemini, OpenRouter, and ModelBox providers
+  - Not set as default for any command - users must explicitly select it
+  - Labeled with "lightweight" hint in installation UI
+
 ## [0.62.8] - 2025-01-16
 
 ### Added

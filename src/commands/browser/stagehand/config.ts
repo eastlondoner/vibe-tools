@@ -10,7 +10,7 @@ export const availableModels = z.enum([
   'gpt-4o',
   'gpt-4.1',
   'gpt-4.1-mini',
-  'gemini-2.5-flash-preview-04-17',
+  'gemini-2.5-flash',
   'groq-llama-3.3-70b-versatile',
   'anthropic/claude-sonnet-4-20250514',
 ]);
@@ -201,7 +201,7 @@ export function getStagehandModel(
       return 'o3-mini';
     }
     case 'gemini': {
-      return 'gemini-2.5-flash-preview-04-17';
+      return 'gemini-2.5-flash';
     }
     case 'openrouter': {
       return 'groq-llama-3.3-70b-versatile';

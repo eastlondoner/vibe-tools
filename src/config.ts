@@ -1,9 +1,8 @@
 import type { Config } from './types';
 
-// 8000 is the max tokens for the perplexity models
-// most openai and anthropic models are 8192
-// so we just use 8000 for all the defaults so people have a fighting chance of not hitting the limits
-export const defaultMaxTokens = 8000;
+// 21000 is a higher default that supports modern models with larger context windows
+// while still being supported by most providers. Note the limitation of 21000 tokens comes from Anthropic who require streaming to go much higher than this.
+export const defaultMaxTokens = 21000;
 export const defaultConfig: Config = {
   ide: 'cursor', // Default IDE
   web: {
@@ -49,17 +48,17 @@ export const defaultConfig: Config = {
   // command specific configuration always overrides the provider specific
   // configuration
   //   modelbox: {
-  //     model: 'google/gemini-2.5-flash-preview-05-20', // Default model, can be overridden per command
+  //     model: 'google/gemini-2.5-flash', // Default model, can be overridden per command
   //     maxTokens: 8192,
   //  },
   //  openrouter: {
-  //   model: 'google/gemini-2.5-pro-preview'
+  //   model: 'google/gemini-2.5-pro'
   //   }
   //
   //  or
   //
   //   "gemini": {
-  //     "model": "gemini-2.5-pro-preview",
+  //     "model": "gemini-2.5-pro",
   //     "maxTokens": 10000
   //   }
   //

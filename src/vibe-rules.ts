@@ -17,7 +17,7 @@ Use the following commands to get AI assistance:
 **Ask Command Options:**
 --provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, openrouter, or xai)
 --model=<model>: Model to use (required for the ask command)
---reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
+--reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3 models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
 --with-doc=<doc_url>: Fetch content from one or more document URLs and include it as context. Can be specified multiple times (e.g., \`--with-doc=<url1> --with-doc=<url2>\`).
 
 **Implementation Planning:**
@@ -25,7 +25,7 @@ Use the following commands to get AI assistance:
 The plan command uses multiple AI models to:
 1. Identify relevant files in your codebase (using Gemini by default)
 2. Extract content from those files
-3. Generate a detailed implementation plan (using OpenAI o3-mini by default)
+3. Generate a detailed implementation plan (using OpenAI o3 by default)
 
 **Plan Command Options:**
 --fileProvider=<provider>: Provider for file identification (gemini, openai, anthropic, perplexity, modelbox, openrouter, or xai)

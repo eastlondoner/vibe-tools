@@ -50,16 +50,16 @@ export class AskCommand implements Command {
     if (!model) {
       // Default models for each provider
       const defaultModels: Record<Provider, string> = {
-        openai: 'gpt-3.5-turbo',
-        anthropic: 'claude-3-haiku-20240307',
-        gemini: 'gemini-2.5-pro-preview',
+        openai: 'gpt-4.1',
+        anthropic: 'claude-sonnet-4-20250514',
+        gemini: 'gemini-2.5-pro',
         perplexity: 'sonar-pro',
-        openrouter: 'openai/gpt-3.5-turbo',
-        modelbox: 'openai/gpt-3.5-turbo',
-        xai: 'grok-3-mini-latest',
+        openrouter: 'openai/gpt-4.1',
+        modelbox: 'openai/gpt-4.1',
+        xai: 'grok-3-latest',
       };
 
-      model = defaultModels[providerName] || 'gpt-3.5-turbo';
+      model = defaultModels[providerName] || 'gpt-4.1';
       console.log(`No model specified, using default model for ${providerName}: ${model}`);
     }
 

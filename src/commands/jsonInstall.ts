@@ -413,9 +413,16 @@ export class JsonInstallCommand implements Command {
           // If provider is gemini and model is the old name, update it
           if (
             configVal.provider.toLowerCase() === 'gemini' &&
-            configVal.model === 'gemini-2.5-pro-preview'
+            (configVal.model === 'gemini-2.5-pro-preview' ||
+              configVal.model.includes('gemini-2.5-pro-preview') ||
+              configVal.model.includes('gemini-2.5-flash-preview'))
           ) {
-            configVal.model = 'gemini-2.5-pro-preview-03-25';
+            // Update to stable model names
+            if (configVal.model.includes('flash')) {
+              configVal.model = 'gemini-2.5-flash';
+            } else {
+              configVal.model = 'gemini-2.5-pro';
+            }
           }
         }
       }

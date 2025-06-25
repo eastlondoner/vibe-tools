@@ -30,19 +30,19 @@ interface PlanCommandOptions extends CommandOptions {
 }
 
 const DEFAULT_FILE_MODELS: Record<FileProvider, string> = {
-  gemini: 'gemini-2.5-flash-preview-05-20', // largest context window (1M tokens)
-  openai: 'o3-mini', // largest context window (200k)
+  gemini: 'gemini-2.5-flash', // largest context window (1M tokens)
+  openai: 'gpt-4.1', // largest context window (1M tokens)
   perplexity: 'sonar-pro', // largest context window (200k tokens)
-  openrouter: 'google/gemini-2.5-flash-preview-05-20', // largest context window (1M tokens)
-  modelbox: 'google/gemini-2.5-flash-preview-05-20',
+  openrouter: 'google/gemini-2.5-flash', // largest context window (1M tokens)
+  modelbox: 'google/gemini-2.5-flash',
   anthropic: 'claude-sonnet-4-20250514',
 };
 
 const DEFAULT_THINKING_MODELS: Record<ThinkingProvider, string> = {
-  gemini: 'gemini-2.5-pro-preview-05-06',
-  openai: 'o3-mini',
+  gemini: 'gemini-2.5-pro',
+  openai: 'o3',
   perplexity: 'r1-1776',
-  openrouter: 'openai/o3-mini',
+  openrouter: 'openai/o3',
   modelbox: 'anthropic/claude-sonnet-4-20250514',
   anthropic: 'claude-sonnet-4-20250514',
 };

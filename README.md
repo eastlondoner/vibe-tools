@@ -224,7 +224,7 @@ In non-interactive mode, vibe-tools will:
   - Playwright browsers are automatically installed during `vibe-tools install`
   - OpenAI API key or Anthropic API key (for `act`, `extract`, and `observe` commands)
 
-`vibe-tools` uses Gemini-2.0 because it is the only good LLM with a context window that goes up to 2 million tokens - enough to handle and entire codebase in one shot. Gemini 2.0 experimental models that we use by default are currently free to use on Google and you need a Google Cloud project to create an API key.
+`vibe-tools` uses Gemini-2.5 models by default, which provide excellent performance with large context windows up to 2 million tokens - enough to handle an entire codebase in one shot. Available Gemini models include `gemini-2.5-flash` (default for speed), `gemini-2.5-pro` (default for quality), and `gemini-2.5-flash-lite-preview-06-17` (lightweight option). Gemini models are currently free to use on Google and you need a Google Cloud project to create an API key.
 
 `vibe-tools` uses Perplexity because Perplexity has the best web search api and indexes and it does not hallucinate. Perplexity Pro users can get an API key with their pro account and recieve $5/month of free credits (at time of writing). Support for Google search grounding is coming soon but so far testing has shown it still frequently hallucinates things like APIs and libraries that don't exist.
 
@@ -380,7 +380,7 @@ Note: The ask command requires both --provider and --model parameters to be spec
      ```env
      GEMINI_API_KEY="./path/to/service-account.json"
      ```
-   - This method enables access to the latest Gemini models available through Vertex AI, such as `gemini-2.5-flash-preview-05-20`.
+   - This method enables access to the latest Gemini models available through Vertex AI, such as `gemini-2.5-flash`.
 
 3. **Application Default Credentials (ADC) (Recommended for Google Cloud Environments)**
    - ADC is ideal when running `vibe-tools` within Google Cloud environments (e.g., Compute Engine, Kubernetes Engine) or for local development using `gcloud`.
@@ -791,7 +791,7 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
   // Commands
   "repo": {
     "provider": "openrouter",
-    "model": "google/gemini-2.5-pro-preview"
+            "model": "google/gemini-2.5-pro"
   },
   "doc": {
     "provider": "openrouter",
@@ -800,7 +800,7 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
   },
   "web": {
     "provider": "gemini",
-    "model": "gemini-2.5-pro-preview"
+    "model": "gemini-2.5-pro"
   },
   "plan": {
     "fileProvider": "gemini",
@@ -933,7 +933,7 @@ vibe-tools browser act "Click Login" --url "https://example.com" --model=gpt-4o
 vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-sonnet-4-20250514
 
 # Use Gemini model
-vibe-tools browser act "Click Login" --url "https://example.com" --model=gemini-2.5-flash-preview-04-17
+vibe-tools browser act "Click Login" --url "https://example.com" --model=gemini-2.5-flash
 
 # Use OpenRouter model
 vibe-tools browser act "Click Login" --url "https://example.com" --model=groq-llama-3.3-70b-versatile
@@ -966,7 +966,7 @@ If no model is specified (either on the command line or in the config), a defaul
 
 - **Anthropic:** `anthropic/claude-sonnet-4-20250514`
 - **OpenAI:** `o3-mini`
-- **Gemini:** `gemini-2.5-flash-preview-04-17`
+- **Gemini:** `gemini-2.5-flash`
 - **OpenRouter:** `groq-llama-3.3-70b-versatile`
 
 Available models depend on your configured provider (OpenAI or Anthropic) in `vibe-tools.config.json` and your API key.
@@ -1310,7 +1310,7 @@ vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --type=review
 vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" "What libraries does the tutorial use for authentication?"
 
 # Use a specific model for analysis
-vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --model=gemini-2.5-pro-preview
+vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --model=gemini-2.5-pro
 
 # Use custom analysis type for specialized insights
 vibe-tools youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --type=custom "Extract all code examples and explain them in detail"

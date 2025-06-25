@@ -36,26 +36,26 @@ Create this file in your project root to customize behavior. Here's a comprehens
 {
   "perplexity": {
     "model": "sonar-pro", // Default model for web search
-    "maxTokens": 8000 // Maximum tokens for responses
+    "maxTokens": 32000 // Maximum tokens for responses
   },
   "gemini": {
     "model": "gemini-2.5-pro-preview", // Default model for repository analysis
-    "maxTokens": 10000 // Maximum tokens for responses
+    "maxTokens": 32000 // Maximum tokens for responses
   },
   "plan": {
     "fileProvider": "gemini", // Provider for file identification
     "thinkingProvider": "openai", // Provider for plan generation
-    "fileMaxTokens": 8192, // Tokens for file identification
-    "thinkingMaxTokens": 8192 // Tokens for plan generation
+    "fileMaxTokens": 32000, // Tokens for file identification
+    "thinkingMaxTokens": 32000 // Tokens for plan generation
   },
   "repo": {
     "provider": "gemini", // Default provider for repo command
-    "maxTokens": 10000 // Maximum tokens for responses
+    "maxTokens": 32000 // Maximum tokens for responses
   },
   "doc": {
     "maxRepoSizeMB": 100, // Maximum repository size for remote docs
     "provider": "gemini", // Default provider for doc generation
-    "maxTokens": 10000 // Maximum tokens for responses
+    "maxTokens": 32000 // Maximum tokens for responses
   },
   "browser": {
     "defaultViewport": "1280x720", // Default browser window size
@@ -75,10 +75,10 @@ Create this file in your project root to customize behavior. Here's a comprehens
     "encoding": "o200k_base" // Token counting method
   },
   "openai": {
-    "maxTokens": 8000 // Will be used when provider is "openai"
+    "maxTokens": 32000 // Will be used when provider is "openai"
   },
   "anthropic": {
-    "maxTokens": 8000 // Will be used when provider is "anthropic"
+    "maxTokens": 21000 // Will be used when provider is "anthropic"
   }
 }
 ```

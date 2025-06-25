@@ -50,7 +50,7 @@ async function summarizeLLMConversationForApproach(
   provider: BaseModelProvider,
   debug: boolean
 ): Promise<string> {
-  const model = 'gemini-2.5-pro-preview';
+  const model = 'gemini-2.5-pro';
 
   // Convert messages to text format
   const conversationText = messages

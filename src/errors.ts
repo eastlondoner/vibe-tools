@@ -53,25 +53,25 @@ export class ModelNotFoundError extends ProviderError {
     // Add model suggestions based on provider
     switch (provider) {
       case 'openai':
-        message += '\nSuggested models:\n- gpt-4o\n- o3-mini';
+        message += '\nSuggested models:\n- gpt-4o\n- o3';
         break;
       case 'anthropic':
-        message += '\nSuggested models:\n- claude-3-5-opus-latest\n- claude-sonnet-4-20250514';
+        message += '\nSuggested models:\n- claude-opus-4-20250514\n- claude-sonnet-4-20250514';
         break;
       case 'gemini':
         message +=
-          '\nSuggested models:\n- gemini-2.5-flash-preview-05-20\n- gemini-2.5-pro-preview\n- gemini-2.5-pro-preview';
+          '\nSuggested models:\n- gemini-2.5-flash\n- gemini-2.5-pro\n- gemini-2.5-flash-lite-preview-06-17';
         break;
       case 'perplexity':
         message += '\nSuggested models:\n- sonar-pro\n- sonar-reasoning-pro';
         break;
       case 'openrouter':
         message +=
-          '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro-preview\n- mistral/mistral-large\n- groq/llama2-70b';
+          '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro\n- google/gemini-2.5-flash-lite-preview-06-17\n- mistral/mistral-large\n- groq/llama2-70b';
         break;
       case 'modelbox':
         message +=
-          '\nSuggested models:\n- perplexity/sonar-pro\n- openai/gpt-4o\n- anthropic/claude-sonnet-4';
+          '\nSuggested models:\n- perplexity/sonar-pro\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- google/gemini-2.5-flash-lite-preview-06-17';
         break;
       case 'xai':
         message += '\nSuggested models:\n- grok-3-latest\n- grok-3-mini-latest';

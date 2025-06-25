@@ -214,7 +214,7 @@ Available Servers:
 ${JSON.stringify(allServers, null, 2)}`;
 
       const response = await provider.executePrompt(prompt, {
-        model: this.config.marketplace?.model || 'gemini-2.5-flash-preview-05-20',
+        model: this.config.marketplace?.model || 'gemini-2.5-flash',
         maxTokens: 1000,
         systemPrompt:
           'You are a semantic search expert that helps find the most relevant MCP servers based on user queries. You only return mcpIds as a comma separated list, no other text.',
