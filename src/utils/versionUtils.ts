@@ -68,6 +68,40 @@ export async function getLatestVersion(): Promise<string | null> {
 }
 
 /**
+ * Compare two semantic version strings
+ * Returns:
+ * - 1 if version1 > version2
+ * - 0 if version1 = version2
+ * - -1 if version1 < version2
+ */
+export function compareVersions(version1: string, version2: string): number {
+  if (version1 === version2) return 0;
+
+  const [v1Major, v1Minor, v1PatchAndMore] = version1.split('.');
+  const v1Patch = v1PatchAndMore?.split('-')[0] || '0';
+
+  const [v2Major, v2Minor, v2PatchAndMore] = version2.split('.');
+  const v2Patch = v2PatchAndMore?.split('-')[0] || '0';
+
+  const v1Parts = [parseInt(v1Major || '0'), parseInt(v1Minor || '0'), parseInt(v1Patch || '0')];
+  const v2Parts = [parseInt(v2Major || '0'), parseInt(v2Minor || '0'), parseInt(v2Patch || '0')];
+
+  for (let i = 0; i < 3; i++) {
+    if (v1Parts[i] > v2Parts[i]) return 1;
+    if (v1Parts[i] < v2Parts[i]) return -1;
+  }
+
+  return 0;
+}
+
+/**
+ * Check if version1 is newer than or equal to version2
+ */
+export function isVersionNewerOrEqual(version1: string, version2: string): boolean {
+  return compareVersions(version1, version2) >= 0;
+}
+
+/**
  * Checks if the currently installed version is outdated compared to the latest NPM version.
  * Note: This uses simple string comparison. For robust comparison (e.g., handling pre-releases),
  * a library like 'semver' would be better, but sticking to simplicity for now.
@@ -84,29 +118,8 @@ export async function checkPackageVersion(): Promise<VersionInfo> {
     const latest = await getLatestVersion();
 
     if (latest) {
-      const [currentMajor, currentMinor, currentPatchish] = current.split('.');
-      const currentPatch = currentPatchish?.split('-')[0];
-
-      const [latestMajor, latestMinor, latestPatchish] = latest.split('.');
-      const latestPatch = latestPatchish?.split('-')[0];
-
-      let isOutdated = false;
-      if (parseInt(currentMajor) < parseInt(latestMajor)) {
-        isOutdated = true;
-      }
-      if (
-        parseInt(currentMajor) === parseInt(latestMajor) &&
-        parseInt(currentMinor) < parseInt(latestMinor)
-      ) {
-        isOutdated = true;
-      }
-      if (
-        parseInt(currentMajor) === parseInt(latestMajor) &&
-        parseInt(currentMinor) === parseInt(latestMinor) &&
-        parseInt(currentPatch) < parseInt(latestPatch)
-      ) {
-        isOutdated = true;
-      }
+      // Use the new version comparison utility
+      const isOutdated = compareVersions(current, latest) < 0;
 
       return {
         current,

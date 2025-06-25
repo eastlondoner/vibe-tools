@@ -2,7 +2,7 @@ import type { Command, CommandGenerator, CommandOptions, Provider, Config } from
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadEnv } from '../config';
-import { generateRules } from '../vibe-rules';
+import { generateRules, isRulesContentUpToDate } from '../vibe-rules';
 import { consola } from 'consola';
 import { colors } from 'consola/utils';
 import { ensurePlaywrightBrowsers } from './browser/utils';
@@ -473,91 +473,105 @@ export class JsonInstallCommand implements Command {
       // Handle IDE-specific rules setup
       const selectedIde = jsonConfig.ide?.toLowerCase() || 'cursor';
 
-      // Re-add the IDE setup code but with simplified output
-      if (selectedIde === 'cursor') {
-        // Create necessary directories
-        const rulesDir = join(process.cwd(), '.cursor', 'rules');
-        ensureDirectoryExists(rulesDir);
+      // Check if rules file needs updating based on version
+      const updateCheck = isRulesContentUpToDate(process.cwd(), selectedIde);
 
-        // Write the rules file directly to the new location
-        const rulesPath = join(rulesDir, 'vibe-tools.mdc');
-        try {
-          writeFileSync(rulesPath, generateRules('cursor'));
-          consola.success(`Rules written to ${colors.cyan(rulesPath)}`);
-        } catch (error) {
-          consola.error(`${colors.red('Error writing rules for cursor:')}`, error);
-          return;
-        }
+      if (!updateCheck.needsUpdate) {
+        consola.info(
+          `${colors.cyan(selectedIde)} rules file is already up to date (${updateCheck.path})`
+        );
       } else {
-        // For other IDEs, add the rules template to the respective file
-        let rulesPath: string;
-        let rulesTemplate: string;
+        // Log the reason for update if available
+        if (updateCheck.message) {
+          consola.info(`${colors.yellow('Update needed:')} ${updateCheck.message}`);
+        }
 
-        switch (selectedIde) {
-          case 'claude-code': {
-            rulesTemplate = generateRules('claude-code');
+        // Re-add the IDE setup code but with simplified output
+        if (selectedIde === 'cursor') {
+          // Create necessary directories
+          const rulesDir = join(process.cwd(), '.cursor', 'rules');
+          ensureDirectoryExists(rulesDir);
 
-            // Handle both global and local Claude.md files
-            if (isLocalConfig) {
-              // Local Claude.md
-              rulesPath = join(process.cwd(), 'CLAUDE.md');
+          // Write the rules file directly to the new location
+          const rulesPath = join(rulesDir, 'vibe-tools.mdc');
+          try {
+            writeFileSync(rulesPath, generateRules('cursor'));
+            consola.success(`Rules written to ${colors.cyan(rulesPath)}`);
+          } catch (error) {
+            consola.error(`${colors.red('Error writing rules for cursor:')}`, error);
+            return;
+          }
+        } else {
+          // For other IDEs, add the rules template to the respective file
+          let rulesPath: string;
+          let rulesTemplate: string;
+
+          switch (selectedIde) {
+            case 'claude-code': {
+              rulesTemplate = generateRules('claude-code');
+
+              // Handle both global and local Claude.md files
+              if (isLocalConfig) {
+                // Local Claude.md
+                rulesPath = join(process.cwd(), 'CLAUDE.md');
+                ensureDirectoryExists(join(rulesPath, '..'));
+                updateRulesSection(rulesPath, rulesTemplate);
+                consola.success(`Updated local Claude.md rules at ${rulesPath}`);
+              } else {
+                // Global Claude.md
+                ensureDirectoryExists(CLAUDE_HOME_DIR);
+                rulesPath = join(CLAUDE_HOME_DIR, 'CLAUDE.md');
+                updateRulesSection(rulesPath, rulesTemplate);
+                consola.success(`Updated global Claude.md rules at ${rulesPath}`);
+              }
+              break;
+            }
+            case 'codex': {
+              rulesTemplate = generateRules('codex');
+
+              // Handle both global and local codex.md files
+              if (isLocalConfig) {
+                // Local codex.md
+                rulesPath = join(process.cwd(), CODEX_LOCAL_INSTRUCTIONS_FILENAME);
+                ensureDirectoryExists(join(rulesPath, '..'));
+                updateRulesSection(rulesPath, rulesTemplate);
+                consola.success(
+                  `Updated local ${CODEX_LOCAL_INSTRUCTIONS_FILENAME} rules at ${rulesPath}`
+                );
+              } else {
+                // Global ~/.codex/instructions.md
+                ensureDirectoryExists(join(CODEX_GLOBAL_INSTRUCTIONS_PATH, '..'));
+                rulesPath = CODEX_GLOBAL_INSTRUCTIONS_PATH;
+                updateRulesSection(rulesPath, rulesTemplate);
+                consola.success(`Updated global ${CODEX_GLOBAL_INSTRUCTIONS_PATH} rules`);
+              }
+              break;
+            }
+            case 'windsurf': {
+              rulesPath = join(process.cwd(), '.windsurfrules');
+              rulesTemplate = generateRules('windsurf');
               ensureDirectoryExists(join(rulesPath, '..'));
               updateRulesSection(rulesPath, rulesTemplate);
-              consola.success(`Updated local Claude.md rules at ${rulesPath}`);
-            } else {
-              // Global Claude.md
-              ensureDirectoryExists(CLAUDE_HOME_DIR);
-              rulesPath = join(CLAUDE_HOME_DIR, 'CLAUDE.md');
-              updateRulesSection(rulesPath, rulesTemplate);
-              consola.success(`Updated global Claude.md rules at ${rulesPath}`);
+              consola.success(`Updated .windsurfrules at ${rulesPath}`);
+              break;
             }
-            break;
-          }
-          case 'codex': {
-            rulesTemplate = generateRules('codex');
-
-            // Handle both global and local codex.md files
-            if (isLocalConfig) {
-              // Local codex.md
-              rulesPath = join(process.cwd(), CODEX_LOCAL_INSTRUCTIONS_FILENAME);
+            case 'cline': {
+              await setupClinerules(process.cwd(), 'cline', generateRules);
+              break;
+            }
+            case 'roo': {
+              // Roo uses the same .clinerules directory/file as cline
+              await setupClinerules(process.cwd(), 'roo', generateRules);
+              break;
+            }
+            default: {
+              rulesPath = join(process.cwd(), '.cursor', 'rules', 'vibe-tools.mdc');
+              rulesTemplate = generateRules('cursor');
               ensureDirectoryExists(join(rulesPath, '..'));
-              updateRulesSection(rulesPath, rulesTemplate);
-              consola.success(
-                `Updated local ${CODEX_LOCAL_INSTRUCTIONS_FILENAME} rules at ${rulesPath}`
-              );
-            } else {
-              // Global ~/.codex/instructions.md
-              ensureDirectoryExists(join(CODEX_GLOBAL_INSTRUCTIONS_PATH, '..'));
-              rulesPath = CODEX_GLOBAL_INSTRUCTIONS_PATH;
-              updateRulesSection(rulesPath, rulesTemplate);
-              consola.success(`Updated global ${CODEX_GLOBAL_INSTRUCTIONS_PATH} rules`);
+              writeFileSync(rulesPath, rulesTemplate.trim());
+              consola.success(`Rules written to ${rulesPath}`);
+              break;
             }
-            break;
-          }
-          case 'windsurf': {
-            rulesPath = join(process.cwd(), '.windsurfrules');
-            rulesTemplate = generateRules('windsurf');
-            ensureDirectoryExists(join(rulesPath, '..'));
-            updateRulesSection(rulesPath, rulesTemplate);
-            consola.success(`Updated .windsurfrules at ${rulesPath}`);
-            break;
-          }
-          case 'cline': {
-            await setupClinerules(process.cwd(), 'cline', generateRules);
-            break;
-          }
-          case 'roo': {
-            // Roo uses the same .clinerules directory/file as cline
-            await setupClinerules(process.cwd(), 'roo', generateRules);
-            break;
-          }
-          default: {
-            rulesPath = join(process.cwd(), '.cursor', 'rules', 'vibe-tools.mdc');
-            rulesTemplate = generateRules('cursor');
-            ensureDirectoryExists(join(rulesPath, '..'));
-            writeFileSync(rulesPath, rulesTemplate.trim());
-            consola.success(`Rules written to ${rulesPath}`);
-            break;
           }
         }
       }

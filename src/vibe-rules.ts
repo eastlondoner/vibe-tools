@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import type { Config } from './types';
 import { promises as fs } from 'node:fs';
-import { getCurrentVersion } from './utils/versionUtils';
+import { getCurrentVersion, isVersionNewerOrEqual } from './utils/versionUtils';
 
 export const VIBE_TOOLS_RULES_VERSION = getCurrentVersion();
 
@@ -481,7 +481,8 @@ export function isRulesContentUpToDate(
   const versionMatch = content.match(/<!-- vibe-tools-version: ([\w.-]+) -->/);
   const fileVersion = versionMatch ? versionMatch[1] : '0'; // Default to '0' if version comment not found
 
-  if (fileVersion !== VIBE_TOOLS_RULES_VERSION) {
+  // Only update if the current version is newer than the file version
+  if (!isVersionNewerOrEqual(fileVersion, VIBE_TOOLS_RULES_VERSION)) {
     return {
       needsUpdate: true,
       message: `Your vibe-tools rules file at ${ruleFilePath} is using version ${fileVersion}, but the current version is ${VIBE_TOOLS_RULES_VERSION}. Run vibe-tools install . to update.`,
@@ -489,6 +490,6 @@ export function isRulesContentUpToDate(
     };
   }
 
-  // Tags and version are correct
+  // File version is same or newer than current version - no update needed
   return { needsUpdate: false, path: ruleFilePath }; // Include path even if up-to-date
 }
