@@ -39,7 +39,6 @@ function detectPackageManager(): string {
   try {
     // Resolve the actual path of the vibe-tools executable
     const resolvedFilename = resolveSymlink(__filename);
-
     // Check for bun
     if (resolvedFilename.includes('/.bun/install/global/')) {
       return 'bun';
@@ -60,12 +59,10 @@ function detectPackageManager(): string {
         return 'pnpm';
       }
     }
-
     // Check for yarn
     if (resolvedFilename.includes('/yarn/global/')) {
       return 'yarn';
     }
-
     // Default to npm
     return 'npm';
   } catch {
@@ -588,7 +585,6 @@ async function main() {
       // Detect package manager based on environment or ask user
       const runNonInteractive = shouldRunNonInteractive();
       let selectedPackageManager: string;
-
       if (runNonInteractive) {
         selectedPackageManager = detectPackageManager();
         consola.info(`Auto-detected package manager: ${selectedPackageManager}`);
@@ -678,7 +674,6 @@ async function main() {
           if (command === 'install') {
             const isNonInteractive = shouldRunNonInteractive();
             let proceedWithInstall: boolean;
-
             if (isNonInteractive) {
               proceedWithInstall = true;
               consola.info('Non-interactive mode: Automatically proceeding with install...');
@@ -690,7 +685,6 @@ async function main() {
                 initial: false, // Default to not re-running install actions
               });
             }
-
             if (proceedWithInstall) {
               consola.info('Proceeding with original install command...');
               const rerunProcess = spawn('vibe-tools', originalArgs, {

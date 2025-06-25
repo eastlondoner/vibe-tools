@@ -385,7 +385,6 @@ export function getExistingConfig(): { config: Config | null; isLocal: boolean }
       consola.warn(`Warning: Error reading local config: ${error}`);
     }
   }
-
   // Check global config
   if (existsSync(VIBE_HOME_CONFIG_PATH)) {
     try {
@@ -395,7 +394,6 @@ export function getExistingConfig(): { config: Config | null; isLocal: boolean }
       consola.warn(`Warning: Error reading global config: ${error}`);
     }
   }
-
   return { config: null, isLocal: false };
 }
 
@@ -412,7 +410,6 @@ export function getDefaultConfigForNonInteractive(): {
 } {
   // Auto-detect IDE
   const ide = isRunningInCursor() ? 'cursor' : 'cursor'; // Default to cursor
-
   return {
     ide,
     coding: {

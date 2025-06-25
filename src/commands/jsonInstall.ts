@@ -345,7 +345,6 @@ export class JsonInstallCommand implements Command {
 
       // Check if we should run in non-interactive mode
       const runNonInteractive = shouldRunNonInteractive();
-
       // Check telemetry status - handle non-interactive mode or prompt
       const currentTelemetryStatus = isTelemetryEnabled();
 
