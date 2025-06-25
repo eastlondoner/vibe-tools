@@ -601,8 +601,10 @@ export class InstallCommand implements Command {
       // Check for existing config before asking for preferences
       const hasExistingLocalConfig = existsSync(LOCAL_CONFIG_PATH);
       const existingGlobalConfig = await this.checkExistingGlobalConfig();
-      const existingLocalConfig = hasExistingLocalConfig ? await this.checkExistingLocalConfig() : null;
-      
+      const existingLocalConfig = hasExistingLocalConfig
+        ? await this.checkExistingLocalConfig()
+        : null;
+
       // Determine which existing config to use (local takes precedence)
       const existingConfig = existingLocalConfig || existingGlobalConfig;
       const isExistingConfigLocal = !!existingLocalConfig;
@@ -610,7 +612,7 @@ export class InstallCommand implements Command {
       if (existingConfig) {
         const configLocation = isExistingConfigLocal ? 'local' : 'global';
         const configPath = isExistingConfigLocal ? LOCAL_CONFIG_PATH : VIBE_HOME_CONFIG_PATH;
-        
+
         const configChoice = await consola.prompt(
           `Found existing ${configLocation} configuration at ${colors.cyan(configPath)}. What would you like to do?`,
           {
@@ -626,7 +628,7 @@ export class InstallCommand implements Command {
         if (configChoice === 'keep') {
           // Use existing config as-is, just handle IDE rules and exit
           const selectedIde = isRunningInCursor() ? 'cursor' : existingConfig.ide || 'cursor';
-          
+
           consola.success(`Using existing ${configLocation} configuration`);
 
           // Install Playwright browsers
@@ -679,13 +681,13 @@ export class InstallCommand implements Command {
 
       // Always ask for model preferences in interactive mode
       consola.info('\nSelect your preferred models for different tasks:');
-      
+
       // Set up initial values based on existing config (if any)
       let codingInitial = 'openai:o3';
       let websearchInitial = 'perplexity:sonar-pro';
       let toolingInitial = 'anthropic:claude-sonnet-4-20250514';
       let largecontextInitial = 'gemini:gemini-2.5-flash';
-      
+
       if (existingConfig) {
         // Use existing values as defaults for the prompts
         if (existingConfig.plan?.thinkingProvider && existingConfig.plan?.thinkingModel) {
@@ -706,17 +708,114 @@ export class InstallCommand implements Command {
           // Fallback to doc provider for large context if repo not set
           largecontextInitial = `${existingConfig.doc.provider}:${existingConfig.doc.model}`;
         }
-        
+
         consola.success('Using existing configuration values as defaults');
       }
 
-        // Coding (repo command)
-        const coding = await consola.prompt('Coding Agent - Code Crafter & Bug Blaster:', {
+      // Coding (plan thinking command)
+      const coding = await consola.prompt('Coding Agent - Code Crafter & Bug Blaster:', {
+        type: 'select',
+        options: [
+          {
+            value: 'gemini:gemini-2.5-pro',
+            label: 'Gemini Pro 2.5',
+            hint: 'recommended',
+          },
+          {
+            value: 'gemini:gemini-2.5-flash',
+            label: 'Gemini Flash 2.5',
+            hint: 'cheaper',
+          },
+          {
+            value: 'anthropic:claude-sonnet-4-20250514',
+            label: 'Claude 4 Sonnet',
+            hint: 'recommended',
+          },
+          {
+            value: 'anthropic:claude-opus-4-20250514',
+            label: 'Claude 4 Opus',
+            hint: 'expensive',
+          },
+          { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro' },
+          { value: 'openai:o3', label: 'OpenAI o3', hint: 'recommended' },
+          { value: 'openai:gpt-4.1', label: 'GPT-4.1' },
+          {
+            value: 'openrouter:anthropic/claude-sonnet-4',
+            label: 'OpenRouter - Claude 4 Sonnet',
+          },
+          {
+            value: 'openrouter:x-ai/grok-3-beta',
+            label: 'OpenRouter - Grok 3',
+          },
+          {
+            value: 'openrouter:x-ai/grok-3-mini-beta',
+            label: 'OpenRouter - Grok 3 Mini',
+          },
+        ],
+        initial: codingInitial,
+      });
+
+      // Web search (web command)
+      const websearch = await consola.prompt('Web Search Agent - Deep Researcher & Web Wanderer:', {
+        type: 'select',
+        options: [
+          { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro', hint: 'recommended' },
+          { value: 'perplexity:sonar', label: 'Perplexity Sonar', hint: 'recommended' },
+          { value: 'gemini:gemini-2.5-pro', label: 'Gemini Pro 2.5', hint: 'recommended' },
+          { value: 'gemini:gemini-2.5-flash', label: 'Gemini Flash 2.5' },
+          {
+            value: 'gemini:gemini-2.5-flash-lite-preview-06-17',
+            label: 'Gemini Flash Lite 2.5 Preview',
+          },
+          {
+            value: 'openrouter:perplexity/sonar-pro',
+            label: 'OpenRouter - Perplexity Sonar Pro',
+          },
+        ],
+        initial: websearchInitial,
+      });
+
+      // Tooling (mcp command)
+      const tooling = await consola.prompt('Tooling Agent - Gear Turner & MCP Master:', {
+        type: 'select',
+        options: [
+          {
+            value: 'anthropic:claude-sonnet-4-20250514',
+            label: 'Claude 4 Sonnet',
+            hint: 'recommended',
+          },
+          {
+            value: 'gemini:gemini-2.5-pro',
+            label: 'Gemini Pro 2.5',
+          },
+          { value: 'openai:gpt-4o', label: 'GPT-4o' },
+          { value: 'openai:o3', label: 'OpenAI o3', hint: 'recommended' },
+          { value: 'openai:gpt-4.1', label: 'GPT-4.1', hint: 'recommended' },
+          {
+            value: 'openrouter:anthropic/claude-sonnet-4',
+            label: 'OpenRouter - Claude 4 Sonnet',
+          },
+          {
+            value: 'openrouter:x-ai/grok-3-beta',
+            label: 'OpenRouter - Grok 3',
+          },
+          {
+            value: 'openrouter:x-ai/grok-3-mini-beta',
+            label: 'OpenRouter - Grok 3 Mini',
+          },
+        ],
+        initial: toolingInitial,
+      });
+
+      // Large context (repo, doc command)
+      const largecontext = await consola.prompt(
+        'Large Context Agent - Systems Thinker & Expert Planner:',
+        {
           type: 'select',
           options: [
             {
-              value: 'gemini:gemini-2.5-pro',
-              label: 'Gemini Pro 2.5',
+              value: 'gemini:gemini-2.5-flash',
+              label: 'Gemini Flash 2.5',
               hint: 'recommended',
             },
             {
@@ -725,124 +824,24 @@ export class InstallCommand implements Command {
               hint: 'lightweight',
             },
             {
-              value: 'anthropic:claude-sonnet-4-20250514',
-              label: 'Claude 4 Sonnet',
-              hint: 'recommended',
-            },
-            {
-              value: 'anthropic:claude-opus-4-20250514',
-              label: 'Claude 4 Opus',
-              hint: 'expensive',
-            },
-            { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro' },
-            { value: 'openai:o3', label: 'OpenAI o3', hint: 'recommended' },
-            { value: 'openai:gpt-4.1', label: 'GPT-4.1' },
-            {
-              value: 'openrouter:anthropic/claude-sonnet-4',
-              label: 'OpenRouter - Claude 4 Sonnet',
-            },
-            {
-              value: 'openrouter:x-ai/grok-3-beta',
-              label: 'OpenRouter - Grok 3',
-            },
-            {
-              value: 'openrouter:x-ai/grok-3-mini-beta',
-              label: 'OpenRouter - Grok 3 Mini',
-            },
-          ],
-          initial: codingInitial,
-        });
-
-        // Web search (web command)
-        const websearch = await consola.prompt(
-          'Web Search Agent - Deep Researcher & Web Wanderer:',
-          {
-            type: 'select',
-            options: [
-              { value: 'perplexity:sonar-pro', label: 'Perplexity Sonar Pro', hint: 'recommended' },
-              { value: 'perplexity:sonar', label: 'Perplexity Sonar', hint: 'recommended' },
-              { value: 'gemini:gemini-2.5-pro', label: 'Gemini Pro 2.5', hint: 'recommended' },
-              { value: 'gemini:gemini-2.5-flash', label: 'Gemini Flash 2.5' },
-              {
-                value: 'gemini:gemini-2.5-flash-lite-preview-06-17',
-                label: 'Gemini Flash Lite 2.5 Preview',
-              },
-              {
-                value: 'openrouter:perplexity/sonar-pro',
-                label: 'OpenRouter - Perplexity Sonar Pro',
-              },
-            ],
-            initial: websearchInitial,
-          }
-        );
-
-        // Tooling (plan command)
-        const tooling = await consola.prompt('Tooling Agent - Gear Turner & MCP Master:', {
-          type: 'select',
-          options: [
-            {
-              value: 'anthropic:claude-sonnet-4-20250514',
-              label: 'Claude 4 Sonnet',
-              hint: 'recommended',
-            },
-            {
               value: 'gemini:gemini-2.5-pro',
               label: 'Gemini Pro 2.5',
+              hint: 'expensive',
             },
-            { value: 'openai:gpt-4o', label: 'GPT-4o' },
-            { value: 'openai:o3', label: 'OpenAI o3', hint: 'recommended' },
-            { value: 'openai:gpt-4.1', label: 'GPT-4.1', hint: 'recommended' },
             {
-              value: 'openrouter:anthropic/claude-sonnet-4',
-              label: 'OpenRouter - Claude 4 Sonnet',
+              value: 'anthropic:claude-sonnet-4-20250514',
+              label: 'Claude 4 Sonnet',
             },
+            { value: 'perplexity:sonar', label: 'Perplexity Sonar' },
+            { value: 'openai:gpt-4.1', label: 'GPT-4.1', hint: 'recommended' },
             {
               value: 'openrouter:x-ai/grok-3-beta',
               label: 'OpenRouter - Grok 3',
             },
-            {
-              value: 'openrouter:x-ai/grok-3-mini-beta',
-              label: 'OpenRouter - Grok 3 Mini',
-            },
           ],
-          initial: toolingInitial,
-        });
-
-        // Large context (doc command)
-        const largecontext = await consola.prompt(
-          'Large Context Agent - Systems Thinker & Expert Planner:',
-          {
-            type: 'select',
-            options: [
-              {
-                value: 'gemini:gemini-2.5-flash',
-                label: 'Gemini Flash 2.5',
-                hint: 'recommended',
-              },
-              {
-                value: 'gemini:gemini-2.5-flash-lite-preview-06-17',
-                label: 'Gemini Flash Lite 2.5 Preview',
-                hint: 'lightweight',
-              },
-              {
-                value: 'gemini:gemini-2.5-pro',
-                label: 'Gemini Pro 2.5',
-                hint: 'expensive',
-              },
-              {
-                value: 'anthropic:claude-sonnet-4-20250514',
-                label: 'Claude 4 Sonnet',
-              },
-              { value: 'perplexity:sonar', label: 'Perplexity Sonar' },
-              { value: 'openai:gpt-4.1', label: 'GPT-4.1', hint: 'recommended' },
-              {
-                value: 'openrouter:x-ai/grok-3-beta',
-                label: 'OpenRouter - Grok 3',
-              },
-            ],
-            initial: largecontextInitial,
-          }
-        );
+          initial: largecontextInitial,
+        }
+      );
 
       // Collect all selected options into a config object
       config = {

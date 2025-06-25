@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Improved
+
+- **Smarter Installation Process**: Enhanced the `vibe-tools install` command with intelligent configuration and rules file management.
+  - When existing configuration is found, users are now offered a clear choice: keep the current setup or update it through interactive prompts
+  - Installation no longer overwrites IDE rules files that are already up to date or newer than the current version
+  - Added semantic version comparison to prevent unnecessary rules file updates
+  - Improved user experience with clearer messaging about what's being updated and why
+
 ### Changed
 
 - **Increased Default Max Tokens**: Raised the default maximum output tokens from 8,000 to 24,000 across all commands for more comprehensive responses.
