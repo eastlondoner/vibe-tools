@@ -87,11 +87,12 @@ export async function ensurePlaywrightBrowsers(): Promise<boolean> {
     );
 
     // Install only Chromium using the exact Playwright version that vibe-tools depends on
-    await installBrowsersForNpmInstall(['chromium']);
+    await installBrowsersForNpmInstall(['chromium', 'chromium-headless-shell']);
 
     consola.success('Playwright Chromium browser installed successfully.');
     return true;
   } catch (error) {
+    console.error('Error installing Playwright Chromium browser:', error);
     consola.warn('Playwright browser installation failed; browser commands may not work.');
     consola.warn(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;

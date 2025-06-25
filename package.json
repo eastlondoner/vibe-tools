@@ -47,10 +47,10 @@
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.51.0",
     "@browserbasehq/sdk": "^2.6.0",
-    "@browserbasehq/stagehand": "^2.2.1",
+    "@browserbasehq/stagehand": "^2.3.1",
     "@eslint/js": "^9.25.1",
     "@modelcontextprotocol/sdk": "^1.10.2",
-    "@playwright/test": "1.52.0",
+    "@playwright/test": "1.53.1",
     "@types/bun": "^1.2.10",
     "@types/node": "^22.15.2",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
@@ -74,8 +74,8 @@
     "dotenv": "16.5.0",
     "eventsource-client": "1.1.3",
     "google-auth-library": "^9.15.1",
-    "playwright": "1.52.0",
-    "playwright-core": "1.52.0",
+    "playwright": "1.53.1",
+    "playwright-core": "1.53.1",
     "punycode": "^2.3.1",
     "repomix": "0.3.3"
   },
@@ -84,18 +84,18 @@
   },
   "overrides": {
     "punycode": "^2.3.1",
-    "playwright-core": "1.52.0",
-    "@playwright/test": "1.52.0",
-    "playwright": "1.52.0"
+    "playwright-core": "1.53.1",
+    "@playwright/test": "1.53.1",
+    "playwright": "1.53.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
     ],
     "overrides": {
-      "playwright-core": "1.52.0",
-      "@playwright/test": "1.52.0",
-      "playwright": "1.52.0"
+      "playwright-core": "1.53.1",
+      "@playwright/test": "1.53.1",
+      "playwright": "1.53.1"
     }
   }
 }
