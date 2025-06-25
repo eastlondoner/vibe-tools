@@ -375,81 +375,98 @@ export class InstallCommand implements Command {
 
       // Handle legacy migration *before* asking for new setup
       yield* handleLegacyMigration();
- 
+
       if (runNonInteractive) {
-        consola.info(`${colors.cyan('🤖 Non-interactive mode detected')} - Using auto-configuration`);
-        
+        consola.info(
+          `${colors.cyan('🤖 Non-interactive mode detected')} - Using auto-configuration`
+        );
+
         // Set telemetry to enabled by default in CI environments
         if (isTelemetryEnabled() === null) {
           setTelemetryStatus(true);
           consola.info(`Anonymous diagnostics ${colors.green('enabled')} (CI default)`);
         }
-        
+
         // Check for existing configuration
         const { config: existingConfig, isLocal: existingIsLocal } = getExistingConfig();
-        
+
         if (existingConfig) {
           consola.success(`Using existing ${existingIsLocal ? 'local' : 'global'} configuration`);
-          
+
           // Create config from existing one, but detect IDE if running in Cursor
-          const selectedIde = isRunningInCursor() ? 'cursor' : (existingConfig.ide || 'cursor');
-          
+          const selectedIde = isRunningInCursor() ? 'cursor' : existingConfig.ide || 'cursor';
+
           const config = {
             ide: selectedIde,
-            coding: existingConfig.repo ? {
-              provider: existingConfig.repo.provider as Provider,
-              model: existingConfig.repo.model || 'gemini-2.5-flash-preview-05-20'
-            } : undefined,
-            websearch: existingConfig.web && existingConfig.web.provider ? {
-              provider: existingConfig.web.provider as Provider,
-              model: existingConfig.web.model || 'sonar-pro'
-            } : undefined,
-            tooling: existingConfig.plan && existingConfig.plan.thinkingProvider ? {
-              provider: existingConfig.plan.thinkingProvider as Provider,
-              model: existingConfig.plan.thinkingModel || 'claude-sonnet-4-20250514'
-            } : undefined,
-            largecontext: existingConfig.doc && existingConfig.doc.provider ? {
-              provider: existingConfig.doc.provider as Provider,
-              model: existingConfig.doc.model || 'gemini-2.5-pro-preview-05-06'
-            } : undefined,
+            coding: existingConfig.repo
+              ? {
+                  provider: existingConfig.repo.provider as Provider,
+                  model: existingConfig.repo.model || 'gemini-2.5-flash',
+                }
+              : undefined,
+            websearch:
+              existingConfig.web && existingConfig.web.provider
+                ? {
+                    provider: existingConfig.web.provider as Provider,
+                    model: existingConfig.web.model || 'sonar-pro',
+                  }
+                : undefined,
+            tooling:
+              existingConfig.plan && existingConfig.plan.thinkingProvider
+                ? {
+                    provider: existingConfig.plan.thinkingProvider as Provider,
+                    model: existingConfig.plan.thinkingModel || 'claude-sonnet-4-20250514',
+                  }
+                : undefined,
+            largecontext:
+              existingConfig.doc && existingConfig.doc.provider
+                ? {
+                    provider: existingConfig.doc.provider as Provider,
+                    model: existingConfig.doc.model || 'gemini-2.5-pro',
+                  }
+                : undefined,
           };
-          
+
           // Skip to API key setup and config creation
           const requiredProviders = collectRequiredProviders(config);
           yield* this.setupApiKeys(requiredProviders, true);
           const { isLocalConfig } = await this.createConfig(config, true, existingIsLocal);
-          
+
           // Install Playwright browsers
           if (!process.env.SKIP_PLAYWRIGHT) {
             await ensurePlaywrightBrowsers();
           }
-          
+
           // Handle IDE rules
           await this.handleIDERules(absolutePath, selectedIde, isLocalConfig);
-          
+
           // Success message
-          consola.success(`${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(isLocalConfig ? 'Local' : 'Global')}, IDE: ${colors.cyan(selectedIde)}`);
+          consola.success(
+            `${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(isLocalConfig ? 'Local' : 'Global')}, IDE: ${colors.cyan(selectedIde)}`
+          );
           return;
         } else {
           // Use defaults for new installation
           consola.info('No existing configuration found - using recommended defaults');
           const defaultConfig = getDefaultConfigForNonInteractive();
-          
+
           // Skip to API key setup and config creation
           const requiredProviders = collectRequiredProviders(defaultConfig);
           yield* this.setupApiKeys(requiredProviders, true);
           const { isLocalConfig } = await this.createConfig(defaultConfig, true, false); // Default to global
-          
+
           // Install Playwright browsers
           if (!process.env.SKIP_PLAYWRIGHT) {
             await ensurePlaywrightBrowsers();
           }
-          
+
           // Handle IDE rules
           await this.handleIDERules(absolutePath, defaultConfig.ide, isLocalConfig);
-          
+
           // Success message
-          consola.success(`${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(isLocalConfig ? 'Local' : 'Global')}, IDE: ${colors.cyan(defaultConfig.ide)}`);
+          consola.success(
+            `${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(isLocalConfig ? 'Local' : 'Global')}, IDE: ${colors.cyan(defaultConfig.ide)}`
+          );
           return;
         }
       }
