@@ -476,17 +476,29 @@ async function getRelevantFiles(
 ): Promise<string[]> {
   console.log('Getting relevant files using:', options.model);
   const prompt = `
-User Query: ${query}
+Your job is to identify the most relevant files in the codebase to the following user query and respond with a newline-separated list of the relevant file paths.
 
-${docContent ? `Additional Context Document:\\n${docContent}\\n\\n---\\n` : ''}
+<user query>
+${query}
+</user query>
 
-Available Files (only include files from this list):
+You can use the additional context document to help you identify the most relevant files.
+<additional context document>
+${docContent ? `\\n${docContent}\\n\\n---\\n` : ''}
+</additional context document>
+
+These are the available files in the codebase. Only include files from here
+<available files>
 ${packedRepo}
+</available files>
 
 Based on the user query${docContent ? ' and the additional context document' : ''}, which files from the list above are most relevant to implement the request?
-Return ONLY a comma-separated list of the relevant file paths. Do not include any other text, explanation, or formatting.
-Example: src/index.ts,src/utils/helper.ts
-Relevant Files:`;
+You must return ONLY a newline-separated list of the relevant file paths (paths as show above from the root of the codebase). Do not reply with any other text, explanation, or formatting.
+
+Example Response:
+src/index.ts
+src/utils/helper.ts
+`;
 
   // Override timeout specifically for this step
   const specificOptions: ModelOptions = {

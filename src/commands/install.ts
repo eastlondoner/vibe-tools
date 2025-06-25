@@ -29,6 +29,7 @@ import {
   shouldRunNonInteractive,
   getExistingConfig,
   getDefaultConfigForNonInteractive,
+  isRunningInCursor,
 } from '../utils/installUtils';
 import { setTelemetryStatus, TELEMETRY_DATA_DESCRIPTION, isTelemetryEnabled } from '../telemetry';
 
@@ -242,6 +243,7 @@ export class InstallCommand implements Command {
             { value: 'global', label: `Global config (${VIBE_HOME_CONFIG_PATH})` },
             { value: 'local', label: `Local config (${LOCAL_CONFIG_PATH})` },
           ],
+          initial: preferLocal ? 'local' : 'global',
         }
       );
       isLocalConfig = answer === 'local';
@@ -596,38 +598,59 @@ export class InstallCommand implements Command {
       }
       // Silently continue if telemetry is already enabled
 
-      // Check for existing global config before asking for preferences
+      // Check for existing config before asking for preferences
       const hasExistingLocalConfig = existsSync(LOCAL_CONFIG_PATH);
       const existingGlobalConfig = await this.checkExistingGlobalConfig();
-      let useExistingGlobal = false;
-      let useExistingLocal = false;
+      const existingLocalConfig = hasExistingLocalConfig ? await this.checkExistingLocalConfig() : null;
+      
+      // Determine which existing config to use (local takes precedence)
+      const existingConfig = existingLocalConfig || existingGlobalConfig;
+      const isExistingConfigLocal = !!existingLocalConfig;
 
-      if (existingGlobalConfig) {
-        if (runNonInteractive) {
-          if (hasExistingLocalConfig) {
-            useExistingLocal = true;
-            consola.info('Using existing local configuration (non-interactive mode)');
-          } else {
-            useExistingGlobal = !!existingGlobalConfig;
-            consola.info('Using existing global configuration (non-interactive mode)');
+      if (existingConfig) {
+        const configLocation = isExistingConfigLocal ? 'local' : 'global';
+        const configPath = isExistingConfigLocal ? LOCAL_CONFIG_PATH : VIBE_HOME_CONFIG_PATH;
+        
+        const configChoice = await consola.prompt(
+          `Found existing ${configLocation} configuration at ${colors.cyan(configPath)}. What would you like to do?`,
+          {
+            type: 'select',
+            options: [
+              { value: 'keep', label: 'Keep existing configuration (skip interactive setup)' },
+              { value: 'update', label: 'Update configuration (go through interactive setup)' },
+            ],
+            initial: 'keep',
           }
-        } else {
-          useExistingGlobal = await consola.prompt(
-            'Found existing global configuration. Would you like to use it?',
-            { type: 'confirm' }
+        );
+
+        if (configChoice === 'keep') {
+          // Use existing config as-is, just handle IDE rules and exit
+          const selectedIde = isRunningInCursor() ? 'cursor' : existingConfig.ide || 'cursor';
+          
+          consola.success(`Using existing ${configLocation} configuration`);
+
+          // Install Playwright browsers
+          if (!process.env.SKIP_PLAYWRIGHT) {
+            await ensurePlaywrightBrowsers();
+          }
+
+          // Handle IDE rules
+          await this.handleIDERules(absolutePath, selectedIde, isExistingConfigLocal);
+
+          // Success message
+          consola.success(
+            `${colors.green('✨ Installation completed!')} Configuration: ${colors.cyan(configLocation)}, IDE: ${colors.cyan(selectedIde)}`
           );
+          return;
         }
+        // If 'update' was chosen, continue with the interactive setup below
       }
 
       // Ask for IDE preference
       let ideInitial = 'cursor';
-      if (useExistingLocal) {
-        const existingLocalConfig = await this.checkExistingLocalConfig();
-        if (existingLocalConfig?.ide) {
-          ideInitial = existingLocalConfig.ide;
-        }
-      } else if (useExistingGlobal && existingGlobalConfig?.ide) {
-        ideInitial = existingGlobalConfig.ide;
+      // If we're updating an existing config, use its IDE as default
+      if (existingConfig?.ide) {
+        ideInitial = existingConfig.ide;
       }
 
       const selectedIde = await consola.prompt('Which IDE will you be using with vibe-tools?', {
@@ -654,87 +677,38 @@ export class InstallCommand implements Command {
         ide: selectedIde,
       };
 
-      // If using existing local config, use those values as defaults
-      if (useExistingLocal) {
-        const existingLocalConfig = await this.checkExistingLocalConfig();
-        if (existingLocalConfig) {
-          config = {
-            ide: selectedIde,
-            coding: existingLocalConfig.repo
-              ? {
-                  provider: existingLocalConfig.repo.provider as Provider,
-                  model: existingLocalConfig.repo.model || '',
-                }
-              : undefined,
-            websearch:
-              existingLocalConfig.web && existingLocalConfig.web.provider
-                ? {
-                    provider: existingLocalConfig.web.provider as Provider,
-                    model: existingLocalConfig.web.model || '',
-                  }
-                : undefined,
-            tooling:
-              existingLocalConfig.plan && existingLocalConfig.plan.thinkingProvider
-                ? {
-                    provider: existingLocalConfig.plan.thinkingProvider as Provider,
-                    model: existingLocalConfig.plan.thinkingModel || '',
-                  }
-                : undefined,
-            largecontext:
-              existingLocalConfig.doc && existingLocalConfig.doc.provider
-                ? {
-                    provider: existingLocalConfig.doc.provider as Provider,
-                    model: existingLocalConfig.doc.model || '',
-                  }
-                : undefined,
-          };
-
-          consola.success('Using existing local configuration values as defaults');
+      // Always ask for model preferences in interactive mode
+      consola.info('\nSelect your preferred models for different tasks:');
+      
+      // Set up initial values based on existing config (if any)
+      let codingInitial = 'openai:o3';
+      let websearchInitial = 'perplexity:sonar-pro';
+      let toolingInitial = 'anthropic:claude-sonnet-4-20250514';
+      let largecontextInitial = 'gemini:gemini-2.5-flash';
+      
+      if (existingConfig) {
+        // Use existing values as defaults for the prompts
+        if (existingConfig.plan?.thinkingProvider && existingConfig.plan?.thinkingModel) {
+          codingInitial = `${existingConfig.plan.thinkingProvider}:${existingConfig.plan.thinkingModel}`;
         }
-      }
-      // If using existing global config, use those values as defaults
-      else if (useExistingGlobal && existingGlobalConfig) {
-        config = {
-          ide: selectedIde,
-          coding: existingGlobalConfig.plan?.thinkingProvider
-            ? {
-                provider: existingGlobalConfig.plan.thinkingProvider as Provider,
-                ...(existingGlobalConfig.plan.thinkingModel
-                  ? { model: existingGlobalConfig.plan.thinkingModel }
-                  : {}),
-              }
-            : undefined,
-          websearch: existingGlobalConfig.web?.provider
-            ? {
-                provider: existingGlobalConfig.web.provider as Provider,
-                ...(existingGlobalConfig.web.model
-                  ? { model: existingGlobalConfig.web.model }
-                  : {}),
-              }
-            : undefined,
-          tooling: existingGlobalConfig.mcp?.provider
-            ? {
-                provider: existingGlobalConfig.mcp.provider as Provider,
-                ...(existingGlobalConfig.mcp.model
-                  ? { model: existingGlobalConfig.mcp.model }
-                  : {}),
-              }
-            : undefined,
-          largecontext:
-            existingGlobalConfig.repo && existingGlobalConfig.repo.provider
-              ? {
-                  provider: existingGlobalConfig.repo.provider as Provider,
-                  ...(existingGlobalConfig.repo.model
-                    ? { model: existingGlobalConfig.repo.model }
-                    : {}),
-                }
-              : undefined,
-        };
-
+        if (existingConfig.web?.provider && existingConfig.web?.model) {
+          websearchInitial = `${existingConfig.web.provider}:${existingConfig.web.model}`;
+        }
+        if (existingConfig.mcp?.provider && existingConfig.mcp?.model) {
+          toolingInitial = `${existingConfig.mcp.provider}:${existingConfig.mcp.model}`;
+        } else if (existingConfig.plan?.thinkingProvider && existingConfig.plan?.thinkingModel) {
+          // Fallback to plan provider for tooling if mcp not set
+          toolingInitial = `${existingConfig.plan.thinkingProvider}:${existingConfig.plan.thinkingModel}`;
+        }
+        if (existingConfig.repo?.provider && existingConfig.repo?.model) {
+          largecontextInitial = `${existingConfig.repo.provider}:${existingConfig.repo.model}`;
+        } else if (existingConfig.doc?.provider && existingConfig.doc?.model) {
+          // Fallback to doc provider for large context if repo not set
+          largecontextInitial = `${existingConfig.doc.provider}:${existingConfig.doc.model}`;
+        }
+        
         consola.success('Using existing configuration values as defaults');
-      } else {
-        // Ask for model preferences only if not using existing config
-        consola.info('\nSelect your preferred models for different tasks:');
+      }
 
         // Coding (repo command)
         const coding = await consola.prompt('Coding Agent - Code Crafter & Bug Blaster:', {
@@ -776,7 +750,7 @@ export class InstallCommand implements Command {
               label: 'OpenRouter - Grok 3 Mini',
             },
           ],
-          initial: 'openai:o3',
+          initial: codingInitial,
         });
 
         // Web search (web command)
@@ -798,7 +772,7 @@ export class InstallCommand implements Command {
                 label: 'OpenRouter - Perplexity Sonar Pro',
               },
             ],
-            initial: 'perplexity:sonar-pro',
+            initial: websearchInitial,
           }
         );
 
@@ -831,7 +805,7 @@ export class InstallCommand implements Command {
               label: 'OpenRouter - Grok 3 Mini',
             },
           ],
-          initial: 'anthropic:claude-sonnet-4-20250514',
+          initial: toolingInitial,
         });
 
         // Large context (doc command)
@@ -844,6 +818,11 @@ export class InstallCommand implements Command {
                 value: 'gemini:gemini-2.5-flash',
                 label: 'Gemini Flash 2.5',
                 hint: 'recommended',
+              },
+              {
+                value: 'gemini:gemini-2.5-flash-lite-preview-06-17',
+                label: 'Gemini Flash Lite 2.5 Preview',
+                hint: 'lightweight',
               },
               {
                 value: 'gemini:gemini-2.5-pro',
@@ -861,19 +840,18 @@ export class InstallCommand implements Command {
                 label: 'OpenRouter - Grok 3',
               },
             ],
-            initial: 'gemini:gemini-2.5-flash',
+            initial: largecontextInitial,
           }
         );
 
-        // Collect all selected options into a config object
-        config = {
-          ide: selectedIde,
-          coding: parseProviderModel(coding as string),
-          websearch: parseProviderModel(websearch as string),
-          tooling: parseProviderModel(tooling as string),
-          largecontext: parseProviderModel(largecontext as string),
-        };
-      }
+      // Collect all selected options into a config object
+      config = {
+        ide: selectedIde,
+        coding: parseProviderModel(coding),
+        websearch: parseProviderModel(websearch),
+        tooling: parseProviderModel(tooling),
+        largecontext: parseProviderModel(largecontext),
+      };
 
       // Create a more compact and readable display of the configuration
       const formatProviderInfo = (provider: string, model: string) => {
@@ -914,7 +892,7 @@ export class InstallCommand implements Command {
       }
 
       // Create config file and get its location preference
-      const { isLocalConfig } = await this.createConfig(config, false, useExistingLocal);
+      const { isLocalConfig } = await this.createConfig(config, false, isExistingConfigLocal);
 
       // Install Playwright browsers (Chromium) unless explicitly skipped
       if (!process.env.SKIP_PLAYWRIGHT) {
