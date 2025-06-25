@@ -24,11 +24,16 @@ import {
 } from '../utilsShared';
 import { StagehandInitOverride, stagehandLogger } from './initOverride';
 import { overrideStagehandInit } from './initOverride';
+import { ensurePlaywright, ensurePlaywrightBrowsers } from '../utils';
 
 overrideStagehandInit();
 
 export class ExtractCommand implements Command {
   async *execute(query: string, options: SharedBrowserCommandOptions): CommandGenerator {
+    // Ensure Playwright and browsers are available
+    await ensurePlaywright();
+    await ensurePlaywrightBrowsers();
+
     if (!query) {
       yield 'Please provide an instruction and URL. Usage: browser extract "<instruction>" --url <url>';
       return;

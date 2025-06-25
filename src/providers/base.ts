@@ -1524,7 +1524,7 @@ export class OpenAIProvider extends OpenAIBase {
         const requestParams: any = {
           model,
           messages,
-          ...(model.includes('o1') || model.includes('o3')
+          ...(model.startsWith('o') || model.startsWith('gpt-4.1') || model.startsWith('gpt-5')
             ? {
                 max_completion_tokens: maxTokens,
               }

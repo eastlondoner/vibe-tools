@@ -6,6 +6,7 @@ import { generateRules } from '../vibe-rules';
 import { consola } from 'consola';
 import { colors } from 'consola/utils';
 import { JsonInstallCommand } from './jsonInstall';
+import { ensurePlaywrightBrowsers } from './browser/utils';
 import {
   VIBE_HOME_DIR,
   VIBE_HOME_ENV_PATH,
@@ -25,6 +26,10 @@ import {
   parseProviderModel,
   setupClinerules,
   handleLegacyMigration,
+  shouldRunNonInteractive,
+  isRunningInCursor,
+  getExistingConfig,
+  getDefaultConfigForNonInteractive,
 } from '../utils/installUtils';
 import { setTelemetryStatus, TELEMETRY_DATA_DESCRIPTION, isTelemetryEnabled } from '../telemetry';
 
@@ -34,7 +39,7 @@ interface InstallOptions extends CommandOptions {
 }
 
 export class InstallCommand implements Command {
-  private async *setupApiKeys(requiredProviders: Provider[]): CommandGenerator {
+  private async *setupApiKeys(requiredProviders: Provider[], nonInteractive = false): CommandGenerator {
     try {
       loadEnv(); // Load existing env files if any
 
@@ -82,6 +87,12 @@ export class InstallCommand implements Command {
         return;
       }
 
+      // Skip writing to files in non-interactive mode (CI environments)
+      if (nonInteractive) {
+        consola.info(`Skipping API key file storage in non-interactive mode (using environment variables only)`);
+        return;
+      }
+
       // Try to write to home directory first, fall back to local if it fails
       try {
         writeKeysToFile(VIBE_HOME_ENV_PATH, keys);
@@ -112,13 +123,26 @@ export class InstallCommand implements Command {
     return null;
   }
 
+  private async checkExistingLocalConfig(): Promise<Config | null> {
+    const localConfigPath = LOCAL_CONFIG_PATH;
+    if (existsSync(localConfigPath)) {
+      try {
+        const configContent = readFileSync(localConfigPath, 'utf-8');
+        return JSON.parse(configContent) as Config;
+      } catch (error) {
+        consola.error(`Error reading local config: ${error}`);
+      }
+    }
+    return null;
+  }
+
   private async createConfig(config: {
     ide?: string;
     coding?: { provider: Provider; model: string };
     websearch?: { provider: Provider; model: string };
     tooling?: { provider: Provider; model: string };
     largecontext?: { provider: Provider; model: string };
-  }): Promise<{ isLocalConfig: boolean }> {
+  }, nonInteractive = false, preferLocal = false): Promise<{ isLocalConfig: boolean }> {
     const finalConfig: Config = {
       web: {},
       plan: {
@@ -180,20 +204,26 @@ export class InstallCommand implements Command {
           : `\nNote: For Claude Code, choosing 'Global' will save rules to ${CLAUDE_HOME_DIR}/CLAUDE.md, and 'Local' will save to ./CLAUDE.md`;
     }
 
-    // Ask user where to save the config
-    consola.info('');
-    const answer = await consola.prompt(
-      `Where would you like to save the configuration?${rulesLocationMessage}`,
-      {
-        type: 'select',
-        options: [
-          { value: 'global', label: `Global config (${VIBE_HOME_CONFIG_PATH})` },
-          { value: 'local', label: `Local config (${LOCAL_CONFIG_PATH})` },
-        ],
-      }
-    );
-
-    const isLocalConfig = answer === 'local';
+    // Ask user where to save the config or use default for non-interactive
+    let isLocalConfig: boolean;
+    
+    if (nonInteractive) {
+      isLocalConfig = preferLocal;
+      consola.info(`Configuration will be saved ${isLocalConfig ? 'locally' : 'globally'} (auto-detected)`);
+    } else {
+      consola.info('');
+      const answer = await consola.prompt(
+        `Where would you like to save the configuration?${rulesLocationMessage}`,
+        {
+          type: 'select',
+          options: [
+            { value: 'global', label: `Global config (${VIBE_HOME_CONFIG_PATH})` },
+            { value: 'local', label: `Local config (${LOCAL_CONFIG_PATH})` },
+          ],
+        }
+      );
+      isLocalConfig = answer === 'local';
+    }
     const configPath = isLocalConfig ? LOCAL_CONFIG_PATH : VIBE_HOME_CONFIG_PATH;
 
     // Ensure all provider names are lowercase before writing
@@ -224,6 +254,67 @@ export class InstallCommand implements Command {
     }
   }
 
+  private async handleIDERules(absolutePath: string, selectedIde: string, isLocalConfig: boolean): Promise<void> {
+    // Handle IDE-specific rules setup using switch-case
+    // Declare variables outside switch to avoid lexical declaration errors
+    let rulesPath: string;
+    let rulesTemplate: string;
+    let rulesDir: string;
+    let cursorPath: string;
+
+    switch (selectedIde) {
+      case 'cursor':
+        // For cursor, create the new directory structure
+        // Create necessary directories
+        rulesDir = join(absolutePath, '.cursor', 'rules');
+        ensureDirectoryExists(rulesDir);
+
+        // Write the rules file directly to the new location
+        cursorPath = join(rulesDir, 'vibe-tools.mdc');
+        try {
+          writeFileSync(cursorPath, generateRules('cursor'));
+          consola.success(`Rules written to ${colors.cyan(cursorPath)}`);
+        } catch (error) {
+          consola.error(`${colors.red('Error writing rules for cursor:')}`, error);
+          throw error;
+        }
+        break;
+
+      case 'claude-code':
+        rulesTemplate = generateRules('claude-code');
+        rulesPath = isLocalConfig
+          ? join(absolutePath, 'CLAUDE.md')
+          : join(CLAUDE_HOME_DIR, 'CLAUDE.md');
+        ensureDirectoryExists(join(rulesPath, '..'));
+        updateRulesSection(rulesPath, rulesTemplate);
+        consola.success(`Claude Code rules updated in ${colors.cyan(rulesPath)}`);
+        break;
+
+      case 'codex':
+        rulesTemplate = generateRules('codex');
+        rulesPath = isLocalConfig
+          ? join(absolutePath, CODEX_LOCAL_INSTRUCTIONS_FILENAME)
+          : CODEX_GLOBAL_INSTRUCTIONS_PATH;
+        ensureDirectoryExists(join(rulesPath, '..'));
+        updateRulesSection(rulesPath, rulesTemplate);
+        consola.success(`Codex instructions updated in ${colors.cyan(rulesPath)}`);
+        break;
+
+      case 'windsurf':
+        rulesPath = join(absolutePath, '.windsurfrules');
+        rulesTemplate = generateRules('windsurf');
+        ensureDirectoryExists(join(rulesPath, '..'));
+        updateRulesSection(rulesPath, rulesTemplate);
+        consola.success(`Updated .windsurfrules at ${colors.cyan(rulesPath)}`);
+        break;
+
+      case 'cline':
+      case 'roo':
+        await setupClinerules(absolutePath, selectedIde, generateRules);
+        break;
+    }
+  }
+
   async *execute(targetPath: string, options?: InstallOptions): CommandGenerator {
     // If JSON option is provided, use the JSON installer
     if (options?.json) {
@@ -237,23 +328,28 @@ export class InstallCommand implements Command {
     const absolutePath = join(process.cwd(), targetPath);
 
     try {
-      // Clear the screen for a clean start
-      clearScreen();
 
-      // Welcome message
-      const logo = getVibeToolsLogo();
+      // Check if we should run in non-interactive mode
+      const runNonInteractive = shouldRunNonInteractive();
 
-      consola.box({
-        title: '🚀 Welcome to Vibe-Tools Setup!',
-        titleColor: 'white',
-        borderColor: 'green',
-        style: {
-          padding: 2,
-          borderStyle: 'rounded',
-        },
-        message: logo,
-      });
+      if(!runNonInteractive) {
+        // Clear the screen for a clean start
+        clearScreen();
 
+        // Welcome message
+        const logo = getVibeToolsLogo();
+
+        consola.box({
+          title: '🚀 Welcome to Vibe-Tools Setup!',
+          titleColor: 'white',
+          borderColor: 'green',
+          style: {
+            padding: 2,
+            borderStyle: 'rounded',
+          },
+          message: logo,
+        });
+      }
       // Load env AFTER displaying welcome message
       loadEnv();
 
@@ -265,6 +361,84 @@ export class InstallCommand implements Command {
 
       // Handle legacy migration *before* asking for new setup
       yield* handleLegacyMigration();
+ 
+      if (runNonInteractive) {
+        consola.info(`${colors.cyan('🤖 Non-interactive mode detected')} - Using auto-configuration`);
+        
+        // Set telemetry to enabled by default in CI environments
+        if (isTelemetryEnabled() === null) {
+          setTelemetryStatus(true);
+          consola.info(`Anonymous diagnostics ${colors.green('enabled')} (CI default)`);
+        }
+        
+        // Check for existing configuration
+        const { config: existingConfig, isLocal: existingIsLocal } = getExistingConfig();
+        
+        if (existingConfig) {
+          consola.success(`Using existing ${existingIsLocal ? 'local' : 'global'} configuration`);
+          
+          // Create config from existing one, but detect IDE if running in Cursor
+          const selectedIde = isRunningInCursor() ? 'cursor' : (existingConfig.ide || 'cursor');
+          
+          const config = {
+            ide: selectedIde,
+            coding: existingConfig.repo ? {
+              provider: existingConfig.repo.provider as Provider,
+              model: existingConfig.repo.model || 'gemini-2.5-flash-preview-05-20'
+            } : undefined,
+            websearch: existingConfig.web && existingConfig.web.provider ? {
+              provider: existingConfig.web.provider as Provider,
+              model: existingConfig.web.model || 'sonar-pro'
+            } : undefined,
+            tooling: existingConfig.plan && existingConfig.plan.thinkingProvider ? {
+              provider: existingConfig.plan.thinkingProvider as Provider,
+              model: existingConfig.plan.thinkingModel || 'claude-sonnet-4-20250514'
+            } : undefined,
+            largecontext: existingConfig.doc && existingConfig.doc.provider ? {
+              provider: existingConfig.doc.provider as Provider,
+              model: existingConfig.doc.model || 'gemini-2.5-pro-preview-05-06'
+            } : undefined,
+          };
+          
+          // Skip to API key setup and config creation
+          const requiredProviders = collectRequiredProviders(config);
+          yield* this.setupApiKeys(requiredProviders, true);
+          const { isLocalConfig } = await this.createConfig(config, true, existingIsLocal);
+          
+          // Install Playwright browsers
+          if (!process.env.SKIP_PLAYWRIGHT) {
+            await ensurePlaywrightBrowsers();
+          }
+          
+          // Handle IDE rules
+          await this.handleIDERules(absolutePath, selectedIde, isLocalConfig);
+          
+          // Success message
+          consola.success(`${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(isLocalConfig ? 'Local' : 'Global')}, IDE: ${colors.cyan(selectedIde)}`);
+          return;
+        } else {
+          // Use defaults for new installation
+          consola.info('No existing configuration found - using recommended defaults');
+          const defaultConfig = getDefaultConfigForNonInteractive();
+          
+          // Skip to API key setup and config creation
+          const requiredProviders = collectRequiredProviders(defaultConfig);
+          yield* this.setupApiKeys(requiredProviders, true);
+          const { isLocalConfig } = await this.createConfig(defaultConfig, true, false); // Default to global
+          
+          // Install Playwright browsers
+          if (!process.env.SKIP_PLAYWRIGHT) {
+            await ensurePlaywrightBrowsers();
+          }
+          
+          // Handle IDE rules
+          await this.handleIDERules(absolutePath, defaultConfig.ide, isLocalConfig);
+          
+          // Success message
+          consola.success(`${colors.green('✨ Non-interactive installation completed!')} Configuration: ${colors.cyan(isLocalConfig ? 'Local' : 'Global')}, IDE: ${colors.cyan(defaultConfig.ide)}`);
+          return;
+        }
+      }
 
       // Ask about telemetry/diagnostics only if status is undetermined or disabled
       const currentTelemetryStatus = isTelemetryEnabled();
@@ -310,17 +484,39 @@ export class InstallCommand implements Command {
       // Silently continue if telemetry is already enabled
 
       // Check for existing global config before asking for preferences
+      const hasExistingLocalConfig = existsSync(LOCAL_CONFIG_PATH);
       const existingGlobalConfig = await this.checkExistingGlobalConfig();
       let useExistingGlobal = false;
+      let useExistingLocal = false;
 
       if (existingGlobalConfig) {
-        useExistingGlobal = await consola.prompt(
-          'Found existing global configuration. Would you like to use it?',
-          { type: 'confirm' }
-        );
+        if (runNonInteractive) {
+          if (hasExistingLocalConfig) {
+            useExistingLocal = true;
+            consola.info('Using existing local configuration (non-interactive mode)');
+          } else {
+            useExistingGlobal = !!existingGlobalConfig;
+            consola.info('Using existing global configuration (non-interactive mode)');
+          }
+        } else {
+          useExistingGlobal = await consola.prompt(
+            'Found existing global configuration. Would you like to use it?',
+            { type: 'confirm' }
+          );
+        }
       }
 
       // Ask for IDE preference
+      let ideInitial = 'cursor';
+      if (useExistingLocal) {
+        const existingLocalConfig = await this.checkExistingLocalConfig();
+        if (existingLocalConfig?.ide) {
+          ideInitial = existingLocalConfig.ide;
+        }
+      } else if (useExistingGlobal && existingGlobalConfig?.ide) {
+        ideInitial = existingGlobalConfig.ide;
+      }
+
       const selectedIde = await consola.prompt('Which IDE will you be using with vibe-tools?', {
         type: 'select',
         options: [
@@ -331,8 +527,7 @@ export class InstallCommand implements Command {
           { value: 'cline', label: 'Cline' },
           { value: 'roo', label: 'Roo' },
         ],
-        initial:
-          useExistingGlobal && existingGlobalConfig?.ide ? existingGlobalConfig.ide : 'cursor',
+        initial: ideInitial,
       });
 
       // Create initial config with defaults
@@ -346,8 +541,46 @@ export class InstallCommand implements Command {
         ide: selectedIde,
       };
 
+      // If using existing local config, use those values as defaults
+      if (useExistingLocal) {
+        const existingLocalConfig = await this.checkExistingLocalConfig();
+        if (existingLocalConfig) {
+          config = {
+            ide: selectedIde,
+            coding: existingLocalConfig.repo
+              ? {
+                  provider: existingLocalConfig.repo.provider as Provider,
+                  model: existingLocalConfig.repo.model || '',
+                }
+              : undefined,
+            websearch:
+              existingLocalConfig.web && existingLocalConfig.web.provider
+                ? {
+                    provider: existingLocalConfig.web.provider as Provider,
+                    model: existingLocalConfig.web.model || '',
+                  }
+                : undefined,
+            tooling:
+              existingLocalConfig.plan && existingLocalConfig.plan.thinkingProvider
+                ? {
+                    provider: existingLocalConfig.plan.thinkingProvider as Provider,
+                    model: existingLocalConfig.plan.thinkingModel || '',
+                  }
+                : undefined,
+            largecontext:
+              existingLocalConfig.doc && existingLocalConfig.doc.provider
+                ? {
+                    provider: existingLocalConfig.doc.provider as Provider,
+                    model: existingLocalConfig.doc.model || '',
+                  }
+                : undefined,
+          };
+
+          consola.success('Using existing local configuration values as defaults');
+        }
+      }
       // If using existing global config, use those values as defaults
-      if (useExistingGlobal && existingGlobalConfig) {
+      else if (useExistingGlobal && existingGlobalConfig) {
         config = {
           ide: selectedIde,
           coding: existingGlobalConfig.repo
@@ -540,71 +773,20 @@ export class InstallCommand implements Command {
       const requiredProviders = collectRequiredProviders(config);
 
       // Setup API keys
-      for await (const message of this.setupApiKeys(requiredProviders)) {
+      for await (const message of this.setupApiKeys(requiredProviders, runNonInteractive)) {
         yield message;
       }
 
       // Create config file and get its location preference
-      const { isLocalConfig } = await this.createConfig(config);
+      const { isLocalConfig } = await this.createConfig(config, false, useExistingLocal);
 
-      // Handle IDE-specific rules setup using switch-case
-      // Declare variables outside switch to avoid lexical declaration errors
-      let rulesPath: string;
-      let rulesTemplate: string;
-      let rulesDir: string;
-      let cursorPath: string;
-
-      switch (selectedIde) {
-        case 'cursor':
-          // For cursor, create the new directory structure
-          // Create necessary directories
-          rulesDir = join(absolutePath, '.cursor', 'rules');
-          ensureDirectoryExists(rulesDir);
-
-          // Write the rules file directly to the new location
-          cursorPath = join(rulesDir, 'vibe-tools.mdc');
-          try {
-            writeFileSync(cursorPath, generateRules('cursor'));
-            consola.success(`Rules written to ${colors.cyan(cursorPath)}`);
-          } catch (error) {
-            consola.error(`${colors.red('Error writing rules for cursor:')}`, error);
-            return;
-          }
-          break;
-
-        case 'claude-code':
-          rulesTemplate = generateRules('claude-code');
-          rulesPath = isLocalConfig
-            ? join(absolutePath, 'CLAUDE.md')
-            : join(CLAUDE_HOME_DIR, 'CLAUDE.md');
-          ensureDirectoryExists(join(rulesPath, '..'));
-          updateRulesSection(rulesPath, rulesTemplate);
-          consola.success(`Claude Code rules updated in ${colors.cyan(rulesPath)}`);
-          break;
-
-        case 'codex':
-          rulesTemplate = generateRules('codex');
-          rulesPath = isLocalConfig
-            ? join(absolutePath, CODEX_LOCAL_INSTRUCTIONS_FILENAME)
-            : CODEX_GLOBAL_INSTRUCTIONS_PATH;
-          ensureDirectoryExists(join(rulesPath, '..'));
-          updateRulesSection(rulesPath, rulesTemplate);
-          consola.success(`Codex instructions updated in ${colors.cyan(rulesPath)}`);
-          break;
-
-        case 'windsurf':
-          rulesPath = join(absolutePath, '.windsurfrules');
-          rulesTemplate = generateRules('windsurf');
-          ensureDirectoryExists(join(rulesPath, '..'));
-          updateRulesSection(rulesPath, rulesTemplate);
-          consola.success(`Updated .windsurfrules at ${colors.cyan(rulesPath)}`);
-          break;
-
-        case 'cline':
-        case 'roo':
-          await setupClinerules(absolutePath, selectedIde, generateRules);
-          break;
+      // Install Playwright browsers (Chromium) unless explicitly skipped
+      if (!process.env.SKIP_PLAYWRIGHT) {
+        await ensurePlaywrightBrowsers();
       }
+
+      // Handle IDE-specific rules setup
+      await this.handleIDERules(absolutePath, selectedIde, isLocalConfig);
 
       // Installation completed
       consola.box({

@@ -1,7 +1,7 @@
 import type { Command, CommandGenerator, CommandOptions } from '../../types';
 import { chromium } from 'playwright';
 import { loadConfig } from '../../config.ts';
-import { ensurePlaywright } from './utils.ts';
+import { ensurePlaywright, ensurePlaywrightBrowsers } from './utils.ts';
 import type { SharedBrowserCommandOptions } from './browserOptions';
 import { setupConsoleLogging, setupNetworkMonitoring, outputMessages } from './utilsShared';
 
@@ -28,6 +28,7 @@ export class ElementCommand implements Command {
     try {
       // Check for Playwright availability first
       await ensurePlaywright();
+      await ensurePlaywrightBrowsers();
 
       // Parse selector from query if not provided in options
       if (!options?.selector && query) {

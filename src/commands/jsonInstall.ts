@@ -5,6 +5,7 @@ import { loadEnv } from '../config';
 import { generateRules } from '../vibe-rules';
 import { consola } from 'consola';
 import { colors } from 'consola/utils';
+import { ensurePlaywrightBrowsers } from './browser/utils';
 import {
   VIBE_HOME_DIR,
   VIBE_HOME_ENV_PATH,
@@ -24,6 +25,7 @@ import {
   collectRequiredProviders,
   setupClinerules,
   handleLegacyMigration,
+  shouldRunNonInteractive,
 } from '../utils/installUtils';
 import { setTelemetryStatus, TELEMETRY_DATA_DESCRIPTION, isTelemetryEnabled } from '../telemetry';
 
@@ -97,7 +99,7 @@ function parseJsonConfig(
 }
 
 export class JsonInstallCommand implements Command {
-  private async *setupApiKeys(requiredProviders: Provider[]): CommandGenerator {
+  private async *setupApiKeys(requiredProviders: Provider[], nonInteractive = false): CommandGenerator {
     try {
       loadEnv(); // Load existing env files if any
 
@@ -145,6 +147,12 @@ export class JsonInstallCommand implements Command {
         return;
       }
 
+      // Skip writing to files in non-interactive mode (CI environments)
+      if (nonInteractive) {
+        consola.info(`Skipping API key file storage in non-interactive mode (using environment variables only)`);
+        return;
+      }
+
       // Try to write to home directory first, fall back to local if it fails
       try {
         writeKeysToFile(VIBE_HOME_ENV_PATH, keys);
@@ -176,7 +184,9 @@ export class JsonInstallCommand implements Command {
   }
 
   private async createConfig(
-    jsonConfig: Record<string, { provider: Provider; model: string }> & { ide?: string }
+    jsonConfig: Record<string, { provider: Provider; model: string }> & { ide?: string },
+    nonInteractive = false,
+    preferLocal = false
   ): Promise<{ isLocalConfig: boolean }> {
     const config: Config = {
       web: {},
@@ -246,20 +256,26 @@ export class JsonInstallCommand implements Command {
           : `\nNote: For Claude Code, choosing 'Global' will save rules to ${CLAUDE_HOME_DIR}/CLAUDE.md, and 'Local' will save to ./CLAUDE.md`;
     }
 
-    // Ask user where to save the config
-    consola.info('');
-    const answer = await consola.prompt(
-      `Where would you like to save the configuration?${rulesLocationMessage}`,
-      {
-        type: 'select',
-        options: [
-          { value: 'global', label: `Global config (${VIBE_HOME_CONFIG_PATH})` },
-          { value: 'local', label: `Local config (${LOCAL_CONFIG_PATH})` },
-        ],
-      }
-    );
-
-    const isLocalConfig = answer === 'local';
+    // Ask user where to save the config or use default for non-interactive
+    let isLocalConfig: boolean;
+    
+    if (nonInteractive) {
+      isLocalConfig = preferLocal;
+      consola.info(`Configuration will be saved ${isLocalConfig ? 'locally' : 'globally'} (auto-detected)`);
+    } else {
+      consola.info('');
+      const answer = await consola.prompt(
+        `Where would you like to save the configuration?${rulesLocationMessage}`,
+        {
+          type: 'select',
+          options: [
+            { value: 'global', label: `Global config (${VIBE_HOME_CONFIG_PATH})` },
+            { value: 'local', label: `Local config (${LOCAL_CONFIG_PATH})` },
+          ],
+        }
+      );
+      isLocalConfig = answer === 'local';
+    }
     const configPath = isLocalConfig ? LOCAL_CONFIG_PATH : VIBE_HOME_CONFIG_PATH;
 
     // Ensure all provider names are lowercase before writing
@@ -320,45 +336,56 @@ export class JsonInstallCommand implements Command {
 
       consola.info('Parsed JSON configuration successfully.');
 
-      // Check telemetry status - only prompt if not already set or disabled via env
+      // Check if we should run in non-interactive mode
+      const runNonInteractive = shouldRunNonInteractive();
+      
+      // Check telemetry status - handle non-interactive mode or prompt
       const currentTelemetryStatus = isTelemetryEnabled();
 
-      // Only prompt if undetermined (null) or explicitly disabled (false)
-      if (currentTelemetryStatus === null || currentTelemetryStatus === false) {
-        const diagnosticsChoice = await consola.prompt(
-          'Would you like to enable anonymous usage diagnostics to help improve vibe-tools?',
-          {
-            type: 'select',
-            options: [
-              { value: 'yes', label: 'Yes' },
-              { value: 'no', label: 'No' },
-              { value: 'more_info', label: 'What data do you track?' },
-            ],
-            initial: 'yes', // Default to YES
+      if (runNonInteractive) {
+        // Set telemetry to enabled by default in CI environments
+        if (currentTelemetryStatus === null) {
+          setTelemetryStatus(true);
+          consola.info(`Anonymous diagnostics ${colors.green('enabled')} (CI default)`);
+        }
+      } else {
+        // Only prompt if undetermined (null) or explicitly disabled (false)
+        if (currentTelemetryStatus === null || currentTelemetryStatus === false) {
+          const diagnosticsChoice = await consola.prompt(
+            'Would you like to enable anonymous usage diagnostics to help improve vibe-tools?',
+            {
+              type: 'select',
+              options: [
+                { value: 'yes', label: 'Yes' },
+                { value: 'no', label: 'No' },
+                { value: 'more_info', label: 'What data do you track?' },
+              ],
+              initial: 'yes', // Default to YES
+            }
+          );
+
+          // If they want more info, show the details and re-prompt
+          if (diagnosticsChoice === 'more_info') {
+            consola.info(`\n${colors.bold('Anonymous Diagnostics Details')}`);
+            consola.info(TELEMETRY_DATA_DESCRIPTION.trim().replace(/^\s+/gm, '  ')); // Indent description
+
+            // Re-prompt after showing details
+            const enableAfterDetails = await consola.prompt('Enable anonymous diagnostics?', {
+              type: 'confirm',
+              initial: false, // Default to NO
+            });
+            setTelemetryStatus(!!enableAfterDetails); // Set status based on user choice
+            consola.info(
+              `Anonymous diagnostics ${enableAfterDetails ? colors.green('enabled') : colors.yellow('disabled')}. You can change this later using the VIBE_TOOLS_NO_TELEMETRY environment variable.\n`
+            );
+          } else {
+            // Handle direct yes/no answer
+            const enableTelemetry = diagnosticsChoice === 'yes';
+            setTelemetryStatus(enableTelemetry); // Set status based on user choice
+            consola.info(
+              `Anonymous diagnostics ${enableTelemetry ? colors.green('enabled') : colors.yellow('disabled')}. You can change this later using the VIBE_TOOLS_NO_TELEMETRY environment variable.\n`
+            );
           }
-        );
-
-        // If they want more info, show the details and re-prompt
-        if (diagnosticsChoice === 'more_info') {
-          consola.info(`\n${colors.bold('Anonymous Diagnostics Details')}`);
-          consola.info(TELEMETRY_DATA_DESCRIPTION.trim().replace(/^\s+/gm, '  ')); // Indent description
-
-          // Re-prompt after showing details
-          const enableAfterDetails = await consola.prompt('Enable anonymous diagnostics?', {
-            type: 'confirm',
-            initial: false, // Default to NO
-          });
-          setTelemetryStatus(!!enableAfterDetails); // Set status based on user choice
-          consola.info(
-            `Anonymous diagnostics ${enableAfterDetails ? colors.green('enabled') : colors.yellow('disabled')}. You can change this later using the VIBE_TOOLS_NO_TELEMETRY environment variable.\n`
-          );
-        } else {
-          // Handle direct yes/no answer
-          const enableTelemetry = diagnosticsChoice === 'yes';
-          setTelemetryStatus(enableTelemetry); // Set status based on user choice
-          consola.info(
-            `Anonymous diagnostics ${enableTelemetry ? colors.green('enabled') : colors.yellow('disabled')}. You can change this later using the VIBE_TOOLS_NO_TELEMETRY environment variable.\n`
-          );
         }
       }
       // Silently continue if telemetry is already enabled
@@ -418,12 +445,17 @@ export class JsonInstallCommand implements Command {
       const requiredProviders = collectRequiredProviders(jsonConfig);
 
       // Setup API keys
-      for await (const message of this.setupApiKeys(requiredProviders)) {
+      for await (const message of this.setupApiKeys(requiredProviders, runNonInteractive)) {
         yield message;
       }
 
       // Create config file and get its location preference
-      const { isLocalConfig } = await this.createConfig(jsonConfig);
+      const { isLocalConfig } = await this.createConfig(jsonConfig, runNonInteractive, false);
+
+      // Install Playwright browsers (Chromium) unless explicitly skipped
+      if (!process.env.SKIP_PLAYWRIGHT) {
+        await ensurePlaywrightBrowsers();
+      }
 
       // Handle IDE-specific rules setup
       const selectedIde = jsonConfig.ide?.toLowerCase() || 'cursor';

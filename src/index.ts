@@ -1,7 +1,8 @@
 import { commands } from './commands/index.ts';
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readlinkSync, lstatSync } from 'node:fs';
 import {
   isRulesContentUpToDate,
   checkFileForVibeTag,
@@ -9,6 +10,7 @@ import {
   getConfiguredIde,
 } from './vibe-rules';
 import { checkPackageVersion, getCurrentVersion } from './utils/versionUtils';
+import { shouldRunNonInteractive } from './utils/installUtils';
 import type { CommandOptions, Provider } from './types';
 import { reasoningEffortSchema } from './types';
 import { promises as fsPromises } from 'node:fs';
@@ -17,7 +19,57 @@ import consola from 'consola';
 import { spawn } from 'node:child_process';
 import { startCommand, updateCommandState, recordError, endCommand } from './telemetry/index';
 // Get the directory name of the current module
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Helper function to resolve symlinks
+function resolveSymlink(path: string): string {
+  try {
+    if (lstatSync(path).isSymbolicLink()) {
+      return resolve(dirname(path), readlinkSync(path));
+    }
+    return path;
+  } catch {
+    return path; // Return original path if we can't resolve
+  }
+}
+
+// Helper function to detect package manager from installation path
+function detectPackageManager(): string {
+  try {
+    // Resolve the actual path of the vibe-tools executable
+    const resolvedFilename = resolveSymlink(__filename);
+    
+    // Check for bun
+    if (resolvedFilename.includes('/.bun/install/global/')) {
+      return 'bun';
+    }
+    
+    // Check for pnpm
+    if (resolvedFilename.includes('/pnpm/vibe-tools') || resolvedFilename.endsWith('/pnpm/vibe-tools')) {
+      return 'pnpm';
+    }
+    
+    // Check PNPM_HOME environment variable
+    if (process.env.PNPM_HOME) {
+      const pnpmHomePath = resolveSymlink(process.env.PNPM_HOME);
+      if (resolvedFilename.startsWith(pnpmHomePath)) {
+        return 'pnpm';
+      }
+    }
+    
+    // Check for yarn
+    if (resolvedFilename.includes('/yarn/global/')) {
+      return 'yarn';
+    }
+    
+    // Default to npm
+    return 'npm';
+  } catch {
+    // If any error occurs during detection, default to npm
+    return 'npm';
+  }
+}
 
 // ensure that console logs print json to arbitrary depth
 util.inspect.defaultOptions.depth = null;
@@ -530,12 +582,21 @@ async function main() {
         `New version v${versionInfo.latest} available (you have v${versionInfo.current}). Automatically updating...`
       );
 
-      // Explicitly ask user for package manager
-      const selectedPackageManager = await consola.prompt('Select package manager for update:', {
-        type: 'select',
-        options: ['npm', 'bun', 'yarn', 'pnpm'],
-        initial: 'npm', // Default suggestion
-      });
+      // Detect package manager based on environment or ask user
+      const runNonInteractive = shouldRunNonInteractive();
+      let selectedPackageManager: string;
+      
+      if (runNonInteractive) {
+        selectedPackageManager = detectPackageManager();
+        consola.info(`Auto-detected package manager: ${selectedPackageManager}`);
+      } else {
+        selectedPackageManager = await consola.prompt('Select package manager for update:', {
+          type: 'select',
+          options: ['npm', 'bun', 'yarn', 'pnpm'],
+          initial: detectPackageManager(), // Use detection as default suggestion
+
+        });
+      }
 
       let pmCommand: string;
       let pmArgs: string[];
@@ -568,6 +629,9 @@ async function main() {
       const updateProcess = spawn(pmCommand, pmArgs, {
         stdio: 'inherit',
         shell: true,
+        env: {
+          ...process.env,
+        },
       });
 
       updateProcess.on('close', async (code) => {
@@ -610,17 +674,27 @@ async function main() {
 
           // Special handling for 'install' command
           if (command === 'install') {
-            // Adjusted prompt message since we removed the automatic update attempt
-            const promptText = `vibe-tools update complete. Still proceed with install (config setup, etc.)?`;
-            const proceedWithInstall = await consola.prompt(promptText, {
-              type: 'confirm',
-              initial: false, // Default to not re-running install actions
-            });
+            const isNonInteractive = shouldRunNonInteractive();
+            let proceedWithInstall: boolean;
+            
+            if (isNonInteractive) {
+              proceedWithInstall = true;
+              consola.info('Non-interactive mode: Automatically proceeding with install...');
+            } else {
+              // Adjusted prompt message since we removed the automatic update attempt
+              const promptText = `vibe-tools update complete. Still proceed with install (config setup, etc.)?`;
+              proceedWithInstall = await consola.prompt(promptText, {
+                type: 'confirm',
+                initial: false, // Default to not re-running install actions
+              });
+            }
+            
             if (proceedWithInstall) {
               consola.info('Proceeding with original install command...');
               const rerunProcess = spawn('vibe-tools', originalArgs, {
                 stdio: 'inherit',
                 shell: true,
+                env: process.env,
               });
               rerunProcess.on('close', (rerunCode) => process.exit(rerunCode ?? 1));
               rerunProcess.on('error', (err) => {
@@ -637,6 +711,7 @@ async function main() {
             const rerunProcess = spawn('vibe-tools', originalArgs, {
               stdio: 'inherit',
               shell: true,
+              env: process.env,
             });
             rerunProcess.on('close', (rerunCode) => process.exit(rerunCode ?? 1));
             rerunProcess.on('error', (err) => {

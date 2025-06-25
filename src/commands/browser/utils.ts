@@ -1,3 +1,5 @@
+import { consola } from 'consola';
+
 /**
  * Checks if Playwright is available and returns its version information
  * @returns Object containing availability status and version info
@@ -68,4 +70,30 @@ export async function ensurePlaywright(): Promise<boolean> {
     console.log(`Using Playwright: ${version}`);
   }
   return true;
+}
+
+/**
+ * Ensures Playwright browsers (specifically Chromium) are installed
+ * Uses the programmatic API to avoid version mismatches
+ * @returns true if installation was successful, false otherwise
+ */
+export async function ensurePlaywrightBrowsers(): Promise<boolean> {
+  try {
+    consola.start('Installing Playwright Chromium browser (one-time setup)...');
+
+    // Import the programmatic installation function from playwright-core
+    const { installBrowsersForNpmInstall } = await import(
+      'playwright-core/lib/server/registry/index'
+    );
+
+    // Install only Chromium using the exact Playwright version that vibe-tools depends on
+    await installBrowsersForNpmInstall(['chromium']);
+
+    consola.success('Playwright Chromium browser installed successfully.');
+    return true;
+  } catch (error) {
+    consola.warn('Playwright browser installation failed; browser commands may not work.');
+    consola.warn(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return false;
+  }
 }

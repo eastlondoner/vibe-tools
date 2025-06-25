@@ -184,7 +184,7 @@ Install vibe-tools globally:
 npm install -g vibe-tools
 ```
 
-Then run the interactive setup:
+Then run the setup:
 
 ```bash
 vibe-tools install .
@@ -193,7 +193,27 @@ vibe-tools install .
 This command will:
 
 1.  Guide you through API key configuration for the AI providers you choose.
-2.  Create or update AI instruction files based on your selected IDE (e.g., setting up `.cursorrules` for Cursor, `CLAUDE.md` for Claude Code, `.windsurfrules` for Windsurf, etc.).
+2.  Automatically install Playwright browsers (Chromium) for browser automation commands.
+3.  Create or update AI instruction files based on your selected IDE (e.g., setting up `.cursorrules` for Cursor, `CLAUDE.md` for Claude Code, `.windsurfrules` for Windsurf, etc.).
+
+### Non-Interactive Installation (CI/CD)
+
+For automated environments, `vibe-tools install` automatically detects CI environments and runs in non-interactive mode:
+
+```bash
+# CI environments - automatically detected and runs without prompts
+CI=true vibe-tools install .
+
+# Or explicitly set non-interactive mode
+NONINTERACTIVE=true vibe-tools install .
+```
+
+In non-interactive mode, vibe-tools will:
+- Auto-detect your package manager and IDE environment
+- Use existing configurations (local takes precedence over global)
+- Apply sensible defaults for new installations
+- Skip writing API keys to files (uses environment variables only)
+- Enable telemetry by default (can be disabled with `VIBE_TOOLS_NO_TELEMETRY=1`)
 
 ## Requirements
 
@@ -201,7 +221,7 @@ This command will:
 - Perplexity API key
 - Google Gemini API key
 - For browser commands:
-  - Playwright (`npm install --global playwright`)
+  - Playwright browsers are automatically installed during `vibe-tools install`
   - OpenAI API key or Anthropic API key (for `act`, `extract`, and `observe` commands)
 
 `vibe-tools` uses Gemini-2.0 because it is the only good LLM with a context window that goes up to 2 million tokens - enough to handle and entire codebase in one shot. Gemini 2.0 experimental models that we use by default are currently free to use on Google and you need a Google Cloud project to create an API key.
@@ -337,6 +357,8 @@ Note: The ask command requires both --provider and --model parameters to be spec
    ```
    - At least one of `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY` must be provided to use the `mcp` commands.
 
+**CI/CD Environments**: In non-interactive mode (automatically detected in CI environments), vibe-tools uses only environment variables for API keys and skips writing them to filesystem for enhanced security.
+
 ### Google Gemini API Authentication
 
 `vibe-tools` supports multiple authentication methods for accessing the Google Gemini API, providing flexibility for different environments and security requirements. You can choose from the following methods:
@@ -421,15 +443,7 @@ The Gemini 2.0 Pro context limit is 2M tokens, you can add filters to .repomixig
 
 Automate browser interactions for web scraping, testing, and debugging:
 
-**Important:** The `browser` command requires the Playwright package to be installed separately in your project:
-
-```bash
-npm install playwright
-# or
-yarn add playwright
-# or
-pnpm add playwright
-```
+**Note:** Playwright browsers are automatically installed when you run `vibe-tools install`. No additional setup is required for browser commands.
 
 1. `open` - Open a URL and capture page content:
 
@@ -602,6 +616,12 @@ Common issues and solutions:
    - Use `--headless` mode for better performance (default)
    - Reduce the viewport size with `--viewport`
    - Consider using `--connect-to` for development
+
+6. **Browser Installation Issues**
+   - Playwright browsers are automatically installed during `vibe-tools install`
+   - If browser installation fails, you can skip it by setting `SKIP_PLAYWRIGHT=1` and install manually
+   - To manually install browsers: `npx playwright install chromium`
+   - Browser installation uses the exact Playwright version that vibe-tools depends on
 
 ### YouTube Video Analysis
 
@@ -1062,7 +1082,18 @@ vibe-tools web "What's new in TypeScript 5.7?"
    - On Unix-like systems, the global bin directory is typically `/usr/local/bin` or `~/.npm-global/bin`
    - On Windows, it's typically `%AppData%\npm`
 
-2. **API Key Errors**
+2. **Installation Hanging in CI/CD**
+
+   - For automated environments, ensure you set appropriate environment variables:
+     ```bash
+     CI=true vibe-tools install .
+     # or
+     NONINTERACTIVE=true vibe-tools install .
+     ```
+   - Set `SKIP_SETUP=true` to skip API key prompts if keys are already in environment
+   - vibe-tools automatically detects CI environments and skips interactive prompts
+
+3. **API Key Errors**
 
    - Verify `.vibe-tools.env` exists and contains valid API keys
    - Run `vibe-tools install` to reconfigure API keys
@@ -1077,13 +1108,13 @@ vibe-tools web "What's new in TypeScript 5.7?"
    - If using OpenRouter for MCP, ensure `OPENROUTER_API_KEY` is set.
    - If a provider is not specified for an MCP command, Anthropic will be used by default.
 
-3. **Model Errors**
+4. **Model Errors**
 
    - Check your internet connection
    - Verify API key permissions
    - Ensure the specified model is available for your API tier
 
-4. **GitHub API Rate Limits**
+5. **GitHub API Rate Limits**
 
    - GitHub API has rate limits for unauthenticated requests. For higher limits you must be authenticated.
    - If you have the gh cli installed and logged in vibe-tools will use that to obtain a short lived auth token. Otherwise you can add a GitHub token to your environment:
@@ -1092,14 +1123,14 @@ vibe-tools web "What's new in TypeScript 5.7?"
      ```
    - Private repositories always require authentication
 
-5. **Documentation Generation Issues**
+6. **Documentation Generation Issues**
 
    - Repository too large: Try using `--hint` to focus on specific parts
    - Token limit exceeded: The tool will automatically switch to a larger model
    - Network timeouts: The tool includes automatic retries
    - For very large repositories, consider documenting specific directories or files
 
-6. **Cursor Integration**
+7. **Cursor Integration**
    - If .cursorrules is outdated, run `vibe-tools install .` to update
    - Ensure Cursor is configured to allow command execution
    - Check that your Cursor version supports AI commands

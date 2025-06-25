@@ -359,3 +359,77 @@ export async function* handleLegacyMigration(): CommandGenerator {
     yield `Error during migration: ${error instanceof Error ? error.message : 'Unknown error'}`;
   }
 }
+
+// Environment detection functions for non-interactive installation
+export function isRunningInCI(): boolean {
+  const ciIndicators = [
+    process.env.CI === 'true' || process.env.CI === '1',
+    process.env.DEBIAN_FRONTEND === 'noninteractive',
+    process.env.NONINTERACTIVE === 'true' || process.env.NONINTERACTIVE === '1',
+  ];
+  
+  return ciIndicators.some(indicator => indicator);
+}
+
+export function isRunningInCursor(): boolean {
+  return !!(process.env.CURSOR_TRACE_ID && process.env.CURSOR_TRACE_ID.trim() !== '');
+}
+
+export function getExistingConfig(): { config: Config | null; isLocal: boolean } {
+  // Check local config first
+  if (existsSync(LOCAL_CONFIG_PATH)) {
+    try {
+      const configContent = readFileSync(LOCAL_CONFIG_PATH, 'utf-8');
+      return { config: JSON.parse(configContent) as Config, isLocal: true };
+    } catch (error) {
+      consola.warn(`Warning: Error reading local config: ${error}`);
+    }
+  }
+  
+  // Check global config
+  if (existsSync(VIBE_HOME_CONFIG_PATH)) {
+    try {
+      const configContent = readFileSync(VIBE_HOME_CONFIG_PATH, 'utf-8');
+      return { config: JSON.parse(configContent) as Config, isLocal: false };
+    } catch (error) {
+      consola.warn(`Warning: Error reading global config: ${error}`);
+    }
+  }
+  
+  return { config: null, isLocal: false };
+}
+
+export function shouldRunNonInteractive(): boolean {
+  return isRunningInCI();
+}
+
+export function getDefaultConfigForNonInteractive(): {
+  ide: string;
+  coding: { provider: Provider; model: string };
+  websearch: { provider: Provider; model: string };
+  tooling: { provider: Provider; model: string };
+  largecontext: { provider: Provider; model: string };
+} {
+  // Auto-detect IDE
+  const ide = isRunningInCursor() ? 'cursor' : 'cursor'; // Default to cursor
+  
+  return {
+    ide,
+    coding: {
+      provider: 'gemini' as Provider,
+      model: 'gemini-2.5-flash-preview-05-20'
+    },
+    websearch: {
+      provider: 'perplexity' as Provider,
+      model: 'sonar-pro'
+    },
+    tooling: {
+      provider: 'anthropic' as Provider,
+      model: 'claude-sonnet-4-20250514'
+    },
+    largecontext: {
+      provider: 'gemini' as Provider,
+      model: 'gemini-2.5-pro-preview-05-06'
+    }
+  };
+}

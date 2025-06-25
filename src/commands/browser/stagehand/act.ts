@@ -18,6 +18,7 @@ import {
   setupVideoRecording,
 } from '../utilsShared';
 import { overrideStagehandInit, StagehandInitOverride, stagehandLogger } from './initOverride';
+import { ensurePlaywright, ensurePlaywrightBrowsers } from '../utils';
 
 export type RecordVideoOptions = {
   /**, stagehandLogger
@@ -37,6 +38,10 @@ export class ActCommand implements Command {
   };
 
   async *execute(query: string, options: SharedBrowserCommandOptions): CommandGenerator {
+    // Ensure Playwright and browsers are available
+    await ensurePlaywright();
+    await ensurePlaywrightBrowsers();
+
     if (!query) {
       yield 'Please provide an instruction and URL. Usage: browser act "<instruction>" --url <url>';
       return;

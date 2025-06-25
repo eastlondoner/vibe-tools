@@ -1,7 +1,7 @@
 import type { Command, CommandGenerator } from '../../types';
 import { chromium, Page } from 'playwright';
 import { loadConfig } from '../../config.ts';
-import { ensurePlaywright } from './utils.ts';
+import { ensurePlaywright, ensurePlaywrightBrowsers } from './utils.ts';
 import type { OpenCommandOptions } from './browserOptions';
 import {
   setupConsoleLogging,
@@ -77,6 +77,7 @@ export class OpenCommand implements Command {
     try {
       // Check for Playwright availability first
       await ensurePlaywright();
+      await ensurePlaywrightBrowsers();
 
       // Parse options from query if not provided
       if (!options?.url && query) {

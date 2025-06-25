@@ -4,9 +4,9 @@
     "model": "sonar-pro"
   },
   "plan": {
-    "fileProvider": "gemini",
+    "fileProvider": "openai",
     "thinkingProvider": "openai",
-    "fileModel": "gemini-2.5-flash-preview-05-20",
+    "fileModel": "o3",
     "thinkingModel": "o3"
   },
   "repo": {

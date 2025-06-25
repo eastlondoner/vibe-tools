@@ -2,6 +2,7 @@ import { writeFileSync } from 'fs';
 import { OpenCommand } from '../commands/browser/open.ts';
 import type { CommandGenerator, CommandOptions } from '../types';
 import { Writable } from 'stream';
+import { ensurePlaywright, ensurePlaywrightBrowsers } from '../commands/browser/utils';
 
 /**
  * Fetches the HTML content of a given URL using the browser open command,
@@ -12,6 +13,10 @@ import { Writable } from 'stream';
  * @throws If fetching fails after retries or if content validation fails.
  */
 export async function fetchDocContent(url: string, debug: boolean): Promise<string> {
+  // Ensure Playwright and browsers are available before using browser commands
+  await ensurePlaywright();
+  await ensurePlaywrightBrowsers();
+
   console.log(`Attempting to fetch document content from: ${url}`);
 
   // No URL validation needed here, browser command handles it

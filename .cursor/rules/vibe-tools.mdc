@@ -16,7 +16,7 @@ Use the following commands to get AI assistance:
 **Ask Command Options:**
 --provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, openrouter, or xai)
 --model=<model>: Model to use (required for the ask command)
---reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 3.7 Sonnet). Higher values produce more thorough responses for complex questions.
+--reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
 --with-doc=<doc_url>: Fetch content from one or more document URLs and include it as context. Can be specified multiple times (e.g., `--with-doc=<url1> --with-doc=<url2>`).
 
 **Implementation Planning:**
@@ -83,9 +83,11 @@ The `search` command helps you discover servers in the MCP Marketplace and on Gi
 `vibe-tools browser act "<instruction>" --url=<url | 'current'> [options]` - Execute actions on a webpage using natural language instructions (e.g., `vibe-tools browser act "Click Login" --url=https://example.com`)
 `vibe-tools browser observe "<instruction>" --url=<url> [options]` - Observe interactive elements on a webpage and suggest possible actions (e.g., `vibe-tools browser observe "interactive elements" --url=https://example.com`)
 `vibe-tools browser extract "<instruction>" --url=<url> [options]` - Extract data from a webpage based on natural language instructions (e.g., `vibe-tools browser extract "product names" --url=https://example.com/products`)
+`vibe-tools browser mac-chrome [options]` - Start a Chrome instance with remote debugging (macOS only) (e.g., `vibe-tools browser mac-chrome --debug`, `vibe-tools browser mac-chrome --lite`)
 
 **Notes on Browser Commands:**
 - All browser commands are stateless unless --connect-to is used to connect to a long-lived interactive session. In disconnected mode each command starts with a fresh browser instance and closes it when done.
+- If you want to start a new long-lived session 
 - When using `--connect-to`, special URL values are supported:
   - `current`: Use the existing page without reloading
   - `reload-current`: Use the existing page and refresh it (useful in development)
@@ -184,5 +186,5 @@ If people say "ask Gemini" or "ask Perplexity" or "ask Stagehand" they mean to u
 - **Remember:** You're part of a team of superhuman expert AIs. Work together to solve complex problems.
 - **Repomix Configuration:** You can customize which files are included/excluded during repository analysis by creating a `repomix.config.json` file in your project root. This file will be automatically detected by `repo`, `plan`, and `doc` commands.
 
-<!-- vibe-tools-version: 0.61.3 -->
+<!-- vibe-tools-version: 0.62.8 -->
 </vibe-tools Integration>
