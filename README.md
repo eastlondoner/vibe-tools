@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/eastlondoner-vibe-tools-badge.png)](https://mseep.ai/app/eastlondoner-vibe-tools)
+
 <div align="center">
   <img height="72" src="https://github.com/user-attachments/assets/45eff178-242f-4d84-863e-247b080cc6f5" />
 </div>
