@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as crypto from 'crypto';
+import { realpath } from 'fs/promises';
 
 /**
  * Manages isolated test environments for each test scenario.
@@ -96,7 +97,7 @@ export class TestEnvironmentManager {
         }
 
         if (process.env.DEBUG) {
-          console.log(`[DEBUG] Created temporary directory: ${tempDir}`);
+          console.log(`[DEBUG] Created temporary directory: ${await realpath(tempDir)}`);
         }
 
         return tempDir;

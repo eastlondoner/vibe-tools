@@ -1,3 +1,5 @@
+import { Provider } from "./types";
+
 // Base error class for all vibe-tools errors
 export class CursorToolsError extends Error {
   constructor(
@@ -47,38 +49,52 @@ For more information on setting up API keys, visit: https://github.com/cursor-ai
 }
 
 export class ModelNotFoundError extends ProviderError {
-  constructor(provider: string) {
-    let message = `No model specified for ${provider}.`;
+  constructor(provider: Provider, availableModels: Set<string> | null, additionalMessage?: string) {
+    let message = `Model not found for ${provider}.`;
 
-    // Add model suggestions based on provider
-    switch (provider) {
-      case 'openai':
-        message += '\nSuggested models:\n- gpt-4o\n- o3';
-        break;
-      case 'anthropic':
-        message += '\nSuggested models:\n- claude-opus-4-20250514\n- claude-sonnet-4-20250514';
-        break;
-      case 'gemini':
-        message +=
-          '\nSuggested models:\n- gemini-2.5-flash\n- gemini-2.5-pro\n- gemini-2.5-flash-lite-preview-06-17';
-        break;
-      case 'perplexity':
-        message += '\nSuggested models:\n- sonar-pro\n- sonar-reasoning-pro';
-        break;
-      case 'openrouter':
-        message +=
-          '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro\n- google/gemini-2.5-flash-lite-preview-06-17\n- mistral/mistral-large\n- groq/llama2-70b';
-        break;
-      case 'modelbox':
-        message +=
-          '\nSuggested models:\n- perplexity/sonar-pro\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- google/gemini-2.5-flash-lite-preview-06-17';
-        break;
-      case 'xai':
-        message += '\nSuggested models:\n- grok-3-latest\n- grok-3-mini-latest';
-        break;
+    if(!availableModels) {
+      // Add model suggestions based on provider
+      switch (provider) {
+        case 'openai':
+
+          message += '\nSuggested models:\n- gpt-4o\n- o3';
+          break;
+        case 'anthropic':
+          message += '\nSuggested models:\n- claude-opus-4-20250514\n- claude-sonnet-4-20250514';
+          break;
+        case 'gemini':
+          message +=
+            '\nSuggested models:\n- gemini-2.5-flash\n- gemini-2.5-pro\n- gemini-2.5-flash-lite-preview-06-17';
+          break;
+        case 'perplexity':
+          message += '\nSuggested models:\n- sonar-pro\n- sonar-reasoning-pro';
+          break;
+        case 'openrouter':
+          message +=
+            '\nSuggested models:\n- perplexity/sonar\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- deepseek/deepseek-r1:free\n- google/gemini-2.5-pro\n- google/gemini-2.5-flash-lite-preview-06-17\n- mistral/mistral-large\n- groq/llama2-70b';
+          break;
+        case 'modelbox':
+          message +=
+            '\nSuggested models:\n- perplexity/sonar-pro\n- openai/gpt-4o\n- anthropic/claude-sonnet-4\n- google/gemini-2.5-flash-lite-preview-06-17';
+          break;
+        case 'xai':
+          message += '\nSuggested models:\n- grok-4-latest\n- grok-3-mini-latest';
+          break;
+        case 'groq':
+          message += '\nSuggested models:\n- qwen/qwen3-32b\n- moonshotai/kimi-k2-instruct';
+          break;
+        default:
+          message += `\nSuggested models:\n${Array.from(availableModels || []).map((m) => `- ${m}`).join('\n')}`;
+          break;
+        } 
+    } else {
+      message += `\nSuggested models:\n${Array.from(availableModels).map((m) => `- ${m}`).join('\n')}`;
     }
 
     message += '\nUse --model to specify a model.';
+    if(additionalMessage) {
+      message += `\n${additionalMessage}`;
+    }
 
     super(message, { provider, model: undefined });
     this.name = 'ModelNotFoundError';

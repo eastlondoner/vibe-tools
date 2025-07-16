@@ -42,7 +42,7 @@ Use this exact query: "A cryptographic hash function takes an input and returns 
 
 **Expected Behavior:**
 
-- The AI agent should use the ask command with Anthropic provider, claude-3-5-haiku-latest model, and high reasoning effort
+- The AI agent should use the ask command with Anthropic provider, claude-3-5-haiku-latest model, maxTokens set to 8192, and high reasoning effort
 - The command should execute but log a warning that the model does not support reasoning effort
 - The response should still provide an answer to the question
 - The command should complete successfully despite the incompatible parameter

@@ -23,20 +23,38 @@ import { globalCleanupRegistry } from './cleanup-registry';
 
 // Replace the existing JSON response instructions with the new simplified schema
 const jsonResponseInstructions = `
-Return a JSON object with the following fields:
+Return a JSON object with exactly the following fields:
 - id: string (unique identifier for the test scenario)
 - status: "PASS" or "FAIL"
 - summary: string (brief description of the outcome, including key messages or error information)
-- executionTime: number (time taken to execute the scenario in seconds)
 - error: string (optional, provide if there is an error)
 
-Example:
+Example 1:
 \`\`\`json
 {
   "id": "scenario-1",
   "status": "PASS",
   "summary": "Test completed successfully",
-  "executionTime": 2.5,
+  "error": null
+}
+\`\`\`
+
+Example 2:
+\`\`\`json
+{
+  "id": "scenario-2",
+  "status": "FAIL",
+  "summary": "Test failed due to an error when executing the file read tool",
+  "error": "Error message"
+}
+\`\`\`
+
+Example 3:
+\`\`\`json
+{
+  "id": "scenario-3",
+  "status": "FAIL",
+  "summary": "Test failed because the success criteria were not met. The AI agent did not provide a relevant response to the question.",
   "error": null
 }
 \`\`\`
@@ -161,7 +179,7 @@ export async function executeScenario(
 
   // Create a temporary directory for this test scenario
   const tempDir = await TestEnvironmentManager.createTempDirectory(scenarioId);
-  appendToBuffer(`Created temporary directory: ${tempDir}`);
+  appendToBuffer(`Created temporary directory: ${await realpath(tempDir)}`);
   
   // Register cleanup task
   const cleanupId = `test-${scenarioId}-${Date.now()}`;
@@ -171,6 +189,7 @@ export async function executeScenario(
       await client.stopMCP();
     }
     
+    console.log('Cleaning up temp directory', tempDir);
     // Clean up temp directory
     await TestEnvironmentManager.cleanup(tempDir);
   }, 10); // High priority
@@ -196,6 +215,7 @@ export async function executeScenario(
   };
 
   try {
+    const startTime = Date.now();
     while (attempts < retryConfig.retries) {
       attempts++;
       try {
@@ -286,6 +306,7 @@ ${jsonResponseInstructions}
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
+        const executionTime = (Date.now() - startTime) / 1000;
         // Extract the final result message
         const finalMessage = messages[messages.length - 1];
 
@@ -364,9 +385,9 @@ ${jsonResponseInstructions}
           expectedBehavior: [],
           successCriteria: [],
           result: parsedResponse.status,
-          executionTime: parsedResponse.executionTime,
+          executionTime: executionTime,
           attempts,
-          explanation: parsedResponse.error || parsedResponse.summary,
+          explanation: parsedResponse.error && parsedResponse.summary ? parsedResponse.summary + '\n' + parsedResponse.error : parsedResponse.error || parsedResponse.summary,
         };
       } catch (error) {
         console.error(`Error on attempt ${attempts}:`, error);

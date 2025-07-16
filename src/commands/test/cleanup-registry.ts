@@ -16,6 +16,16 @@ class CleanupRegistry {
     this.tasks.delete(id);
   }
   
+  async cleanupTask(cleanupId: string): Promise<void> {
+    const task = this.tasks.get(cleanupId);
+    if (!task) {
+      console.error(`Cleanup task ${cleanupId} not found`);
+      return;
+    }
+    await task.cleanup();
+    this.unregister(cleanupId);
+  }
+
   async executeCleanup(): Promise<void> {
     if (this.isCleaningUp) return;
     

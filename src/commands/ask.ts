@@ -1,7 +1,7 @@
 import type { Command, CommandGenerator, CommandOptions, Provider } from '../types';
 import { loadEnv, loadConfig } from '../config';
 import { createProvider } from '../providers/base';
-import { ProviderError, ModelNotFoundError } from '../errors';
+import { ProviderError } from '../errors';
 import { getAllProviders, resolveMaxTokens } from '../utils/providerAvailability';
 import type { ModelOptions } from '../providers/base';
 import { fetchDocContent } from '../utils/fetch-doc.ts';
@@ -57,7 +57,7 @@ export class AskCommand implements Command {
         openrouter: 'openai/gpt-4.1',
         modelbox: 'openai/gpt-4.1',
         xai: 'grok-3-latest',
-        groq: 'llama3-8b-8192',
+        groq: 'moonshotai/kimi-k2-instruct',
       };
 
       model = defaultModels[providerName] || 'gpt-4.1';

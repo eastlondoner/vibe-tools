@@ -744,11 +744,11 @@ export class InstallCommand implements Command {
             label: 'OpenRouter - Claude 4 Sonnet',
           },
           {
-            value: 'openrouter:x-ai/grok-3-beta',
-            label: 'OpenRouter - Grok 3',
+            value: 'openrouter:x-ai/grok-4',
+            label: 'OpenRouter - Grok 4',
           },
           {
-            value: 'openrouter:x-ai/grok-3-mini-beta',
+            value: 'openrouter:x-ai/grok-3-mini',
             label: 'OpenRouter - Grok 3 Mini',
           },
         ],
@@ -796,11 +796,11 @@ export class InstallCommand implements Command {
             label: 'OpenRouter - Claude 4 Sonnet',
           },
           {
-            value: 'openrouter:x-ai/grok-3-beta',
-            label: 'OpenRouter - Grok 3',
+            value: 'openrouter:x-ai/grok-4',
+            label: 'OpenRouter - Grok 4',
           },
           {
-            value: 'openrouter:x-ai/grok-3-mini-beta',
+            value: 'openrouter:x-ai/grok-3-mini',
             label: 'OpenRouter - Grok 3 Mini',
           },
         ],

@@ -33,6 +33,10 @@ export function isModelNotFoundError(error: unknown): boolean {
     if ('status' in error && error.status === 404) {
       return true;
     }
+
+    if(error instanceof Error && error.message.includes('does not exist or you do not have access to it')) {
+      return true;
+    }
   }
 
   // Check error message patterns

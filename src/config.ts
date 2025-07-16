@@ -1,7 +1,11 @@
 import type { Config } from './types';
+import { dirname, join, resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import dotenv from 'dotenv';
+import { once } from './utils/once';
+import { execSync } from 'child_process';
 
-// 21000 is a higher default that supports modern models with larger context windows
-// while still being supported by most providers. Note the limitation of 21000 tokens comes from Anthropic who require streaming to go much higher than this.
 export const defaultMaxTokens = 21000;
 export const defaultConfig: Config = {
   ide: 'cursor', // Default IDE
@@ -41,7 +45,12 @@ export const defaultConfig: Config = {
     model: 'sonar-pro',
     maxTokens: defaultMaxTokens,
   },
+  groq: {
+    model: 'moonshotai/kimi-k2-instruct',
+    maxTokens: 8192,
+  },
   reasoningEffort: 'medium', // Default reasoning effort for all commands
+  disableDoppler: false,
 
   // Note that it is also permitted to add provider-specific config options
   // in the config file, even though they are not shown in this interface.
@@ -94,30 +103,50 @@ export const defaultConfig: Config = {
   //   }
 };
 
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
-import dotenv from 'dotenv';
-import { once } from './utils/once';
-
-export function loadConfig(): Config {
-  // Try loading from current directory first
-  try {
-    const localConfigPath = join(process.cwd(), 'vibe-tools.config.json');
-    const localConfig = JSON.parse(readFileSync(localConfigPath, 'utf-8'));
-    return { ...defaultConfig, ...localConfig };
-  } catch {
-    // If local config doesn't exist, try home directory
+function findConfigUpwards(
+  filename = 'vibe-tools.config.json',
+  maxDepth = 3,
+  startDir: string = process.cwd()
+): { path: string; data: unknown } | null {
+  let currentDir = resolve(startDir);
+  for (let depth = 0; depth <= maxDepth; depth++) {
+    const candidate = join(currentDir, filename);
     try {
-      const homeConfigPath = join(homedir(), '.vibe-tools', 'config.json');
-      const homeConfig = JSON.parse(readFileSync(homeConfigPath, 'utf-8'));
-      return { ...defaultConfig, ...homeConfig };
-    } catch {
-      // If neither config exists, return default config
-      return defaultConfig;
+      if (existsSync(candidate)) {
+        const raw = readFileSync(candidate, 'utf-8');
+        return { path: candidate, data: JSON.parse(raw) };
+      }
+    } catch (error: any) {
+      if (error?.code === 'EACCES' || error?.code === 'EPERM') {
+        break;
+      }
+      // Other errors: ignore and continue
     }
+    const parent = dirname(currentDir);
+    if (parent === currentDir) break; // reached filesystem root
+    currentDir = parent;
   }
+  return null;
 }
+
+export const loadConfig = once((): Config => {
+  // Search upwards from cwd up to 3 levels
+  const found = findConfigUpwards();
+  if (found) {
+    console.log('Loaded vibe-tools config from', found.path);
+    return { ...defaultConfig, ...(found.data as Partial<Config>) };
+  }
+
+  // If not found, try home directory
+  try {
+    const homeConfigPath = join(homedir(), '.vibe-tools', 'config.json');
+    const homeConfig = JSON.parse(readFileSync(homeConfigPath, 'utf-8'));
+    return { ...defaultConfig, ...homeConfig };
+  } catch {
+    // If neither config exists, return default config
+    return defaultConfig;
+  }
+})
 
 export function applyEnvUnset(): void {
   // Check for CURSOR_TOOLS_ENV_UNSET environment variable
@@ -154,7 +183,59 @@ function _loadEnv(): void {
 
   // If neither env file exists, continue without loading
   console.log('No .env file found in local or home directories.', localEnvPath, homeEnvPath);
-  return;
+
+  // Doppler integration
+  const config = loadConfig();
+  if (config.disableDoppler) {
+    console.debug('[Doppler] Skipped: disabled in config');
+    return;
+  }
+
+  // Check if Doppler CLI is available
+  let hasDoppler = true;
+  try {
+    execSync('command -v doppler', { stdio: 'ignore', env: process.env });
+  } catch {
+    hasDoppler = false;
+  }
+  if (!hasDoppler) {
+    console.debug('[Doppler] Skipped: CLI not found on PATH');
+    return;
+  }
+
+  try {
+    console.debug('[Doppler] Attempting detection');
+    const output = execSync('doppler configure --json', { env: process.env }).toString().trim();
+    console.debug('[Doppler] Configure output (redacted):', output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"'));
+    const configJson = JSON.parse(output);
+    const cwd = process.cwd();
+    const dirConfig = configJson[cwd];
+    if (!dirConfig || !dirConfig['enclave.project'] || !dirConfig['enclave.config']) {
+      console.debug('[Doppler] Skipped: directory not configured');
+      return;
+    }
+    console.debug('[Doppler] Directory configured for project:', dirConfig['enclave.project']);
+
+    console.debug('[Doppler] Fetching secrets');
+    const secretsOutput = execSync('doppler secrets --json', { env: process.env }).toString().trim();
+    const secrets = JSON.parse(secretsOutput);
+    console.debug('[Doppler] Fetched', Object.keys(secrets).length, 'secrets');
+
+    // Set environment variables if not already set
+    let loadedCount = 0;
+    for (const key of Object.keys(secrets)) {
+      if (key.endsWith('_API_KEY') && !process.env[key]) {
+        process.env[key] = secrets[key];
+        loadedCount++;
+      }
+    }
+
+    console.log(`Loaded ${loadedCount} secrets from Doppler for project ${dirConfig['enclave.project']}.`);
+    console.debug('[Doppler] Loaded', loadedCount, 'new environment variables');
+  } catch (error) {
+    console.warn(`[Doppler] Fetch failed: ${(error as Error).message}. Skipping.`);
+    console.debug('[Doppler] Error details:', error);
+  }
 }
 
 export const loadEnv = once(() => {

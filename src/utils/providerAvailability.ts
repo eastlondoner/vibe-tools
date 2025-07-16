@@ -17,19 +17,19 @@ const DEFAULT_MODELS: Record<Provider, string> = {
   anthropic: 'claude-sonnet-4-20250514',
   openrouter: 'google/gemini-2.5-pro', // largest context window (1M tokens) so best chance of working
   modelbox: 'google/gemini-2.5-pro', // largest context window (1M tokens) so best chance of working
-  xai: 'grok-3-latest',
-  groq: 'llama-3.3-70b-versatile',
+  xai: 'grok-4-latest',
+  groq: 'moonshotai/kimi-k2-instruct',
 };
 
 // Provider preference order for each command type
 export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
   web: ['perplexity', 'gemini', 'modelbox', 'openrouter', 'groq'],
   repo: ['gemini', 'modelbox', 'openrouter', 'openai', 'perplexity', 'anthropic', 'xai', 'groq'],
-  plan_file: ['gemini', 'modelbox', 'openrouter', 'openai', 'perplexity', 'anthropic', 'xai', 'groq'],
-  plan_thinking: ['openai', 'modelbox', 'openrouter', 'gemini', 'anthropic', 'perplexity', 'xai', 'groq'],
-  doc: ['gemini', 'modelbox', 'openrouter', 'openai', 'perplexity', 'anthropic', 'xai', 'groq'],
-  ask: ['openai', 'modelbox', 'openrouter', 'gemini', 'anthropic', 'perplexity', 'groq'],
-  browser: ['anthropic', 'openai', 'modelbox', 'openrouter', 'gemini', 'perplexity', 'groq'],
+  plan_file: ['gemini', 'modelbox', 'openrouter', 'openai', 'perplexity', 'xai', 'anthropic', 'groq'],
+  plan_thinking: ['openai', 'anthropic', 'gemini', 'xai', 'groq', 'openrouter', 'modelbox', 'perplexity'],
+  doc: ['gemini', 'openai', 'modelbox', 'openrouter',  'perplexity', 'xai', 'anthropic', 'groq'],
+  ask: ['openai', 'modelbox', 'openrouter', 'gemini', 'xai', 'anthropic', 'perplexity', 'groq'],
+  browser: ['anthropic', 'openai', 'gemini'],
 };
 
 export function getDefaultModel(provider: Provider): string {

@@ -3,11 +3,8 @@ import type {
   ToolExecutionResult,
 } from '../../utils/tool-enabled-llm/unified-client';
 
-import * as util from 'util';
-import * as fs from 'fs';
 import * as child_process from 'child_process';
-
-const execAsync = util.promisify(child_process.exec);
+import * as path from 'path';
 
 // Track active child processes for cleanup
 const activeProcesses = new Set<child_process.ChildProcess>();
@@ -31,16 +28,17 @@ export function cleanupAllProcesses() {
 async function execWithTracking(
   command: string,
   options: child_process.ExecOptions
-): Promise<{ stdout: string; stderr: string }> {
+): Promise<{ stdout: string; stderr: string, exitCode: number }> {
   return new Promise((resolve, reject) => {
     const child = child_process.exec(command, options, (error, stdout, stderr) => {
       // Remove from active processes when done
       activeProcesses.delete(child);
       
       if (error) {
-        reject(error);
+        console.error('Error executing command:', error);
+        resolve({ stdout, stderr, exitCode: error.code || 1 });
       } else {
-        resolve({ stdout, stderr });
+        resolve({ stdout, stderr, exitCode: 0 });
       }
     });
     
@@ -54,7 +52,6 @@ async function execWithTracking(
     
     child.on('error', (error) => {
       activeProcesses.delete(child);
-      reject(error);
     });
   });
 }
@@ -138,7 +135,7 @@ export function createCommandExecutionTool(options: {
       if (cursorToolsMatch) {
         // Handle vibe-tools command
         const [, subCommand, args] = cursorToolsMatch;
-        return await executeCursorToolsCommand(subCommand, args, envVars, workingDir);
+        return await executeCursorToolsCommand(commandPart, subCommand, args, envVars, workingDir, appendToBuffer);
       } else if (shellCommandMatch) {
         // Check if the command is in the whitelist
         const [, shellCommand, shellArgs] = shellCommandMatch;
@@ -177,219 +174,56 @@ export function createCommandExecutionTool(options: {
 
       // Helper function to execute vibe-tools commands
       async function executeCursorToolsCommand(
+        commandPart: string,
         subCommand: string,
         args: string,
         envVars: Record<string, string>,
-        workingDir: string
-      ) {
-        // Safety check for potentially dangerous commands
-        const dangerousCommands = ['rm', 'del', 'remove', 'format'];
-        if (dangerousCommands.includes(subCommand.toLowerCase())) {
-          return {
-            success: false,
-            output: `Command rejected for security reasons: ${subCommand} is not allowed`,
-            error: {
-              message: 'Command rejected for security reasons',
-              details: {
-                command: subCommand,
-                reason: 'Potentially destructive operation',
-              },
-            },
-          };
-        }
-
-        // Get the path to the project root directory
+        workingDir: string,
+        appendToBuffer: (text: string, shouldPrefix?: boolean) => void
+      ): Promise<{ success: boolean; output: string; error?: { message: string; stack?: string } }> {
         const projectRoot = process.cwd();
+        const vibeToolsEntryPoint = path.resolve(projectRoot, 'src', 'index.ts');
 
-        // Check if the working directory exists
+        const envPrefix = envVars
+          ? Object.entries(envVars).map(([key, value]) => `${key}="${value}"`).join(' ') + ' '
+          : '';
+
+        const fullCommand = `${envPrefix}node --import=tsx "${vibeToolsEntryPoint}" ${subCommand}${args}`;
+
+        appendToBuffer(`Executing command: ${fullCommand} in cwd: ${workingDir}\n`);
+
+        const execOptions = {
+          cwd: workingDir,
+          env: { ...process.env, ...envVars },
+        };
+
         try {
-          const stats = await fs.promises.stat(workingDir);
-          if (!stats.isDirectory()) {
+          const { stdout, stderr, exitCode } = await execWithTracking(fullCommand, execOptions);
+
+          const output = stdout.trim();
+          const errorOutput = stderr.trim();
+
+          appendToBuffer(`Command output: ${output}\n`);
+          if (errorOutput) {
+            appendToBuffer(`Stderr (warnings): ${errorOutput}\n`);
+          }
+          
+          if (exitCode !== 0) {
+            appendToBuffer(`Command failed with exit code ${exitCode}\n`);
             return {
               success: false,
-              output: `Working directory is not a valid directory: ${workingDir}`,
-              error: {
-                message: 'Invalid working directory',
-                details: {
-                  path: workingDir,
-                },
-              },
+              output: output + '\n' + errorOutput,
+              error: { message: `Command failed with exit code ${exitCode}` }
             };
           }
-        } catch (error) {
+
+          return { success: true, output: output };
+        } catch (error: any) {
+          appendToBuffer(`Error executing command: ${error.message}\n`);
           return {
             success: false,
-            output: `Working directory does not exist or is not accessible: ${workingDir}`,
-            error: {
-              message: 'Working directory not accessible',
-              details: {
-                path: workingDir,
-                error: error instanceof Error ? error.message : String(error),
-              },
-            },
-          };
-        }
-
-        // Construct the command to execute using pnpm
-        // This ensures we're using the same environment as the main project
-        // Use double quotes for Windows compatibility
-        const pnpmCommand = `${
-          envVars
-            ? Object.entries(envVars)
-                .map(([key, value]) => `${key}="${value}"`)
-                .join(' ') + ' '
-            : ''
-        }pnpm --dir="${projectRoot}" dev ${subCommand}${args}`;
-
-        if (debug) {
-          appendToBuffer(`[DEBUG] Executing in ${workingDir}: ${pnpmCommand}`);
-        }
-
-        // Set a reasonable timeout for command execution (5 minutes)
-        const timeoutMs = 5 * 60 * 1000;
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-        try {
-          // Execute in the temporary directory if provided
-          const execOptions: child_process.ExecOptions = {
-            shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
-            cwd: workingDir,
-            maxBuffer: 1024 * 1024 * 10, // 10MB buffer for large outputs
-            timeout: timeoutMs, // 5 minute timeout
-            env: {
-              ...process.env,
-              // Ensure API keys are passed to the child process
-              GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-              OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-              ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-              PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
-              // Set a flag to indicate we're in test mode
-              CURSOR_TOOLS_TEST_MODE: '1',
-              // If env overrides are provided, set CURSOR_TOOLS_ENV_UNSET
-              ...(env && Object.keys(env).some((key) => env[key] === undefined)
-                ? {
-                    CURSOR_TOOLS_ENV_UNSET: Object.keys(env)
-                      .filter((key) => env[key] === undefined)
-                      .join(','),
-                  }
-                : {}),
-              // Add any environment variables that are set (not undefined)
-              ...(env
-                ? Object.fromEntries(
-                    Object.entries(env).filter(([_, value]) => value !== undefined)
-                  )
-                : {}),
-            },
-          };
-
-          // Create a promise that will be rejected if the timeout is reached
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            timeoutId = setTimeout(() => {
-              reject(new Error(`Command execution timed out after ${timeoutMs / 1000} seconds`));
-            }, timeoutMs);
-          });
-
-          // Execute command with timeout
-          const execPromise = execWithTracking(pnpmCommand, execOptions);
-          const result = await Promise.race([execPromise, timeoutPromise]);
-
-          // Clear the timeout if the command completes before the timeout
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-
-          let { stdout, stderr } = result;
-          stderr = stderr.trim();
-          stdout = stdout.trim();
-
-          if (stdout) {
-            appendToBuffer(`COMMAND OUTPUT:\n${stdout}`);
-          }
-
-          if (stderr) {
-            appendToBuffer(`COMMAND ERRORS:\n${stderr}`);
-          }
-
-          // Return successful result with both stdout and stderr if available
-          return {
-            success: true,
-            output: stdout || 'Command executed successfully with no output',
-            ...(stderr
-              ? { error: { message: 'Warning: stderr output was present', details: { stderr } } }
-              : {}),
-          };
-        } catch (error) {
-          // Clear the timeout if it was set
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-          }
-
-          const errorMessage = error instanceof Error ? error.message : String(error);
-
-          // If it's a timeout error, make sure we clean up any processes
-          if (errorMessage.includes('timed out')) {
-            cleanupAllProcesses();
-          }
-
-          appendToBuffer(`COMMAND ERROR: ${errorMessage}`);
-
-          // Handle specific error types with detailed information
-          if (error instanceof Error) {
-            const errorObj: ToolExecutionResult = {
-              success: false,
-              output: `Command execution failed: ${error.message}`,
-              error: {
-                message: error.message,
-                code: 'code' in error && typeof error.code === 'number' ? error.code : undefined,
-                details: {},
-              },
-            };
-
-            // Handle different error scenarios
-            if (error.message.includes('command not found') || error.message.includes('ENOENT')) {
-              if (errorObj.error) {
-                errorObj.error.details = {
-                  type: 'COMMAND_NOT_FOUND',
-                  suggestion: 'Ensure the command is installed and in your PATH',
-                };
-              }
-            } else if (
-              error.message.includes('permission denied') ||
-              error.message.includes('EACCES')
-            ) {
-              if (errorObj.error) {
-                errorObj.error.details = {
-                  type: 'PERMISSION_DENIED',
-                  suggestion: 'Check file permissions or try with appropriate privileges',
-                };
-              }
-            } else if (error.message.includes('timed out')) {
-              if (errorObj.error) {
-                errorObj.error.details = {
-                  type: 'TIMEOUT',
-                  suggestion: `Command execution exceeded the timeout of ${timeoutMs / 1000} seconds`,
-                };
-              }
-            } else if (error.message.includes('SIGTERM') || error.message.includes('SIGKILL')) {
-              if (errorObj.error) {
-                errorObj.error.details = {
-                  type: 'TERMINATED',
-                  suggestion: 'Command was terminated by the system',
-                };
-              }
-            }
-
-            return errorObj;
-          }
-
-          return {
-            success: false,
-            output: 'Command execution failed with unknown error',
-            error: {
-              message: 'Unknown error',
-            },
+            output: '',
+            error: { message: error.message, stack: error.stack }
           };
         }
       }
@@ -453,7 +287,7 @@ export function createCommandExecutionTool(options: {
             timeoutId = null;
           }
 
-          const { stdout, stderr } = result;
+          const { stdout, stderr, exitCode } = result;
 
           if (stdout) {
             appendToBuffer(`COMMAND OUTPUT:\n${stdout}`);
@@ -465,8 +299,8 @@ export function createCommandExecutionTool(options: {
 
           // Return successful result with both stdout and stderr if available
           return {
-            success: true,
-            output: stdout || 'Command executed successfully with no output',
+            success: exitCode === 0,
+            output: stdout || (exitCode === 0 ? 'Command executed successfully with no output' : 'Command execution failed with exit code ' + exitCode),
             ...(stderr
               ? { error: { message: 'Warning: stderr output was present', details: { stderr } } }
               : {}),
@@ -480,10 +314,7 @@ export function createCommandExecutionTool(options: {
 
           const errorMessage = error instanceof Error ? error.message : String(error);
 
-          // If it's a timeout error, make sure we clean up any processes
-          if (errorMessage.includes('timed out')) {
-            cleanupAllProcesses();
-          }
+          cleanupAllProcesses();          
 
           appendToBuffer(`COMMAND ERROR: ${errorMessage}`);
 

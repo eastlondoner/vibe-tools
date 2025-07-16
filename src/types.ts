@@ -9,7 +9,8 @@ export type Provider =
   | 'perplexity'
   | 'modelbox'
   | 'anthropic'
-  | 'xai';
+  | 'xai'
+  | 'groq';
 
 // Zod schema for reasoning effort
 export const reasoningEffortSchema = z.enum(['low', 'medium', 'high']);
@@ -70,6 +71,10 @@ export interface Config {
   ide?: string; // The IDE being used (cursor, claude-code, windsurf, cline, roo)
   reasoningEffort?: ReasoningEffort; // Global default reasoning effort setting
   perplexity?: {
+    model?: string;
+    maxTokens?: number;
+  };
+  groq?: {
     model?: string;
     maxTokens?: number;
   };
@@ -139,6 +144,7 @@ export interface Config {
     maxRetries?: number;
     retryDelay?: number;
   };
+  disableDoppler?: boolean;
 }
 
 export interface ModelOptions {

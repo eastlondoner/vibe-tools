@@ -15,7 +15,7 @@ Use the following commands to get AI assistance:
 \`vibe-tools ask "<your question>" --provider <provider> --model <model>\` - Ask any model from any provider a direct question (e.g., \`vibe-tools ask "What is the capital of France?" --provider openai --model o3-mini\`). Note that this command is generally less useful than other commands like \`repo\` or \`plan\` because it does not include any context from your codebase or repository. In general you should not use the ask command because it does not include any context. The other commands like \`web\`, \`doc\`, \`repo\`, or \`plan\` are usually better. If you are using it, make sure to include in your question all the information and context that the model might need to answer usefully.
 
 **Ask Command Options:**
---provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, openrouter, or xai)
+--provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, openrouter, xai, or groq)
 --model=<model>: Model to use (required for the ask command)
 --reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3 models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
 --with-doc=<doc_url>: Fetch content from one or more document URLs and include it as context. Can be specified multiple times (e.g., \`--with-doc=<url1> --with-doc=<url2>\`).
@@ -28,8 +28,8 @@ The plan command uses multiple AI models to:
 3. Generate a detailed implementation plan (using OpenAI o3 by default)
 
 **Plan Command Options:**
---fileProvider=<provider>: Provider for file identification (gemini, openai, anthropic, perplexity, modelbox, openrouter, or xai)
---thinkingProvider=<provider>: Provider for plan generation (gemini, openai, anthropic, perplexity, modelbox, openrouter, or xai)
+--fileProvider=<provider>: Provider for file identification (gemini, openai, anthropic, perplexity, modelbox, openrouter, xai, or groq)
+--thinkingProvider=<provider>: Provider for plan generation (gemini, openai, anthropic, perplexity, modelbox, openrouter, xai, or groq)
 --fileModel=<model>: Model to use for file identification
 --thinkingModel=<model>: Model to use for plan generation
 --with-doc=<doc_url>: Fetch content from one or more document URLs and include it as context for both file identification and planning. Can be specified multiple times (e.g., \`--with-doc=<url1> --with-doc=<url2>\`).
@@ -42,7 +42,7 @@ when using web for complex queries suggest writing the output to a file somewher
 **IMPORTANT: Do NOT use the \`web\` command for specific URLs.** If a user provides a specific URL (documentation link, GitHub repo, article, etc.), you should always use commands that support the \`--with-doc\` parameter instead, such as \`repo\`, \`plan\`, \`doc\`, or \`ask\`. Using \`--with-doc\` ensures the exact content of the URL is processed correctly and completely.
 
 **Web Command Options:**
---provider=<provider>: AI provider to use (perplexity, gemini, modelbox, or openrouter)
+--provider=<provider>: AI provider to use (perplexity, gemini, modelbox, openrouter, or groq)
 
 **Repository Context:**
 \`vibe-tools repo "<your question>" [--subdir=<path>] [--from-github=<username/repo>] [--with-doc=<doc_url>...]\` - Get context-aware answers about this repository using Google Gemini (e.g., \`vibe-tools repo "explain authentication flow"\`)
@@ -98,7 +98,7 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 - DO NOT ask browser act to "wait" for anything, the wait command is currently disabled in Stagehand.
 
 **Tool Recommendations:**
-- \`vibe-tools web\` is best for general web information not specific to the repository. Generally call this without additional arguments.
+- \`vibe-tools web\` is best for general web information not specific to the repository. Generally call this without additional arguments. Ask natural language questions when using this tool like "Describe OpenAI's Responses REST API for me, including examples of different request and response payloads" DO NOT use search keyword style queries like "OpenAI Responses REST API".
 - \`vibe-tools repo\` is ideal for repository-specific questions, planning, code review and debugging. E.g. \`vibe-tools repo "Review recent changes to command error handling looking for mistakes, omissions and improvements"\`. Generally call this without additional arguments.
 - \`vibe-tools plan\` is ideal for planning tasks. E.g. \`vibe-tools plan "Adding authentication with social login using Google and Github"\`. Generally call this without additional arguments.
 - \`vibe-tools doc\` generates documentation for local or remote repositories.
@@ -113,7 +113,7 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 1. Use \`vibe-tools <command>\` to execute commands (make sure vibe-tools is installed globally using npm install -g vibe-tools so that it is in your PATH)
 
 **General Command Options (Supported by all commands):**
---provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, openrouter, modelbox, or xai). If provider is not specified, the default provider for that task will be used.
+--provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, openrouter, modelbox, xai, or groq). If provider is not specified, the default provider for that task will be used.
 --model=<model name>: Specify an alternative AI model to use. If model is not specified, the provider's default model for that task will be used.
 --max-tokens=<number>: Control response length
 --save-to=<file path>: Save command output to a file (in *addition* to displaying it)
@@ -121,7 +121,7 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 --web: Enable web search capabilities for supported models (currently Gemini models) across all commands
 
 **Repository Command Options:**
---provider=<provider>: AI provider to use (gemini, openai, openrouter, perplexity, modelbox, anthropic, or xai)
+--provider=<provider>: AI provider to use (gemini, openai, openrouter, perplexity, modelbox, anthropic, xai, or groq)
 --model=<model>: Model to use for repository analysis
 --max-tokens=<number>: Maximum tokens for response
 --from-github=<GitHub username>/<repository name>[@<branch>]: Analyze a remote GitHub repository without cloning it locally
@@ -130,7 +130,7 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 
 **Documentation Command Options:**
 --from-github=<GitHub username>/<repository name>[@<branch>]: Generate documentation for a remote GitHub repository
---provider=<provider>: AI provider to use (gemini, openai, openrouter, perplexity, modelbox, anthropic, or xai)
+--provider=<provider>: AI provider to use (gemini, openai, openrouter, perplexity, modelbox, anthropic, xai, or groq)
 --model=<model>: Model to use for documentation generation
 --max-tokens=<number>: Maximum tokens for response
 --with-doc=<doc_url>: Fetch content from one or more document URLs and include it as context. Can be specified multiple times.
@@ -180,7 +180,7 @@ If people say "ask Gemini" or "ask Perplexity" or "ask Stagehand" they mean to u
 - Configuration is in \`vibe-tools.config.json\` (or \`~/.vibe-tools/config.json\`).
 - API keys are loaded from \`.vibe-tools.env\` (or \`~/.vibe-tools/.env\`).
 - ClickUp commands require a \`CLICKUP_API_TOKEN\` to be set in your \`.vibe-tools.env\` file.
-- Available models depend on your configured provider (OpenAI, Anthropic, xAI, etc.) in \`vibe-tools.config.json\`.
+- Available models depend on your configured provider (OpenAI, Anthropic, xAI, Groq, etc.) in \`vibe-tools.config.json\`.
 - repo has a limit of 2M tokens of context. The context can be reduced by filtering out files in a .repomixignore file.
 - problems running browser commands may be because playwright is not installed. Recommend installing playwright globally.
 - MCP commands require \`ANTHROPIC_API_KEY\` or \`OPENROUTER_API_KEY\`

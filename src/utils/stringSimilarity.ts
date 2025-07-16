@@ -1,5 +1,8 @@
+import { Provider } from "../types";
+
 /**
  * Calculate Levenshtein distance between two strings
+ * used to find the closest string in a list of strings
  */
 function levenshteinDistance(str1: string, str2: string): number {
   const m = str1.length;
@@ -71,4 +74,27 @@ export function getSimilarModels(model: string, availableModels: Set<string>): s
       return bSimilarity - aSimilarity;
     })
     .slice(0, 5); // Return top 5 most similar models
+}
+
+export function getSimilarProviders(provider: string, availableProviders: Set<Provider>): Provider[] {
+  const providerParts = provider.split('/');
+  const providerName = providerParts.length > 1 ? providerParts[1] : provider;
+
+  // Find providers from the same provider if provider is provided
+  const similarProviders = Array.from(availableProviders).filter((p) => {
+    if (provider) {
+      const [pProvider] = p.split('/');
+      return pProvider === provider;
+    }
+    return true;
+  });
+
+  // Sort by similarity to the requested provider name
+  return similarProviders
+    .sort((a, b) => {
+      const aSimilarity = stringSimilarity(providerName, a);
+      const bSimilarity = stringSimilarity(providerName, b);
+      return bSimilarity - aSimilarity;
+    })
+    .slice(0, 5); // Return top 5 most similar providers
 }

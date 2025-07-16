@@ -334,8 +334,8 @@ Note: The ask command requires both --provider and --model parameters to be spec
 
 **Ask Command Options:**
 
-- `--provider=<provider>`: AI provider to use (required)
-- `--model=<model>`: Model to use (required)
+- `--provider=<provider>`: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, openrouter, xai, or groq)
+- `--model=<model>`: Model to use (required for the ask command)
 - `--max-tokens=<number>`: Maximum tokens for response
 - `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
 - `--with-doc=<doc_url>`: Fetch content from one or more document URLs and include it as context. Can be specified multiple times (e.g., `--with-doc=<url1> --with-doc=<url2>`).
@@ -353,6 +353,7 @@ Note: The ask command requires both --provider and --model parameters to be spec
    ANTHROPIC_API_KEY="your-anthropic-api-key" # Optional, for Stagehand and MCP
    OPENROUTER_API_KEY="your-openrouter-api-key" # Optional, for MCP
    XAI_API_KEY="your-xai-api-key" # Optional, for xAI Grok models
+   GROQ_API_KEY="your-groq-api-key" # Optional, for Groq models
    GITHUB_TOKEN="your-github-token"  # Optional, for enhanced GitHub access
    ```
    - At least one of `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY` must be provided to use the `mcp` commands.
@@ -424,8 +425,8 @@ The plan command uses multiple AI models to:
 
 **Plan Command Options:**
 
-- `--fileProvider=<provider>`: Provider for file identification (gemini, openai, anthropic, perplexity, modelbox, or openrouter)
-- `--thinkingProvider=<provider>`: Provider for plan generation (gemini, openai, anthropic, perplexity, modelbox, or openrouter)
+- `--fileProvider=<provider>`: Provider for file identification (gemini, openai, anthropic, perplexity, modelbox, openrouter, xai, or groq)
+- `--thinkingProvider=<provider>`: Provider for plan generation (gemini, openai, anthropic, perplexity, modelbox, openrouter, xai, or groq)
 - `--fileModel=<model>`: Model to use for file identification
 - `--thinkingModel=<model>`: Model to use for plan generation
 - `--fileMaxTokens=<number>`: Maximum tokens for file identification
@@ -1189,6 +1190,12 @@ vibe-tools ask "Compare and contrast microservices vs monolithic architecture" -
 
 # Ask with context from multiple documents
 vibe-tools ask "Based on these specs, what is the main goal?" --provider openai --model o3-mini --with-doc=https://example.com/specA.txt --with-doc=https://example.com/specB.txt
+
+# Ask Groq's moonshotai/kimi-k2-instruct model
+vibe-tools ask "Explain quantum computing" --provider groq --model moonshotai/kimi-k2-instruct
+
+# Ask Groq's qwen/qwen3-32b model
+vibe-tools ask "Summarize the history of AI" --provider groq --model qwen/qwen3-32b
 ```
 
 #### Documentation Examples

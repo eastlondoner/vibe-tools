@@ -195,6 +195,7 @@ function mergeRepomixConfigs(
       git: {
         ...outputOptions.git,
         ...mergedConfig.output?.git,
+        includeDiffs: mergedConfig.output?.git?.includeDiffs ?? false,
       },
       includeEmptyDirectories: mergedConfig.output?.includeEmptyDirectories ?? false,
     },

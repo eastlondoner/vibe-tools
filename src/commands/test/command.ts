@@ -161,6 +161,7 @@ export class TestCommand implements Command {
         debug,
         mcpServers,
         tags,
+        maxTokens: 8192,
       };
 
       // Create a queue for file processing

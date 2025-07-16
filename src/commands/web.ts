@@ -1,6 +1,6 @@
 import type { Command, CommandGenerator, CommandOptions, Provider } from '../types.ts';
 import type { Config } from '../types.ts';
-import { defaultMaxTokens, loadConfig, loadEnv } from '../config.ts';
+import { loadConfig, loadEnv } from '../config.ts';
 import { createProvider } from '../providers/base';
 import { ProviderError } from '../errors';
 import {
@@ -18,6 +18,7 @@ const DEFAULT_WEB_MODELS: Record<Provider, string> = {
   modelbox: 'google/gemini-2.5-pro',
   xai: 'NO WEB SUPPORT',
   anthropic: 'NO WEB SUPPORT',
+  groq: 'NO WEB SUPPORT',
 };
 
 export class WebCommand implements Command {

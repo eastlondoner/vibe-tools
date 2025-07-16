@@ -23,6 +23,7 @@ OPENAI_API_KEY="your-openai-api-key"            # For browser commands with Open
 ANTHROPIC_API_KEY="your-anthropic-api-key"      # For browser commands with Anthropic, and MCP commands
 OPENROUTER_API_KEY="your-openrouter-api-key"    # For MCP commands with OpenRouter and web search
 GITHUB_TOKEN="your-github-token"                # For enhanced GitHub access
+GROQ_API_KEY="your-groq-api-key"                # For Groq LLM access
 
 # Configuration Options
 USE_LEGACY_CURSORRULES="true"                   # Use legacy .cursorrules file (default: false)
@@ -79,6 +80,10 @@ Create this file in your project root to customize behavior. Here's a comprehens
   },
   "anthropic": {
     "maxTokens": 21000 // Will be used when provider is "anthropic"
+  },
+  "groq": {
+    "model": "llama-3.3-70b-versatile",
+    "maxTokens": 16384
   }
 }
 ```

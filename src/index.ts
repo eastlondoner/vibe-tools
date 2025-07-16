@@ -18,6 +18,7 @@ import util from 'node:util';
 import consola from 'consola';
 import { spawn } from 'node:child_process';
 import { startCommand, updateCommandState, recordError, endCommand } from './telemetry/index';
+import { ModelNotFoundError } from './errors.ts';
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

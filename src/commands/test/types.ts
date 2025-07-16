@@ -126,7 +126,6 @@ export const TestResultSchema = z.object({
     return normalized === 'PASS' ? 'PASS' : 'FAIL';
   }),
   summary: z.string(),
-  executionTime: z.number(),
   error: z.string().nullable().optional().default(null),
 });
 

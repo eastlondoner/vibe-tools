@@ -29,13 +29,18 @@ Use this query: [[asset:simple-query]]
 ### Scenario 2: Query with Alternative Provider and Model (Happy Path)
 
 **Task Description:**
-Use vibe-tools to ask a factual question using each provider:
+Use vibe-tools to ask the question "What is virtue ethics?" using each provider with the default model (do not specify a model parameter):
 
 - Gemini
 - Anthropic
 - OpenRouter
 - ModelBox
 - OpenAI
+- Groq
+- XAI
+- Perplexity
+
+Keep going until you have tested all providers.
 
 **Expected Behavior:**
 
@@ -46,38 +51,45 @@ Use vibe-tools to ask a factual question using each provider:
 **Success Criteria:**
 
 - AI agent correctly specifies the provider and figures out a valid model to use
+- Every provider should be tested
 - Response contains relevant information answering the question
 - No error messages are displayed
 - Command completes within a reasonable time
 
-### Scenario 3: Query without Provider Parameter (Error Handling)
+### Scenario 3: Query without Provider Parameter
 
 **Task Description:**
 Attempt to use vibe-tools to ask a question without specifying a provider.
 
+Ask the question: "Who is the current president of the United States?"
+
 **Expected Behavior:**
 
-- The command should fail with a clear error message
-- Error message should mention that the ask command requires a provider parameter
-- Error message should list available providers
+- The command should succeed using a default provider
+- The output should indicate which provider and model was used
+- The response should be relevant to the question, the model may explain that it does not have access to up to date information, that is OK
 
 **Success Criteria:**
 
-- AI agent recognizes the need for a provider parameter
-- Command fails gracefully with informative error message
-- Error message provides guidance on fixing the issue
+- Command succeeds using a default provider
+- Output indicates which provider and model were used
+- Response is relevant to the question. DO NOT concern yourself with the factual accuracy of the response
 - No partial or corrupted output is generated
 
 ### Scenario 4: Query with Invalid Model (Error Handling)
 
 **Task Description:**
-Attempt to use vibe-tools to ask a question with a valid provider but an invalid model name.
+Attempt to use vibe-tools to ask a question with a valid provider but an invalid model name. To create an invalid model name append `-huge` to the model name.
+When the command fails follow up by asking the question again with one of the provided model names from the error message.
 
 **Expected Behavior:**
 
-- The command should fail with a clear error message
-- Error message should mention that the specified model is invalid or not found
-- Error message should provide suggested valid models for the provider
+- The first command should fail with a clear error message
+- The error message should mention that the specified model is invalid or not found
+- The error message should provide suggested valid models for the provider
+- The second command should succeed using the provided model name from the error message
+- The response should be relevant to the question
+- The output should indicate which provider and model were used
 
 **Success Criteria:**
 
@@ -89,7 +101,7 @@ Attempt to use vibe-tools to ask a question with a valid provider but an invalid
 ### Scenario 5: Query with Missing API Key (Error Handling)
 
 **Task Description:**
-Attempt to use vibe-tools to ask a question using a provider for which no API key is configured.
+Attempt to use vibe-tools to ask a question using a provider for which no API key is configured. To do this set the API key env var to an empty string.
 
 **Expected Behavior:**
 
@@ -186,15 +198,16 @@ Use the query from this file: {{path:scenario9-long-query.txt}}
 
 **Tags:** error-handling, model-errors
 **Task Description:**
-Attempt to use vibe-tools to ask a question with an OpenAI provider but using a non-existent model name "o3-HUGE".
+Attempt to use vibe-tools to ask a question with an OpenAI provider but 
+use a non-existent model name "o3-HUGE". Do not pass the --debug flag.
 
 Use this query: [[asset:simple-query]]
 
 **Expected Behavior:**
 
-- The command should fail with a clear error message
-- The error message should include the specific non-existent model name that was requested
-- The error message should provide details about why the model was not found
+- The command should fail with an error message indicating the model was not found
+- The output should include the specific non-existent model name that was requested
+- The output should provide details of one or more available models for the provider
 - Debug mode should NOT be required to see detailed error information
 
 **Success Criteria:**
