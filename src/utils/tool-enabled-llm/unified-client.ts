@@ -797,7 +797,7 @@ export class UnifiedLLMClient {
             input_schema: {
               type: 'object',
               properties: tool.inputSchema.properties || {},
-              required: tool.inputSchema.required || [],
+              required: Array.isArray(tool.inputSchema.required) ? tool.inputSchema.required : null,
             },
           });
         }
