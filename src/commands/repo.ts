@@ -24,10 +24,11 @@ import { createProvider } from '../providers/base';
 import { loadFileConfigWithOverrides } from '../repomix/repomixConfig';
 import {
   getNextAvailableProvider,
-  getDefaultModel,
   getProviderInfo,
-  getAvailableProviders,
   isProviderAvailable,
+  getDefaultModel,
+  getAvailableProviders,
+  resolveMaxTokens,
 } from '../utils/providerAvailability';
 import { getGithubRepoContext, looksLikeGithubRepo } from '../utils/githubRepo';
 import { fetchDocContent } from '../utils/fetch-doc.ts';
@@ -236,7 +237,7 @@ export class RepoCommand implements Command {
       let currentProvider = null;
 
       const noAvailableProvidersMsg =
-        'No suitable AI provider available for repo command. Please ensure at least one of the following API keys are set in your ~/.cursor-tools/.env file: GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, PERPLEXITY_API_KEY, MODELBOX_API_KEY.';
+        'No suitable AI provider available for repo command. Please ensure at least one of the following API keys are set in your ~/.vibe-tools/.env file: GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, PERPLEXITY_API_KEY, MODELBOX_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY, GROQ_API_KEY.';
 
       if (this.config.repo?.provider && isProviderAvailable(this.config.repo?.provider)) {
         currentProvider = this.config.repo.provider;
@@ -320,11 +321,7 @@ export class RepoCommand implements Command {
 
     yield `Analyzing repository using ${modelName}...\n`;
     try {
-      const maxTokens =
-        options?.maxTokens ||
-        this.config.repo?.maxTokens ||
-        (this.config as Record<string, any>)[provider]?.maxTokens ||
-        defaultMaxTokens;
+      const maxTokens = resolveMaxTokens(options, this.config, provider, modelProvider, 'repo');
 
       // Simplify modelOptions creation - pass only relevant options
       // The analyzeRepository function will construct the full ModelOptions internally

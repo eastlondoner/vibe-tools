@@ -7,6 +7,7 @@ import { createProvider } from '../providers/base';
 import { FileError, ProviderError } from '../errors';
 import { loadFileConfigWithOverrides } from '../repomix/repomixConfig';
 import { fetchDocContent } from '../utils/fetch-doc.ts';
+import { resolveMaxTokens } from '../utils/providerAvailability';
 
 const FIVE_MINUTES = 300000;
 const TEN_MINUTES = 600000;
@@ -281,11 +282,14 @@ export class PlanCommand implements Command {
       // Get relevant files
       let filePaths: string[];
       try {
-        const maxTokens =
-          options?.maxTokens ||
-          this.config.plan?.fileMaxTokens ||
-          (this.config as Record<string, any>)[fileProviderName]?.maxTokens ||
-          defaultMaxTokens;
+        const maxTokens = resolveMaxTokens(
+          options,
+          this.config,
+          fileProviderName,
+          fileProvider,
+          'plan',
+          'fileMaxTokens'
+        );
 
         const effectiveFileMaxTokens = maxTokens ?? defaultMaxTokens; // Ensure maxTokens is a number
 
@@ -377,11 +381,14 @@ export class PlanCommand implements Command {
         throw new FileError('Failed to extract content', error);
       }
 
-      const thinkingMaxTokens =
-        options?.maxTokens ||
-        this.config.plan?.thinkingMaxTokens ||
-        (this.config as Record<string, any>)[thinkingProviderName]?.maxTokens ||
-        defaultMaxTokens;
+      const thinkingMaxTokens = resolveMaxTokens(
+        options,
+        this.config,
+        thinkingProviderName,
+        thinkingProvider,
+        'plan',
+        'thinkingMaxTokens'
+      );
 
       const effectiveThinkingMaxTokens = thinkingMaxTokens ?? defaultMaxTokens; // Ensure maxTokens is a number
 

@@ -1,8 +1,8 @@
 import type { Command, CommandGenerator, CommandOptions, Provider } from '../types';
-import { loadEnv, loadConfig, defaultMaxTokens } from '../config';
+import { loadEnv, loadConfig } from '../config';
 import { createProvider } from '../providers/base';
 import { ProviderError, ModelNotFoundError } from '../errors';
-import { getAllProviders } from '../utils/providerAvailability';
+import { getAllProviders, resolveMaxTokens } from '../utils/providerAvailability';
 import type { ModelOptions } from '../providers/base';
 import { fetchDocContent } from '../utils/fetch-doc.ts';
 
@@ -21,7 +21,7 @@ export class AskCommand implements Command {
     // If no providers are available, throw an error
     if (availableProviders.length === 0) {
       throw new ProviderError(
-        "No AI providers are currently available. Please run 'vibe-tools install' to set up your API keys."
+        "No AI providers are currently available. Please run 'vibe-tools install' to set up your API keys for one of: OpenAI, Anthropic, Gemini, Perplexity, OpenRouter, ModelBox, xAI, Groq."
       );
     }
 
@@ -57,6 +57,7 @@ export class AskCommand implements Command {
         openrouter: 'openai/gpt-4.1',
         modelbox: 'openai/gpt-4.1',
         xai: 'grok-3-latest',
+        groq: 'llama3-8b-8192',
       };
 
       model = defaultModels[providerName] || 'gpt-4.1';
@@ -65,7 +66,15 @@ export class AskCommand implements Command {
 
     // Create the provider instance
     const provider = createProvider(providerName);
-    const maxTokens = options?.maxTokens || defaultMaxTokens;
+
+    // Resolve maxTokens using the shared utility function
+    const maxTokens = resolveMaxTokens(
+      options,
+      this.config,
+      providerName,
+      provider,
+      'ask'
+    );
 
     let finalQuery = query;
     let docContent = '';

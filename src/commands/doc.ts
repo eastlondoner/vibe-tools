@@ -15,6 +15,7 @@ import {
   getDefaultModel,
   PROVIDER_PREFERENCE,
   getAvailableProviders,
+  resolveMaxTokens,
 } from '../utils/providerAvailability';
 import { getGithubRepoContext, looksLikeGithubRepo, parseGithubUrl } from '../utils/githubRepo';
 import { fetchDocContent } from '../utils/fetch-doc.ts';
@@ -174,7 +175,7 @@ export class DocCommand implements Command {
       let currentProvider = null;
 
       const noAvailableProvidersMsg =
-        'No suitable AI provider available for doc command. Please ensure at least one of the following API keys are set in your ~/.cursor-tools/.env file: GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, PERPLEXITY_API_KEY, MODELBOX_API_KEY.';
+        'No suitable AI provider available for doc command. Please ensure at least one of the following API keys are set in your ~/.vibe-tools/.env file: GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, PERPLEXITY_API_KEY, MODELBOX_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY, GROQ_API_KEY.';
 
       if (this.config.doc?.provider && isProviderAvailable(this.config.doc?.provider)) {
         currentProvider = this.config.doc.provider;
@@ -264,7 +265,7 @@ export class DocCommand implements Command {
     const providerInstance = createProvider(provider);
 
     const model = options?.model || this.config.doc?.model || getDefaultModel(provider);
-    const maxTokens = options?.maxTokens || this.config.doc?.maxTokens || defaultMaxTokens;
+    const maxTokens = resolveMaxTokens(options, this.config, provider, providerInstance, 'doc');
 
     // Enable webSearch only for Gemini models when the web flag is provided
     const webSearch = options?.webSearch && provider === 'gemini';

@@ -7,6 +7,7 @@ import {
   getAllProviders,
   getNextAvailableProvider,
   getDefaultModel,
+  resolveMaxTokens,
 } from '../utils/providerAvailability';
 
 const DEFAULT_WEB_MODELS: Record<Provider, string> = {
@@ -117,11 +118,7 @@ export class WebCommand implements Command {
       );
     }
 
-    const maxTokens =
-      options?.maxTokens ||
-      this.config.web?.maxTokens ||
-      (this.config as Record<string, any>)[provider]?.maxTokens ||
-      defaultMaxTokens;
+    const maxTokens = resolveMaxTokens(options, this.config, provider, modelProvider, 'web');
 
     yield `Querying ${provider} using ${model} for: ${query} with maxTokens: ${maxTokens}\n`;
 

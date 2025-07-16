@@ -92,6 +92,7 @@ export interface BaseModelProvider {
   };
   // Add this optional method for video analysis
   executeVideoPrompt?(prompt: string, options: VideoAnalysisOptions): Promise<string>;
+  getDefaultMaxTokens?(): number;
 }
 
 // Base provider class with common functionality
@@ -441,6 +442,7 @@ export abstract class BaseProvider implements BaseModelProvider {
   abstract executePrompt(prompt: string, options: ModelOptions): Promise<string>;
   // Add executeVideoPrompt as optional here as well if not already present
   executeVideoPrompt?(prompt: string, options: VideoAnalysisOptions): Promise<string>;
+  getDefaultMaxTokens?(): number;
 }
 
 // Helper function for exponential backoff retry
@@ -2420,9 +2422,84 @@ export class XAIProvider extends OpenAIBase {
     };
   }
 }
+
+// Groq provider implementation
+export class GroqProvider extends OpenAIBase {
+  constructor() {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      throw new ApiKeyMissingError('Groq');
+    }
+    
+    super(apiKey, 'https://api.groq.com/openai/v1');
+    
+    // Initialize the promise in constructor
+    this.availableModels = this.initializeModels();
+    this.availableModels.catch((error) => {
+      console.error('Error fetching Groq models:', error);
+    });
+  }
+
+  private async initializeModels(): Promise<Set<string>> {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new NetworkError(`Failed to fetch Groq models: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!data?.data) {
+        console.warn('Unexpected API response format:', data);
+        return new Set();
+      }
+
+      // Each model in the response has an 'id' field that we can use
+      return new Set(data.data.map((model: any) => model.id));
+    } catch (error) {
+      console.error('Error fetching Groq models:', error);
+      throw new NetworkError('Failed to fetch available Groq models', error);
+    }
+  }
+
+  async supportsWebSearch(
+    modelName: string
+  ): Promise<{ supported: boolean; model?: string; error?: string }> {
+    return {
+      supported: false,
+      error: 'Groq does not support web search capabilities',
+    };
+  }
+
+  async executePrompt(prompt: string, options: ModelOptions): Promise<string> {
+    // Apply Groq-specific default for maxTokens if not explicitly set
+    // This ensures Groq uses 16000 tokens by default when user hasn't specified
+    const groqOptions: ModelOptions = {
+      ...options,
+      maxTokens: options.maxTokens ?? 16000,
+    };
+
+    // Debug logging when default is applied
+    if (options.maxTokens === undefined || options.maxTokens === null) {
+      this.debugLog(groqOptions, 'No maxTokens specified, using Groq default: 16000');
+    }
+
+    // Call parent implementation with modified options
+    return super.executePrompt(prompt, groqOptions);
+  }
+
+  getDefaultMaxTokens(): number {
+    return 16000;
+  }
+}
+
 // Factory function to create providers
 export function createProvider(
-  provider: 'gemini' | 'openai' | 'openrouter' | 'perplexity' | 'modelbox' | 'anthropic' | 'xai'
+  provider: 'gemini' | 'openai' | 'openrouter' | 'perplexity' | 'modelbox' | 'anthropic' | 'xai' | 'groq'
 ): BaseModelProvider {
   switch (provider) {
     case 'gemini': {
@@ -2454,6 +2531,8 @@ export function createProvider(
       return new AnthropicProvider();
     case 'xai':
       return new XAIProvider();
+    case 'groq':
+      return new GroqProvider();
     default:
       throw exhaustiveMatchGuard(
         provider,
