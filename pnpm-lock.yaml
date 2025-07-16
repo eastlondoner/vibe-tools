@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  playwright-core: 1.53.1
-  '@playwright/test': 1.53.1
-  playwright: 1.53.1
+  playwright-core: 1.54.1
+  '@playwright/test': 1.54.1
+  playwright: 1.54.1
 
 importers:
 
@@ -1804,18 +1804,8 @@ packages:
     resolution: {integrity: sha512-ueGLflrrnvwB3xuo/uGob5pd5FN7l0MsLf0Z87o/UQmRtwjvfylfc9MurIxRAWywCYTgrvpXBcqjV4OfCYGCIQ==}
     engines: {node: '>=16.20.0'}
 
-  playwright-core@1.53.1:
-    resolution: {integrity: sha512-Z46Oq7tLAyT0lGoFx4DOuB1IA9D1TPj0QkYxpPVUnGDqHHvDpCftu1J2hM2PiWsNMoZh8+LQaarAWcDfPBc6zg==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.54.1:
     resolution: {integrity: sha512-Nbjs2zjj0htNhzgiy5wu+3w09YetDx5pkrpI/kZotDlDUaYk0HVA5xrBVPdow4SAUIlhgKcJeJg4GRKW6xHusA==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.53.1:
-    resolution: {integrity: sha512-LJ13YLr/ocweuwxyGf1XNFWIU4M2zUSo149Qbp+A4cpwDjsxRPj7k6H25LBrEHiEwxvRbD8HdwvQmRMSvquhYw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -2491,7 +2481,7 @@ snapshots:
       openai: 4.104.0(ws@8.18.3)(zod@4.0.5)
       pino: 9.7.0
       pino-pretty: 13.0.0
-      playwright: 1.53.1
+      playwright: 1.54.1
       ws: 8.18.3
       zod: 4.0.5
       zod-to-json-schema: 3.24.6(zod@4.0.5)
@@ -2712,7 +2702,7 @@ snapshots:
 
   '@playwright/test@1.54.1':
     dependencies:
-      playwright: 1.53.1
+      playwright: 1.54.1
 
   '@rollup/rollup-android-arm-eabi@4.45.1':
     optional: true
@@ -4065,19 +4055,11 @@ snapshots:
 
   pkce-challenge@5.0.0: {}
 
-  playwright-core@1.53.1: {}
-
   playwright-core@1.54.1: {}
-
-  playwright@1.53.1:
-    dependencies:
-      playwright-core: 1.53.1
-    optionalDependencies:
-      fsevents: 2.3.2
 
   playwright@1.54.1:
     dependencies:
-      playwright-core: 1.53.1
+      playwright-core: 1.54.1
     optionalDependencies:
       fsevents: 2.3.2
 
