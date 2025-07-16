@@ -19,6 +19,7 @@ import { TestEnvironmentManager } from './environment';
 import { StdioServerParameters } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { realpath } from 'fs/promises';
+import { globalCleanupRegistry } from './cleanup-registry';
 
 // Replace the existing JSON response instructions with the new simplified schema
 const jsonResponseInstructions = `
@@ -137,8 +138,8 @@ export async function executeScenario(
   },
   geminiProvider: BaseModelProvider // used for summarization
 ): Promise<TestScenarioResult> {
-  // Declare filesystemClient at the function scope so it's available in the finally block
-  let filesystemClient: Client | undefined;
+  // Declare client at the function scope so it's available in the finally block
+  let client: UnifiedLLMClient | undefined;
   const { model, provider, timeout, retryConfig, debug, scenarioId, outputBuffer = [] } = options;
   // Note: mcpServers is not used currently but kept for future implementation
   const startTime = Date.now();
@@ -161,6 +162,18 @@ export async function executeScenario(
   // Create a temporary directory for this test scenario
   const tempDir = await TestEnvironmentManager.createTempDirectory(scenarioId);
   appendToBuffer(`Created temporary directory: ${tempDir}`);
+  
+  // Register cleanup task
+  const cleanupId = `test-${scenarioId}-${Date.now()}`;
+  globalCleanupRegistry.register(cleanupId, async () => {
+    // Clean up client
+    if (client) {
+      await client.stopMCP();
+    }
+    
+    // Clean up temp directory
+    await TestEnvironmentManager.cleanup(tempDir);
+  }, 10); // High priority
 
   // Copy assets and update task description with new references
   const modifiedTaskDescription = await TestEnvironmentManager.copyAssets(scenario, tempDir, debug);
@@ -249,7 +262,7 @@ ${jsonResponseInstructions}
 `;
 
         // Create LLM client with non-prefixed logger for model outputs
-        const client = new UnifiedLLMClient(
+        client = new UnifiedLLMClient(
           {
             provider,
             model,
@@ -263,13 +276,16 @@ ${jsonResponseInstructions}
         );
         await client.startMCP();
         // Execute with timeout
+        let timeoutId = null;
         const messages = await Promise.race([
           client.processQuery(prompt, systemPrompt),
           new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new TestTimeoutError(scenarioId, timeout)), timeout * 1000);
+            timeoutId = setTimeout(() => reject(new TestTimeoutError(scenarioId, timeout)), timeout * 1000);
           }),
         ]);
-
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
         // Extract the final result message
         const finalMessage = messages[messages.length - 1];
 
@@ -473,18 +489,12 @@ ${jsonResponseInstructions}
   } finally {
     // Clean up resources
     try {
-      // Stop the filesystem MCP client if it exists
-      if (filesystemClient) {
-        await filesystemClient.close();
-        if (debug) {
-          console.log(`Stopped filesystem MCP client`);
-        }
-      }
-
-      // Clean up temporary directory
-      await TestEnvironmentManager.cleanup(tempDir);
+      // Execute registered cleanup and then unregister
+      await globalCleanupRegistry.executeCleanup();
+      globalCleanupRegistry.unregister(cleanupId);
+      
       if (debug) {
-        console.log(`Cleaned up temporary directory: ${tempDir}`);
+        console.log(`Cleaned up resources for scenario ${scenarioId}`);
       }
     } catch (error) {
       console.error(`Error cleaning up resources: ${error}`);

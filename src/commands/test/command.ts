@@ -4,6 +4,8 @@ import type { Command } from '../../types';
 import { loadEnv, loadConfig } from '../../config';
 import { yieldOutput } from '../../utils/output';
 import { TestError, FeatureFileParseError } from '../../errors';
+import { globalCleanupRegistry, monitorActiveResources } from './cleanup-registry';
+import { cleanupAllProcesses } from './tools';
 import { TestOptions, TestReport, TestScenarioResult } from './types';
 import { parseFeatureBehaviorFile } from './parser';
 import { executeScenario } from './executor-new';
@@ -40,6 +42,28 @@ export class TestCommand implements Command {
     loadEnv();
     this.config = loadConfig();
   }
+  
+  private async cleanup(): Promise<void> {
+    console.log('Cleaning up test resources...');
+    try {
+      // Clean up any remaining subprocesses
+      cleanupAllProcesses();
+      
+      // Execute global cleanup registry
+      await globalCleanupRegistry.executeCleanup();
+      
+      // Clear the cleanup registry to allow exit
+      globalCleanupRegistry.clear();
+      
+      // Monitor active resources for debugging
+      if (process.env.DEBUG_RESOURCES) {
+        monitorActiveResources();
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+    }
+    console.log('Cleanup complete');
+  }
 
   /**
    * Execute the test command
@@ -55,7 +79,23 @@ export class TestCommand implements Command {
       for await (const output of this.runTests(query, options)) {
         yield output;
       }
+      
+      // Trigger cleanup and exit after tests complete
+      await this.cleanup();
+      
+      // // Use setImmediate to allow any pending I/O to complete
+      // setImmediate(() => {
+      //   process.exit(0);
+      // });
     } catch (error) {
+      // Trigger cleanup on error
+      await this.cleanup();
+      
+      // // Exit with error code after cleanup
+      // setImmediate(() => {
+      //   process.exit(1);
+      // });
+      
       if (error instanceof Error) {
         throw new TestError(`Failed to execute test: ${error.message}`);
       }

@@ -9,6 +9,56 @@ import * as child_process from 'child_process';
 
 const execAsync = util.promisify(child_process.exec);
 
+// Track active child processes for cleanup
+const activeProcesses = new Set<child_process.ChildProcess>();
+
+// Add cleanup function for active processes
+export function cleanupAllProcesses() {
+  for (const proc of activeProcesses) {
+    try {
+      if (proc.pid && !proc.killed) {
+        proc.kill('SIGTERM');
+        activeProcesses.delete(proc);
+      }
+    } catch (error) {
+      console.error('Error killing process:', error);
+    }
+  }
+  activeProcesses.clear();
+}
+
+// Execute command with subprocess tracking
+async function execWithTracking(
+  command: string,
+  options: child_process.ExecOptions
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = child_process.exec(command, options, (error, stdout, stderr) => {
+      // Remove from active processes when done
+      activeProcesses.delete(child);
+      
+      if (error) {
+        reject(error);
+      } else {
+        resolve({ stdout, stderr });
+      }
+    });
+    
+    // Track the child process
+    activeProcesses.add(child);
+    
+    // Handle child process exit
+    child.on('exit', () => {
+      activeProcesses.delete(child);
+    });
+    
+    child.on('error', (error) => {
+      activeProcesses.delete(child);
+      reject(error);
+    });
+  });
+}
+
 // Whitelist of permitted shell commands that can be executed directly
 const WHITELISTED_COMMANDS = ['ls', 'cat', 'grep', 'find', 'pwd', 'sqlite3', 'test'];
 
@@ -240,7 +290,7 @@ export function createCommandExecutionTool(options: {
           });
 
           // Execute command with timeout
-          const execPromise = execAsync(pnpmCommand, execOptions);
+          const execPromise = execWithTracking(pnpmCommand, execOptions);
           const result = await Promise.race([execPromise, timeoutPromise]);
 
           // Clear the timeout if the command completes before the timeout
@@ -277,6 +327,11 @@ export function createCommandExecutionTool(options: {
           }
 
           const errorMessage = error instanceof Error ? error.message : String(error);
+
+          // If it's a timeout error, make sure we clean up any processes
+          if (errorMessage.includes('timed out')) {
+            cleanupAllProcesses();
+          }
 
           appendToBuffer(`COMMAND ERROR: ${errorMessage}`);
 
@@ -389,7 +444,7 @@ export function createCommandExecutionTool(options: {
           });
 
           // Execute command with timeout
-          const execPromise = execAsync(fullCommand, execOptions);
+          const execPromise = execWithTracking(fullCommand, execOptions);
           const result = await Promise.race([execPromise, timeoutPromise]);
 
           // Clear the timeout if the command completes before the timeout
@@ -424,6 +479,11 @@ export function createCommandExecutionTool(options: {
           }
 
           const errorMessage = error instanceof Error ? error.message : String(error);
+
+          // If it's a timeout error, make sure we clean up any processes
+          if (errorMessage.includes('timed out')) {
+            cleanupAllProcesses();
+          }
 
           appendToBuffer(`COMMAND ERROR: ${errorMessage}`);
 
