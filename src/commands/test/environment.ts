@@ -15,88 +15,103 @@ export class TestEnvironmentManager {
    * @throws Error if directory creation fails
    */
   static async createTempDirectory(scenarioId: string): Promise<string> {
-    // Create a unique directory name with timestamp and random suffix for collision avoidance
-    const timestamp = Date.now();
-    const randomSuffix = crypto.randomBytes(4).toString('hex');
-    // Replace any whitespace and special characters with hyphens to ensure no whitespace in directory names
-    const sanitizedScenarioId = scenarioId.replace(/[\s\W]+/g, '-');
-    const dirName = `vibe-tools-test-${sanitizedScenarioId}-${timestamp}-${randomSuffix}`;
-    const tempDir = path.join(os.tmpdir(), dirName);
+    let lastError: Error | undefined;
 
-    // Ensure the directory exists
-    try {
-      await fs.promises.mkdir(tempDir, { recursive: true });
-    } catch (error) {
-      const errorMessage = `Failed to create temporary directory at ${tempDir}: ${error instanceof Error ? error.message : String(error)}`;
-      console.error(errorMessage);
-      throw new Error(errorMessage);
-    }
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        // Create a unique directory name with timestamp and random suffix for collision avoidance
+        const timestamp = Date.now();
+        const randomSuffix = crypto.randomBytes(4).toString('hex');
+        // Replace any whitespace and special characters with hyphens to ensure no whitespace in directory names
+        const sanitizedScenarioId = scenarioId.replace(/[\s\W]+/g, '-');
+        const dirName = `vibe-tools-test-${sanitizedScenarioId}-${timestamp}-${randomSuffix}`;
+        const tempDir = path.join(os.tmpdir(), dirName);
 
-    // Create a symlink to the node_modules directory only
-    // Note: We don't create a symlink to the src directory to maintain isolation
-    const projectRoot = process.cwd();
-    const nodeModulesPath = path.join(projectRoot, 'node_modules');
-    const symlinkPath = path.join(tempDir, 'node_modules');
+        // Ensure the directory exists
+        await fs.promises.mkdir(tempDir, { recursive: true });
 
-    try {
-      await fs.promises.symlink(nodeModulesPath, symlinkPath, 'junction');
-    } catch (error) {
-      const errorMessage = `Failed to create symlink to node_modules: ${error instanceof Error ? error.message : String(error)}`;
-      console.error(errorMessage);
-      // Don't throw here - we can still proceed with tests even without the symlink,
-      // it might just result in test failures that will be properly reported
-    }
+        // Create a symlink to the node_modules directory only
+        // Note: We don't create a symlink to the src directory to maintain isolation
+        const projectRoot = process.cwd();
+        const nodeModulesPath = path.join(projectRoot, 'node_modules');
+        const symlinkPath = path.join(tempDir, 'node_modules');
 
-    // Copy package.json to the temporary directory
-    try {
-      const packageJsonPath = path.join(projectRoot, 'package.json');
-      const packageJsonContent = await fs.promises.readFile(packageJsonPath, 'utf-8');
-      await fs.promises.writeFile(path.join(tempDir, 'package.json'), packageJsonContent);
-    } catch (error) {
-      const errorMessage = `Failed to copy package.json: ${error instanceof Error ? error.message : String(error)}`;
-      console.error(errorMessage);
-      // Don't throw here - we can still proceed with tests even without package.json,
-      // it might just result in test failures that will be properly reported
-    }
+        try {
+          await fs.promises.symlink(nodeModulesPath, symlinkPath, 'junction');
+        } catch (error) {
+          const errorMessage = `Failed to create symlink to node_modules: ${error instanceof Error ? error.message : String(error)}`;
+          console.error(errorMessage);
+          // Don't throw here - we can still proceed with tests even without the symlink,
+          // it might just result in test failures that will be properly reported
+        }
 
-    // Create .cursor/rules directory and copy vibe-tools.mdc file to prevent warnings
-    try {
-      // Check if the cursor rules file exists in the project root
-      const cursorRulesSourcePath = path.join(projectRoot, '.cursor', 'rules', 'vibe-tools.mdc');
-      const cursorRulesDestDir = path.join(tempDir, '.cursor', 'rules');
-      const cursorRulesDestPath = path.join(cursorRulesDestDir, 'vibe-tools.mdc');
+        // Copy package.json to the temporary directory
+        try {
+          const packageJsonPath = path.join(projectRoot, 'package.json');
+          const packageJsonContent = await fs.promises.readFile(packageJsonPath, 'utf-8');
+          await fs.promises.writeFile(path.join(tempDir, 'package.json'), packageJsonContent);
+        } catch (error) {
+          const errorMessage = `Failed to copy package.json: ${error instanceof Error ? error.message : String(error)}`;
+          console.error(errorMessage);
+          // Don't throw here - we can still proceed with tests even without package.json,
+          // it might just result in test failures that will be properly reported
+        }
 
-      if (fs.existsSync(cursorRulesSourcePath)) {
-        // Create the .cursor/rules directory in the temp directory
-        await fs.promises.mkdir(cursorRulesDestDir, { recursive: true });
+        // Create .cursor/rules directory and copy vibe-tools.mdc file to prevent warnings
+        try {
+          // Check if the cursor rules file exists in the project root
+          const cursorRulesSourcePath = path.join(
+            projectRoot,
+            '.cursor',
+            'rules',
+            'vibe-tools.mdc'
+          );
+          const cursorRulesDestDir = path.join(tempDir, '.cursor', 'rules');
+          const cursorRulesDestPath = path.join(cursorRulesDestDir, 'vibe-tools.mdc');
 
-        // Copy the cursor rules file
-        const cursorRulesContent = await fs.promises.readFile(cursorRulesSourcePath, 'utf-8');
-        await fs.promises.writeFile(cursorRulesDestPath, cursorRulesContent);
-      } else {
-        // Also check for .cursorrules in the project root (alternative location)
-        const altCursorRulesPath = path.join(projectRoot, '.cursorrules');
-        if (fs.existsSync(altCursorRulesPath)) {
-          // Copy the .cursorrules file
-          const cursorRulesContent = await fs.promises.readFile(altCursorRulesPath, 'utf-8');
-          await fs.promises.writeFile(path.join(tempDir, '.cursorrules'), cursorRulesContent);
-          console.log(`Copied .cursorrules to ${tempDir}`);
-        } else {
-          console.log('No cursor rules file found to copy');
+          if (fs.existsSync(cursorRulesSourcePath)) {
+            // Create the .cursor/rules directory in the temp directory
+            await fs.promises.mkdir(cursorRulesDestDir, { recursive: true });
+
+            // Copy the cursor rules file
+            const cursorRulesContent = await fs.promises.readFile(cursorRulesSourcePath, 'utf-8');
+            await fs.promises.writeFile(cursorRulesDestPath, cursorRulesContent);
+          } else {
+            // Also check for .cursorrules in the project root (alternative location)
+            const altCursorRulesPath = path.join(projectRoot, '.cursorrules');
+            if (fs.existsSync(altCursorRulesPath)) {
+              // Copy the .cursorrules file
+              const cursorRulesContent = await fs.promises.readFile(altCursorRulesPath, 'utf-8');
+              await fs.promises.writeFile(path.join(tempDir, '.cursorrules'), cursorRulesContent);
+              console.log(`Copied .cursorrules to ${tempDir}`);
+            } else {
+              console.log('No cursor rules file found to copy');
+            }
+          }
+        } catch (error) {
+          const errorMessage = `Failed to copy cursor rules: ${error instanceof Error ? error.message : String(error)}`;
+          console.error(errorMessage);
+          // Don't throw here - we can still proceed with tests even without cursor rules,
+          // it will just show warnings
+        }
+
+        if (process.env.DEBUG) {
+          console.log(`[DEBUG] Created temporary directory: ${tempDir}`);
+        }
+
+        return tempDir;
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`Attempt ${attempt} failed to create temporary directory: ${lastError.message}`);
+        if (attempt < 2) {
+          await new Promise((res) => setTimeout(res, 100)); // Wait before retrying
         }
       }
-    } catch (error) {
-      const errorMessage = `Failed to copy cursor rules: ${error instanceof Error ? error.message : String(error)}`;
-      console.error(errorMessage);
-      // Don't throw here - we can still proceed with tests even without cursor rules,
-      // it will just show warnings
     }
-
-    if (process.env.DEBUG) {
-      console.log(`[DEBUG] Created temporary directory: ${tempDir}`);
-    }
-
-    return tempDir;
+    // If all attempts fail, throw the last recorded error.
+    throw new Error(
+      `Failed to create temporary directory after 2 attempts. Last error: ${lastError?.message}`
+    );
   }
 
   /**

@@ -116,7 +116,7 @@ export function createExecutionQueue(
 `
           : '');
 
-      void yieldOutput(statusMessage, options).catch((err) =>
+      void yieldOutput(statusMessage + '\n', options).catch((err) =>
         console.error('Error yielding progress output:', err)
       );
 
