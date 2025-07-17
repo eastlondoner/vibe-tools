@@ -1126,7 +1126,7 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
   }
 
   getDefaultMaxTokens(): number {
-    return 640000;
+    return 64000;
   }
 
   private async initializeModels(): Promise<Set<string>> {
@@ -1662,9 +1662,7 @@ export class OpenAIProvider extends OpenAIBase {
           requestParams.reasoning_effort = options.reasoningEffort;
           this.debugLog(options, `Using reasoning_effort: ${options.reasoningEffort}`);
         } else if (options?.reasoningEffort) {
-          console.log(
-            `Model ${model} does not support reasoning effort. Parameter will be ignored. Set OVERRIDE_SAFETY_CHECKS=true to bypass this check and pass the reasoning effort parameter to the provider API`
-          );
+          this.debugLog(options, `Model ${model} does not support reasoning effort. Parameter will be ignored. Set OVERRIDE_SAFETY_CHECKS=true to bypass this check and pass the reasoning effort parameter to the provider API`);
         }
 
         // Log full request parameters in debug mode

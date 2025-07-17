@@ -2,11 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.63.0] - 2025-07-17
 
 ### Added
 
+- **Groq Provider Support**: Added support for the Groq provider, enabling access to fast inference models including `moonshotai/kimi-k2-instruct` and `qwen/qwen3-32b`. Configure using the `GROQ_API_KEY` environment variable.
+  - Available across all commands that support provider selection (ask, web, repo, doc, plan)
+  - Optimized for high-speed inference with competitive performance
+  - Includes comprehensive error handling and model validation
 - **Automatic Doppler Secrets Integration**: vibe-tools now automatically detects a Doppler-configured project and, when the `doppler` CLI is on the PATH, loads any secrets that end with `_API_KEY` into the environment before commands execute. This means you no longer need to copy provider API keys into `.env` files for projects that already manage secrets with Doppler. The feature is enabled by default and can be disabled by adding `"disableDoppler": true` to your `vibe-tools.config.json`.
+- **Local File Support for `--with-doc`**: You can now pass local files directly to the `--with-doc` flag (relative/absolute paths or `file://` URLs) across the `ask`, `repo`, `plan`, and `doc` commands. This makes it simple to enrich prompts with Markdown, text, or other documents from your filesystem without hosting them online.
+- **XAI (Grok) Web Search & Reasoning Effort**: Grok models now support the `--web` flag for live web search with source citations and the `--reasoning-effort` flag (`low`, `medium`, `high`) for deeper analysis. Works across `ask`, `web`, `repo`, `doc`, and `plan` commands, bringing Grok feature-parity with Gemini and Perplexity providers.
+
+## [0.62.10] - 2025-07-01
 
 ### Improved
 
@@ -45,7 +53,7 @@ All notable changes to this project will be documented in this file.
   - Not set as default for any command - users must explicitly select it
   - Labeled with "lightweight" hint in installation UI
 
-## [0.62.8] - 2025-01-16
+## [0.62.8] - 2025-06-21
 
 ### Added
 

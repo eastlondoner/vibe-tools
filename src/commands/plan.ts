@@ -9,7 +9,6 @@ import { loadFileConfigWithOverrides } from '../repomix/repomixConfig';
 import { fetchDocContent } from '../utils/fetch-doc.ts';
 import { resolveMaxTokens } from '../utils/providerAvailability';
 
-const FIVE_MINUTES = 300000;
 const TEN_MINUTES = 600000;
 
 type FileProvider = 'gemini' | 'openai' | 'openrouter' | 'perplexity' | 'modelbox' | 'anthropic';
@@ -482,35 +481,48 @@ async function getRelevantFiles(
   docContent: string
 ): Promise<string[]> {
   console.log('Getting relevant files using:', options.model);
-  const prompt = `
-Your job is to identify the most relevant files in the codebase to the following user query and respond with a newline-separated list of the relevant file paths.
+  const systemPrompt = `
+Your job is to identify the most relevant files in the codebase to the following user query and respond with a newline-separated list of all files in the codebase that are relevant to the user query.
+If there are files that show examples of how certain relevant things are done in the codebase then include those as well, even if the files themselves are not relevant to the user query.
 
+Example Response:
+<example response>
+These are the files in the codebase that are most relevant to the user's request:
+src/index.ts
+src/utils/helper.ts
+</example response>
+
+The user query will be provided enclosed in <user query> tags. Additional context documents will be provided enclosed in <additional context document> tags. The codebase will be provided enclosed in <codebase> tags.
+
+Based on the user query${docContent ? ' and the additional context document' : ''}, you must respond with ONLY the list of files that are most relevant to implement the request.
+Reply with ONLY a newline-separated list of the relevant file paths (paths as show above from the root of the codebase). Do not reply with any other text, explanation, or formatting.
+`;
+
+  const prompt = `
+Here is the user query:
 <user query>
 ${query}
 </user query>
 
-You can use the additional context document to help you identify the most relevant files.
+You can use this additional context document to help you identify the most relevant files.
 <additional context document>
 ${docContent ? `\\n${docContent}\\n\\n---\\n` : ''}
 </additional context document>
 
-These are the available files in the codebase. Only include files from here
-<available files>
+Here is the codebase. Only include files from here
+<codebase>
 ${packedRepo}
-</available files>
+</codebase>
 
 Based on the user query${docContent ? ' and the additional context document' : ''}, which files from the list above are most relevant to implement the request?
-You must return ONLY a newline-separated list of the relevant file paths (paths as show above from the root of the codebase). Do not reply with any other text, explanation, or formatting.
-
-Example Response:
-src/index.ts
-src/utils/helper.ts
+Reply with ONLY a newline-separated list of the relevant file paths (paths as show above from the root of the codebase). Do not reply with any other text, explanation, or formatting.
 `;
 
   // Override timeout specifically for this step
   const specificOptions: ModelOptions = {
     ...options,
-    timeout: FIVE_MINUTES,
+    timeout: TEN_MINUTES,
+    systemPrompt,
   };
 
   // Use executePrompt and ensure options is the full ModelOptions type
@@ -528,25 +540,47 @@ async function generatePlan(
   options: ModelOptions, // Expect full ModelOptions
   docContent: string
 ): Promise<string> {
+  const systemPrompt = `
+Your job is to generate a detailed, step-by-step implementation plan to address the user query.
+Focus on the design, architecture, and actionable steps and code modifications where appropriate.
+Provide key code snippets to illustrate important design points and code patterns but do not include excessively long code blocks.
+The person implementing the plan is a highly skilled developer - but it is very helpful for them to provide a list of the files that should be consulted and/or modified in each phase of the plan so they can refer to the codebase as they implement the plan. Include a list of relevant files in each phase of the plan.
+
+The user query will be provided enclosed in <user query> tags. Additional context documents will be provided enclosed in <additional context document> tags.
+
+Ensure that your plan is thorough and comprehensive. Avoid creating unnecessary abstractions and over-engineering. Match the approach and patterns of the existing codebase. It is not necessary to include time or effort estimates.
+
+We have automatically provided you with the most relevant subset of the entire codebase. The entire codebase is too large to include. The relevant codebase will be provided enclosed in <relevant code context> tags.
+
+Reply with a markdown formatted design and plan. Split the plan into phases that can each be implemented and tested in turn. When you include code snippets, use \`\`\` to format them and indicate the path to the file where the code snippet would be located.
+  `;
   console.log('Generating plan using:', options.model);
   const prompt = `
-User Query: ${query}
+Here is the user query:
+<user query>
+${query}
+</user query>
 
-${docContent ? `Additional Context Document:\\n${docContent}\\n\\n---\\n` : ''}
+You can use this additional context document to help you identify the most relevant files.
+<additional context document>
+${docContent ? `\\n${docContent}\\n\\n---\\n` : ''}
+</additional context document>
 
 Relevant Code Context:
+<relevant code context>
 \`\`\`
 ${filteredContent}
 \`\`\`
+</relevant code context>
 
-Based *only* on the user query${docContent ? ', the additional context document,' : ''} and the provided relevant code context, generate a detailed, step-by-step implementation plan to address the user query.
-Focus on actionable steps and code modifications where appropriate.
-Implementation Plan:`;
+
+Based on the user query${docContent ? ', the additional context document,' : ''} and the provided relevant code context, generate a detailed, step-by-step implementation plan to address the user query.`;
 
   // Override timeout specifically for this step
   const specificOptions: ModelOptions = {
     ...options,
     timeout: TEN_MINUTES,
+    systemPrompt,
   };
 
   // Use executePrompt and ensure options includes the required systemPrompt

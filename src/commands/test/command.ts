@@ -82,7 +82,6 @@ export class TestCommand implements Command {
 
       // Trigger cleanup and exit after tests complete
       await this.cleanup();
-
     } catch (error) {
       // Trigger cleanup on error
       await this.cleanup();
