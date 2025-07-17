@@ -333,7 +333,10 @@ ${jsonResponseInstructions}
         }
 
         if (typeof finalMessage.content === 'string') {
-          const jsonMatch = finalMessage.content.match(/```json([\s\S]*?)```/);
+          let jsonMatch = finalMessage.content.match(/```json([\s\S]*?)```/);
+          if (!jsonMatch) {
+            jsonMatch = finalMessage.content.match(/({[\s\S]*?})/);
+          }
           if (!jsonMatch) {
             throw new TestExecutionError(
               `Failed to parse JSON response from AI agent: ${finalMessage.content}...`
@@ -378,7 +381,7 @@ ${jsonResponseInstructions}
           taskDescription: scenario.taskDescription,
           approachTaken,
           commands: [],
-          actualCommands: executionHistory.map((h) => h.args.command),
+          actualCommands: executionHistory.map((h) => h.args?.command || JSON.stringify(h)),
           output: parsedResponse.summary,
           outputBuffer,
           toolExecutions: executionHistory,
@@ -511,7 +514,7 @@ ${jsonResponseInstructions}
     // Clean up resources
     try {
       // Execute registered cleanup and then unregister
-      await globalCleanupRegistry.executeCleanup();
+      await globalCleanupRegistry.cleanupTask(cleanupId);
       globalCleanupRegistry.unregister(cleanupId);
       
       if (debug) {

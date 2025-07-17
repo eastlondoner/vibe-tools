@@ -290,7 +290,7 @@ Note: in most cases you can say "ask Perplexity" instead of "use vibe-tools web"
 
 "Use vibe-tools repo to analyze how authentication is implemented in the Next.js repository. Use --from-github=vercel/next.js."
 
-"Use vibe-tools repo to explain this React component with documentation from the official React docs. Use --with-doc=https://react.dev/reference/react/useState"
+"Use vibe-tools repo to explain this React component with documentation from the official React docs. Use --with-doc=https://react.dev/reference/react/useState or a local file path"
 
 "Use vibe-tools repo to review my recent changes and suggest improvements. Use --with-diff to include the git diff."
 
@@ -337,7 +337,7 @@ Note: The ask command requires both --provider and --model parameters to be spec
 - `--provider=<provider>`: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, openrouter, xai, or groq)
 - `--model=<model>`: Model to use (required for the ask command)
 - `--max-tokens=<number>`: Maximum tokens for response
-- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
+- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models, Claude 4 Sonnet, and XAI Grok models). Higher values produce more thorough responses for complex questions.
 - `--with-doc=<doc_url>`: Fetch content from one or more document URLs and include it as context. Can be specified multiple times (e.g., `--with-doc=<url1> --with-doc=<url2>`).
 
 ## Authentication and API Keys
@@ -383,14 +383,29 @@ Note: The ask command requires both --provider and --model parameters to be spec
      ```
    - This method enables access to the latest Gemini models available through Vertex AI, such as `gemini-2.5-flash`.
 
-3. **Application Default Credentials (ADC) (Recommended for Google Cloud Environments)**
+3. **Automatic Doppler Secrets Manager Integration** (new in 0.63.x)
+   - If the [Doppler](https://www.doppler.com/) CLI is installed and your working directory has been configured with `doppler setup`, vibe-tools will automatically run `doppler secrets --json` at startup and load any secrets whose names end with `_API_KEY` into the current process **before** it evaluates which providers are available.
+   - This means you can keep all of your provider keys (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, etc.) in Doppler and skip copying them into `.env` files.
+   - Doppler integration is **on by default**. To turn it off add the following to `vibe-tools.config.json`:
+     ```json
+     {
+       "disableDoppler": true
+     }
+     ```
+   - Doppler secrets are only loaded if the variable is *not already defined* in the environment, so explicit environment variables always win.
+   - The integration is read-only: secrets are never written back to Doppler or logged.
+
+4. **Application Default Credentials (ADC) for Gemini models (Recommended for Google Cloud Environments)**
+   - **Note:** This is an _alternative_ to setting the `GEMINI_API_KEY` environment variable for Gemini models.
    - ADC is ideal when running `vibe-tools` within Google Cloud environments (e.g., Compute Engine, Kubernetes Engine) or for local development using `gcloud`.
    - Set the `GEMINI_API_KEY` environment variable to `adc`.
    - **Example:**
      ```env
      GEMINI_API_KEY="adc"
      ```
-   - **Setup Instructions:** First, authenticate locally using gcloud:
+   - **Setup Instructions:**
+   - For Google Cloud environments no further steps are required.
+   - To use vibe-tools locally with ADC, authenticate locally using gcloud:
      ```bash
      gcloud auth application-default login
      ```
@@ -998,12 +1013,12 @@ All commands support these general options:
 
 - `--model`: Specify an alternative model
 - `--max-tokens`: Control response length
-- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini and Claude 4 Sonnet). Higher values produce more thorough responses at the cost of increased token usage.
+- `--reasoning-effort=<low|medium|high>`: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models, Claude 4 Sonnet, and XAI Grok models). Higher values produce more thorough responses at the cost of increased token usage.
 - `--save-to`: Save command output to a file (in addition to displaying it, like tee)
 - `--quiet`: Suppress stdout output (only useful with --save-to)
 - `--debug`: Show detailed error information
-- `--provider`: AI provider to use. Valid values: openai, anthropic, perplexity, gemini, openrouter
-- `--web`: Enable web search capabilities for supported models (currently Gemini models) across all commands
+- `--provider`: AI provider to use. Valid values: openai, anthropic, perplexity, gemini, openrouter, modelbox, xai, groq
+- `--web`: Enable web search capabilities for supported models (Gemini models, XAI Grok models, Perplexity models, and ModelBox models) across all commands
 
 Documentation command specific options:
 
@@ -1149,6 +1164,9 @@ vibe-tools web "How to implement OAuth2 in Express.js?"
 
 # Compare technologies
 vibe-tools web "Compare Vite vs Webpack for modern web development"
+
+# Use XAI Grok for web search with reasoning
+vibe-tools web "What are the latest AI safety developments?" --provider xai --reasoning-effort high
 ```
 
 #### Repository Context Examples
@@ -1173,7 +1191,7 @@ vibe-tools repo "Explain the architecture" --from-github=username/repo-name
 vibe-tools repo "Analyze the security implications of our authentication implementation" --reasoning-effort high
 
 # Include web documentation as context
-vibe-tools repo "Help me implement useState in my component" --with-doc=https://react.dev/reference/react/useState
+vibe-tools repo "Help me implement useState in my component" --with-doc=https://react.dev/reference/react/useState or a local file path"
 ```
 
 #### Direct Model Query Examples
@@ -1188,8 +1206,11 @@ vibe-tools ask "Explain the quicksort algorithm and analyze its time complexity 
 # Comparative analysis with Claude model and enhanced reasoning
 vibe-tools ask "Compare and contrast microservices vs monolithic architecture" --provider anthropic --model claude-sonnet-4-20250514 --reasoning-effort medium
 
+# Advanced reasoning with XAI Grok model
+vibe-tools ask "Analyze the philosophical implications of artificial general intelligence" --provider xai --model grok-4-latest --reasoning-effort high
+
 # Ask with context from multiple documents
-vibe-tools ask "Based on these specs, what is the main goal?" --provider openai --model o3-mini --with-doc=https://example.com/specA.txt --with-doc=https://example.com/specB.txt
+vibe-tools ask "Based on these specs, what is the main goal?" --provider openai --model o3-mini --with-doc=./specA.txt --with-doc=https://example.com/specB.txt
 
 # Ask Groq's moonshotai/kimi-k2-instruct model
 vibe-tools ask "Explain quantum computing" --provider groq --model moonshotai/kimi-k2-instruct
@@ -1214,7 +1235,7 @@ vibe-tools doc --from-github=expressjs/express --save-to=docs/EXPRESS.md --quiet
 vibe-tools doc --from-github=reactjs/react-redux --with-doc=https://redux.js.org/tutorials/fundamentals/part-5-ui-and-react --save-to=docs/REACT_REDUX.md
 
 # Document using multiple web documents as context
-vibe-tools doc --from-github=some/repo --with-doc=https://example.com/spec1 --with-doc=https://example.com/spec2 --save-to=docs/MULTI_DOC.md
+vibe-tools doc --from-github=some/repo --with-doc=https://example.com/spec1 --with-doc=./local-spec.md --save-to=docs/MULTI_DOC.md
 ```
 
 #### GitHub Integration Examples
@@ -1233,10 +1254,10 @@ vibe-tools github pr 123 --from-github microsoft/typescript
 vibe-tools github issue 456 --from-github golang/go
 
 # Include web documentation as context
-vibe-tools repo "Help me implement useState in my component" --with-doc=https://react.dev/reference/react/useState
+vibe-tools repo "Help me implement useState in my component" --with-doc=./path/to/local/docs.md
 
 # Include multiple documents as context
-vibe-tools repo "Summarize these two specifications" --with-doc=https://example.com/spec1.md --with-doc=https://example.com/spec2.pdf
+vibe-tools repo "Summarize these two specifications" --with-doc=./spec1.md --with-doc=https://example.com/spec2.pdf
 
 # Git diff integration for code review
 vibe-tools repo "Review my recent changes for potential issues" --with-diff
@@ -1245,7 +1266,7 @@ vibe-tools repo "Review my recent changes for potential issues" --with-diff
 vibe-tools repo "Check compatibility with main branch" --with-diff --base=main
 
 # Combine diff with external documentation for comprehensive review
-vibe-tools repo "Does my implementation follow the API specification?" --with-diff --with-doc=https://api.example.com/docs
+vibe-tools repo "Does my implementation follow the API specification?" --with-diff --with-doc=./local-api-spec.md
 ```
 
 #### Xcode Command Examples

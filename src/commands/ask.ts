@@ -56,7 +56,7 @@ export class AskCommand implements Command {
         perplexity: 'sonar-pro',
         openrouter: 'openai/gpt-4.1',
         modelbox: 'openai/gpt-4.1',
-        xai: 'grok-3-latest',
+        xai: 'grok-4-latest',
         groq: 'moonshotai/kimi-k2-instruct',
       };
 
@@ -135,7 +135,7 @@ export class AskCommand implements Command {
         maxTokens,
         debug: options?.debug,
         systemPrompt:
-          'You are a helpful assistant. Answer the following question directly and concisely.',
+          'You are a helpful assistant. Answer the following question directly and concisely.' + (options?.webSearch ? ' Search the web to find information to help answer the question.' : ''),
         reasoningEffort: options?.reasoningEffort ?? this.config.reasoningEffort,
         webSearch: options?.webSearch,
       };

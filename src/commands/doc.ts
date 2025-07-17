@@ -267,8 +267,16 @@ export class DocCommand implements Command {
     const model = options?.model || this.config.doc?.model || getDefaultModel(provider);
     const maxTokens = resolveMaxTokens(options, this.config, provider, providerInstance, 'doc');
 
-    // Enable webSearch only for Gemini models when the web flag is provided
-    const webSearch = options?.webSearch && provider === 'gemini';
+    // Enable webSearch when the web flag is provided and the provider supports it
+    let webSearch = false;
+    if (options?.webSearch) {
+      try {
+        const webSearchSupport = await providerInstance.supportsWebSearch(model);
+        webSearch = webSearchSupport.supported;
+      } catch (error) {
+        console.warn(`Warning: Could not check web search support for ${provider}: ${error}`);
+      }
+    }
     const modelOptions: ModelOptions = {
       model,
       maxTokens,

@@ -346,7 +346,7 @@ export abstract class BaseProvider implements BaseModelProvider {
   }
 
   protected getSystemPrompt(options?: ModelOptions): string | undefined {
-    return (
+    return `Date: ${new Date().toISOString().split('T')[0]}\n` + (
       options?.systemPrompt || 'You are a helpful assistant. Provide clear and concise responses.'
     );
   }
@@ -388,7 +388,8 @@ export abstract class BaseProvider implements BaseModelProvider {
 
     const str = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
     if (str.length <= effectiveMaxLength) return str;
-    return str.slice(0, effectiveMaxLength) + '... (truncated)';
+    const keys = Object.keys(obj).join(', ');
+    return str.slice(0, effectiveMaxLength) + '... (truncated)]\nKeys: ' + keys;
   }
 
   /**
@@ -432,6 +433,8 @@ export abstract class BaseProvider implements BaseModelProvider {
       `[${this.constructor.name}] Token usage set: ${promptTokens} prompt + ${completionTokens} completion = ${this.tokenUsage.totalTokens} total`
     );
   }
+
+  protected abstract webSearchParameters(requestParams: Record<string, any>): Record<string, any>;
 
   abstract supportsWebSearch(
     modelName: string
@@ -492,6 +495,10 @@ abstract class OpenAIBase extends BaseProvider {
       : this.defaultClient;
   }
 
+  protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
+    return requestParams;
+  }
+
   protected getClient(options: ModelOptions): OpenAI {
     if (options.webSearch) {
       return this.webSearchClient;
@@ -504,9 +511,11 @@ abstract class OpenAIBase extends BaseProvider {
   ): Promise<{ supported: boolean; model?: string; error?: string }> {
     return {
       supported: false,
-      error: 'OpenAI does not support web search capabilities',
+      error: 'Web search capabilities not implemented for ' + this.constructor.name,
     };
   }
+
+
 
   async executePrompt(prompt: string, options: ModelOptions): Promise<string> {
     const model = await this.getModel(options);
@@ -531,7 +540,7 @@ abstract class OpenAIBase extends BaseProvider {
 
       this.debugLog(options, 'Request messages:', this.truncateForLogging(messages));
 
-      const requestParams: any = {
+      let requestParams: any = {
         model,
         messages,
         ...(model.includes('o1') || model.includes('o3')
@@ -542,6 +551,9 @@ abstract class OpenAIBase extends BaseProvider {
               max_tokens: maxTokens,
             }),
       };
+      if(options.webSearch) {
+        requestParams = this.webSearchParameters(requestParams);
+      }
 
       // Add reasoning_effort parameter for o1 or o3-mini models if specified
       if (this.doesModelSupportReasoningEffort(model) && options?.reasoningEffort) {
@@ -552,10 +564,26 @@ abstract class OpenAIBase extends BaseProvider {
           `Model ${model} does not support reasoning effort. Parameter will be ignored. Set OVERRIDE_SAFETY_CHECKS=true to bypass this check and pass the reasoning effort parameter to the provider API`
         );
       }
-
+      this.debugLog(options, 'Model options:', this.truncateForLogging(options));
       // Log full request parameters in debug mode
-      this.debugLog(options, 'Full request parameters:', this.truncateForLogging(requestParams));
-
+      const url = `${client.baseURL ?? 'https://api.openai.com/v1'}/chat/completions`;
+      this.debugLog(options, 'Full request parameters:', this.truncateForLogging({url, ...requestParams}));
+      
+      // Uncomment to use plain fetch 
+      // const responseRequest = await fetch(url, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${client.apiKey}`,
+      //   },
+      //   body: JSON.stringify(requestParams),
+      // });
+      // if(!responseRequest.ok) {
+      //   const errorBody = await responseRequest.text();
+      //   throw new ProviderError(`${this.constructor.name} returned an error: ${responseRequest.statusText}\n${errorBody}`);
+      // }
+      // const response = await responseRequest.json();
+      
       const response = await client.chat.completions.create(requestParams);
 
       const endTime = Date.now();
@@ -575,6 +603,10 @@ abstract class OpenAIBase extends BaseProvider {
         throw new ProviderError(`${this.constructor.name} returned an empty response`);
       }
 
+      if('citations' in response) {
+        const citations = response.citations as Array<string>;
+        return content + '\n\n' + citations.map((citation: any, index: number) => `[${index + 1}] ${citation}`).join('\n');
+      }
       return content;
     } catch (error) {
       this.debugLog(options, `Error in ${this.constructor.name} executePrompt:`, error);
@@ -691,6 +723,13 @@ export class GoogleVertexAIProvider extends BaseProvider {
     }
   }
 
+  protected webSearchParameters<T extends Record<string, any>>(requestParams: T): T {
+    return {
+      ...requestParams,
+      tools: [...(requestParams.tools ?? []).filter((tool: any) => !('google_search' in tool)), { google_search: {} }],
+    };
+  }
+
   async executePrompt(prompt: string, options: ModelOptions): Promise<string> {
     const model = await this.getModel(options);
 
@@ -721,7 +760,7 @@ export class GoogleVertexAIProvider extends BaseProvider {
     return retryWithBackoff(
       async () => {
         try {
-          const requestBody: GoogleVertexAIRequestBody = {
+          let requestBody: GoogleVertexAIRequestBody = {
             contents: [
               {
                 role: 'user',
@@ -740,11 +779,7 @@ export class GoogleVertexAIProvider extends BaseProvider {
 
           // Add web search tool only when explicitly requested
           if (options?.webSearch) {
-            requestBody.tools = [
-              {
-                google_search: {},
-              },
-            ];
+            requestBody = this.webSearchParameters(requestBody);
           }
 
           this.debugLog(options, 'Request body:', this.truncateForLogging(requestBody));
@@ -1152,6 +1187,13 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
     };
   }
 
+  protected webSearchParameters(requestParams: GoogleGenerativeLanguageRequestBody): GoogleGenerativeLanguageRequestBody {
+    return {
+      ...requestParams,
+      tools: [...(requestParams.tools ?? []).filter((tool: any) => !('google_search' in tool)), { google_search: {} }],
+    };
+  }
+
   async executePrompt(prompt: string, options: ModelOptions): Promise<string> {
     const model = await this.getModel(options);
     const maxTokens = options.maxTokens;
@@ -1165,7 +1207,7 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
     return retryWithBackoff(
       async () => {
         try {
-          const requestBody: GoogleGenerativeLanguageRequestBody = {
+          let requestBody: GoogleGenerativeLanguageRequestBody = {
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { maxOutputTokens: maxTokens },
             ...(systemPrompt
@@ -1179,11 +1221,7 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
 
           // Add web search tool only when explicitly requested
           if (options?.webSearch) {
-            requestBody.tools = [
-              {
-                google_search: {},
-              },
-            ];
+            requestBody = this.webSearchParameters(requestBody);
           }
 
           this.debugLog(options, 'Request body:', this.truncateForLogging(requestBody));
@@ -1837,6 +1875,11 @@ export class OpenRouterProvider extends OpenAIBase {
 // Perplexity provider implementation
 export class PerplexityProvider extends BaseProvider {
   provider = 'perplexity' as const;
+
+  protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
+    return requestParams;
+  }
+
   async supportsWebSearch(
     modelName: string
   ): Promise<{ supported: boolean; model?: string; error?: string }> {
@@ -2199,6 +2242,10 @@ export class AnthropicProvider extends BaseProvider {
   provider = 'anthropic' as const;
   private client: Anthropic;
 
+  protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
+    return requestParams;
+  }
+
   constructor() {
     super();
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -2439,13 +2486,23 @@ export class XAIProvider extends OpenAIBase {
     );
   }
 
-  // X.AI API is OpenAI compatible, but doesn't support web search
+  protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
+    return {
+      ...requestParams,
+      search_parameters: { mode: 'on', return_citations: true },
+    };
+  }
+
+  protected doesModelSupportReasoningEffort(model: string): boolean {
+    return model.includes('grok-3');
+  }
+  
+  // X.AI API is OpenAI compatible and supports web search via its own parameter
   async supportsWebSearch(
     modelName: string
   ): Promise<{ supported: boolean; model?: string; error?: string }> {
     return {
-      supported: false,
-      error: 'X.AI does not support web search capabilities',
+      supported: true,
     };
   }
 }

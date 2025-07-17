@@ -16,7 +16,7 @@ const DEFAULT_WEB_MODELS: Record<Provider, string> = {
   perplexity: 'sonar-pro',
   openrouter: 'google/gemini-2.5-pro',
   modelbox: 'google/gemini-2.5-pro',
-  xai: 'NO WEB SUPPORT',
+  xai: 'grok-4-latest',
   anthropic: 'NO WEB SUPPORT',
   groq: 'NO WEB SUPPORT',
 };

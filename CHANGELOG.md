@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Automatic Doppler Secrets Integration**: vibe-tools now automatically detects a Doppler-configured project and, when the `doppler` CLI is on the PATH, loads any secrets that end with `_API_KEY` into the environment before commands execute. This means you no longer need to copy provider API keys into `.env` files for projects that already manage secrets with Doppler. The feature is enabled by default and can be disabled by adding `"disableDoppler": true` to your `vibe-tools.config.json`.
+
 ### Improved
 
 - **Smarter Installation Process**: Enhanced the `vibe-tools install` command with intelligent configuration and rules file management.

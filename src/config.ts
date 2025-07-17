@@ -170,24 +170,23 @@ function _loadEnv(): void {
   if (existsSync(localEnvPath)) {
     console.log('Local .env file found, loading env from', localEnvPath);
     dotenv.config({ path: localEnvPath });
-    return;
+  } else {
+    // If local env doesn't exist, try home directory
+    const homeEnvPath = join(homedir(), '.vibe-tools', '.env');
+    if (existsSync(homeEnvPath)) {
+      console.log('Home .env file found, loading env from', homeEnvPath);
+      dotenv.config({ path: homeEnvPath });
+    } else {
+      // If neither env file exists, continue without loading
+      console.log('No .env file found in local or home directories.', localEnvPath, homeEnvPath);
+    }
   }
 
-  // If local env doesn't exist, try home directory
-  const homeEnvPath = join(homedir(), '.vibe-tools', '.env');
-  if (existsSync(homeEnvPath)) {
-    console.log('Home .env file found, loading env from', homeEnvPath);
-    dotenv.config({ path: homeEnvPath });
-    return;
-  }
-
-  // If neither env file exists, continue without loading
-  console.log('No .env file found in local or home directories.', localEnvPath, homeEnvPath);
-
-  // Doppler integration
+  // Doppler integration - runs regardless of .env file presence
+  console.log('[Doppler] Starting integration check');
   const config = loadConfig();
   if (config.disableDoppler) {
-    console.debug('[Doppler] Skipped: disabled in config');
+    console.log('[Doppler] Skipped: disabled in config');
     return;
   }
 
@@ -199,42 +198,46 @@ function _loadEnv(): void {
     hasDoppler = false;
   }
   if (!hasDoppler) {
-    console.debug('[Doppler] Skipped: CLI not found on PATH');
+    console.log('[Doppler] Skipped: CLI not found on PATH');
     return;
   }
 
   try {
-    console.debug('[Doppler] Attempting detection');
+    console.log('[Doppler] Attempting detection');
     const output = execSync('doppler configure --json', { env: process.env }).toString().trim();
-    console.debug('[Doppler] Configure output (redacted):', output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"'));
+    console.log('[Doppler] Configure output (redacted):', output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"'));
     const configJson = JSON.parse(output);
     const cwd = process.cwd();
     const dirConfig = configJson[cwd];
     if (!dirConfig || !dirConfig['enclave.project'] || !dirConfig['enclave.config']) {
-      console.debug('[Doppler] Skipped: directory not configured');
+      console.log('[Doppler] Skipped: directory not configured');
       return;
     }
-    console.debug('[Doppler] Directory configured for project:', dirConfig['enclave.project']);
+    console.log('[Doppler] Directory configured for project:', dirConfig['enclave.project']);
 
-    console.debug('[Doppler] Fetching secrets');
+    console.log('[Doppler] Fetching secrets');
     const secretsOutput = execSync('doppler secrets --json', { env: process.env }).toString().trim();
     const secrets = JSON.parse(secretsOutput);
-    console.debug('[Doppler] Fetched', Object.keys(secrets).length, 'secrets');
+    console.log('[Doppler] Fetched', Object.keys(secrets).length, 'secrets');
 
     // Set environment variables if not already set
     let loadedCount = 0;
     for (const key of Object.keys(secrets)) {
       if (key.endsWith('_API_KEY') && !process.env[key]) {
-        process.env[key] = secrets[key];
-        loadedCount++;
+        // Extract the computed value from the nested structure
+        const secretValue = secrets[key]?.computed;
+        if (secretValue) {
+          process.env[key] = secretValue;
+          loadedCount++;
+        }
       }
     }
 
     console.log(`Loaded ${loadedCount} secrets from Doppler for project ${dirConfig['enclave.project']}.`);
-    console.debug('[Doppler] Loaded', loadedCount, 'new environment variables');
+    console.log('[Doppler] Loaded', loadedCount, 'new environment variables');
   } catch (error) {
     console.warn(`[Doppler] Fetch failed: ${(error as Error).message}. Skipping.`);
-    console.debug('[Doppler] Error details:', error);
+    console.log('[Doppler] Error details:', error);
   }
 }
 

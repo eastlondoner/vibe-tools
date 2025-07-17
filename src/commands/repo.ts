@@ -325,8 +325,16 @@ export class RepoCommand implements Command {
 
       // Simplify modelOptions creation - pass only relevant options
       // The analyzeRepository function will construct the full ModelOptions internally
-      // Enable webSearch only for Gemini models when the web flag is provided
-      const webSearch = options?.webSearch && provider === 'gemini';
+      // Enable webSearch when the web flag is provided and the provider supports it
+      let webSearch = false;
+      if (options?.webSearch) {
+        try {
+          const webSearchSupport = await modelProvider.supportsWebSearch(modelName);
+          webSearch = webSearchSupport.supported;
+        } catch (error) {
+          console.warn(`Warning: Could not check web search support for ${provider}: ${error}`);
+        }
+      }
       const modelOptsForAnalysis: Omit<ModelOptions, 'systemPrompt'> & { model: string } = {
         ...options,
         model: modelName,
