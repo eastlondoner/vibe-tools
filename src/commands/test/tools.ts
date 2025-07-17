@@ -28,12 +28,12 @@ export function cleanupAllProcesses() {
 async function execWithTracking(
   command: string,
   options: child_process.ExecOptions
-): Promise<{ stdout: string; stderr: string, exitCode: number }> {
+): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return new Promise((resolve, reject) => {
     const child = child_process.exec(command, options, (error, stdout, stderr) => {
       // Remove from active processes when done
       activeProcesses.delete(child);
-      
+
       if (error) {
         console.error('Error executing command:', error);
         resolve({ stdout, stderr, exitCode: error.code || 1 });
@@ -41,15 +41,15 @@ async function execWithTracking(
         resolve({ stdout, stderr, exitCode: 0 });
       }
     });
-    
+
     // Track the child process
     activeProcesses.add(child);
-    
+
     // Handle child process exit
     child.on('exit', () => {
       activeProcesses.delete(child);
     });
-    
+
     child.on('error', (error) => {
       activeProcesses.delete(child);
     });
@@ -135,7 +135,14 @@ export function createCommandExecutionTool(options: {
       if (cursorToolsMatch) {
         // Handle vibe-tools command
         const [, subCommand, args] = cursorToolsMatch;
-        return await executeCursorToolsCommand(commandPart, subCommand, args, envVars, workingDir, appendToBuffer);
+        return await executeCursorToolsCommand(
+          commandPart,
+          subCommand,
+          args,
+          envVars,
+          workingDir,
+          appendToBuffer
+        );
       } else if (shellCommandMatch) {
         // Check if the command is in the whitelist
         const [, shellCommand, shellArgs] = shellCommandMatch;
@@ -180,12 +187,18 @@ export function createCommandExecutionTool(options: {
         envVars: Record<string, string>,
         workingDir: string,
         appendToBuffer: (text: string, shouldPrefix?: boolean) => void
-      ): Promise<{ success: boolean; output: string; error?: { message: string; stack?: string } }> {
+      ): Promise<{
+        success: boolean;
+        output: string;
+        error?: { message: string; stack?: string };
+      }> {
         const projectRoot = process.cwd();
         const vibeToolsEntryPoint = path.resolve(projectRoot, 'src', 'index.ts');
 
         const envPrefix = envVars
-          ? Object.entries(envVars).map(([key, value]) => `${key}="${value}"`).join(' ') + ' '
+          ? Object.entries(envVars)
+              .map(([key, value]) => `${key}="${value}"`)
+              .join(' ') + ' '
           : '';
 
         const fullCommand = `${envPrefix}node --import=tsx "${vibeToolsEntryPoint}" ${subCommand}${args}`;
@@ -207,13 +220,13 @@ export function createCommandExecutionTool(options: {
           if (errorOutput) {
             appendToBuffer(`Stderr (warnings): ${errorOutput}\n`);
           }
-          
+
           if (exitCode !== 0) {
             appendToBuffer(`Command failed with exit code ${exitCode}\n`);
             return {
               success: false,
               output: output + '\n' + errorOutput,
-              error: { message: `Command failed with exit code ${exitCode}` }
+              error: { message: `Command failed with exit code ${exitCode}` },
             };
           }
 
@@ -223,7 +236,7 @@ export function createCommandExecutionTool(options: {
           return {
             success: false,
             output: '',
-            error: { message: error.message, stack: error.stack }
+            error: { message: error.message, stack: error.stack },
           };
         }
       }
@@ -300,7 +313,11 @@ export function createCommandExecutionTool(options: {
           // Return successful result with both stdout and stderr if available
           return {
             success: exitCode === 0,
-            output: stdout || (exitCode === 0 ? 'Command executed successfully with no output' : 'Command execution failed with exit code ' + exitCode),
+            output:
+              stdout ||
+              (exitCode === 0
+                ? 'Command executed successfully with no output'
+                : 'Command execution failed with exit code ' + exitCode),
             ...(stderr
               ? { error: { message: 'Warning: stderr output was present', details: { stderr } } }
               : {}),
@@ -314,7 +331,7 @@ export function createCommandExecutionTool(options: {
 
           const errorMessage = error instanceof Error ? error.message : String(error);
 
-          cleanupAllProcesses();          
+          cleanupAllProcesses();
 
           appendToBuffer(`COMMAND ERROR: ${errorMessage}`);
 

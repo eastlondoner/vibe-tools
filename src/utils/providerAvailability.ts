@@ -23,11 +23,29 @@ const DEFAULT_MODELS: Record<Provider, string> = {
 
 // Provider preference order for each command type
 export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
-  web: ['perplexity', 'gemini', 'modelbox', 'openrouter', 'groq'],
+  web: ['perplexity', 'gemini', 'modelbox', 'openrouter', 'xai', 'groq'],
   repo: ['gemini', 'modelbox', 'openrouter', 'openai', 'perplexity', 'anthropic', 'xai', 'groq'],
-  plan_file: ['gemini', 'modelbox', 'openrouter', 'openai', 'perplexity', 'xai', 'anthropic', 'groq'],
-  plan_thinking: ['openai', 'anthropic', 'gemini', 'xai', 'groq', 'openrouter', 'modelbox', 'perplexity'],
-  doc: ['gemini', 'openai', 'modelbox', 'openrouter',  'perplexity', 'xai', 'anthropic', 'groq'],
+  plan_file: [
+    'gemini',
+    'modelbox',
+    'openrouter',
+    'openai',
+    'perplexity',
+    'xai',
+    'anthropic',
+    'groq',
+  ],
+  plan_thinking: [
+    'openai',
+    'anthropic',
+    'gemini',
+    'xai',
+    'groq',
+    'openrouter',
+    'modelbox',
+    'perplexity',
+  ],
+  doc: ['gemini', 'openai', 'modelbox', 'openrouter', 'perplexity', 'xai', 'anthropic', 'groq'],
   ask: ['openai', 'modelbox', 'openrouter', 'gemini', 'xai', 'anthropic', 'perplexity', 'groq'],
   browser: ['anthropic', 'openai', 'gemini'],
 };

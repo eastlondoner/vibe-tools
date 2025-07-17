@@ -103,7 +103,9 @@ export class TestEnvironmentManager {
         return tempDir;
       } catch (error) {
         lastError = error as Error;
-        console.error(`Attempt ${attempt} failed to create temporary directory: ${lastError.message}`);
+        console.error(
+          `Attempt ${attempt} failed to create temporary directory: ${lastError.message}`
+        );
         if (attempt < 2) {
           await new Promise((res) => setTimeout(res, 100)); // Wait before retrying
         }

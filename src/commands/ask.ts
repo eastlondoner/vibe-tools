@@ -68,13 +68,7 @@ export class AskCommand implements Command {
     const provider = createProvider(providerName);
 
     // Resolve maxTokens using the shared utility function
-    const maxTokens = resolveMaxTokens(
-      options,
-      this.config,
-      providerName,
-      provider,
-      'ask'
-    );
+    const maxTokens = resolveMaxTokens(options, this.config, providerName, provider, 'ask');
 
     let finalQuery = query;
     let docContent = '';
@@ -135,7 +129,10 @@ export class AskCommand implements Command {
         maxTokens,
         debug: options?.debug,
         systemPrompt:
-          'You are a helpful assistant. Answer the following question directly and concisely.' + (options?.webSearch ? ' Search the web to find information to help answer the question.' : ''),
+          'You are a helpful assistant. Answer the following question directly and concisely.' +
+          (options?.webSearch
+            ? ' Search the web to find information to help answer the question.'
+            : ''),
         reasoningEffort: options?.reasoningEffort ?? this.config.reasoningEffort,
         webSearch: options?.webSearch,
       };

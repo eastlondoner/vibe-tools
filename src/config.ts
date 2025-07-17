@@ -146,7 +146,7 @@ export const loadConfig = once((): Config => {
     // If neither config exists, return default config
     return defaultConfig;
   }
-})
+});
 
 export function applyEnvUnset(): void {
   // Check for CURSOR_TOOLS_ENV_UNSET environment variable
@@ -205,7 +205,10 @@ function _loadEnv(): void {
   try {
     console.log('[Doppler] Attempting detection');
     const output = execSync('doppler configure --json', { env: process.env }).toString().trim();
-    console.log('[Doppler] Configure output (redacted):', output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"'));
+    console.log(
+      '[Doppler] Configure output (redacted):',
+      output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"')
+    );
     const configJson = JSON.parse(output);
     const cwd = process.cwd();
     const dirConfig = configJson[cwd];
@@ -216,7 +219,9 @@ function _loadEnv(): void {
     console.log('[Doppler] Directory configured for project:', dirConfig['enclave.project']);
 
     console.log('[Doppler] Fetching secrets');
-    const secretsOutput = execSync('doppler secrets --json', { env: process.env }).toString().trim();
+    const secretsOutput = execSync('doppler secrets --json', { env: process.env })
+      .toString()
+      .trim();
     const secrets = JSON.parse(secretsOutput);
     console.log('[Doppler] Fetched', Object.keys(secrets).length, 'secrets');
 
@@ -233,7 +238,9 @@ function _loadEnv(): void {
       }
     }
 
-    console.log(`Loaded ${loadedCount} secrets from Doppler for project ${dirConfig['enclave.project']}.`);
+    console.log(
+      `Loaded ${loadedCount} secrets from Doppler for project ${dirConfig['enclave.project']}.`
+    );
     console.log('[Doppler] Loaded', loadedCount, 'new environment variables');
   } catch (error) {
     console.warn(`[Doppler] Fetch failed: ${(error as Error).message}. Skipping.`);

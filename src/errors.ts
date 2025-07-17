@@ -1,4 +1,4 @@
-import { Provider } from "./types";
+import { Provider } from './types';
 
 // Base error class for all vibe-tools errors
 export class CursorToolsError extends Error {
@@ -52,11 +52,10 @@ export class ModelNotFoundError extends ProviderError {
   constructor(provider: Provider, availableModels: Set<string> | null, additionalMessage?: string) {
     let message = `Model not found for ${provider}.`;
 
-    if(!availableModels) {
+    if (!availableModels) {
       // Add model suggestions based on provider
       switch (provider) {
         case 'openai':
-
           message += '\nSuggested models:\n- gpt-4o\n- o3';
           break;
         case 'anthropic':
@@ -84,15 +83,19 @@ export class ModelNotFoundError extends ProviderError {
           message += '\nSuggested models:\n- qwen/qwen3-32b\n- moonshotai/kimi-k2-instruct';
           break;
         default:
-          message += `\nSuggested models:\n${Array.from(availableModels || []).map((m) => `- ${m}`).join('\n')}`;
+          message += `\nSuggested models:\n${Array.from(availableModels || [])
+            .map((m) => `- ${m}`)
+            .join('\n')}`;
           break;
-        } 
+      }
     } else {
-      message += `\nSuggested models:\n${Array.from(availableModels).map((m) => `- ${m}`).join('\n')}`;
+      message += `\nSuggested models:\n${Array.from(availableModels)
+        .map((m) => `- ${m}`)
+        .join('\n')}`;
     }
 
     message += '\nUse --model to specify a model.';
-    if(additionalMessage) {
+    if (additionalMessage) {
       message += `\n${additionalMessage}`;
     }
 

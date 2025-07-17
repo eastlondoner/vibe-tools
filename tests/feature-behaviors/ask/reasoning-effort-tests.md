@@ -83,3 +83,29 @@ Use this exact query: "Compare and contrast three major frameworks for ethical A
 - Console output includes a message about using extended thinking with appropriate token budget
 - No error messages are displayed
 - Command completes within a reasonable time
+
+### Scenario 4: XAI Provider with Reasoning Effort
+
+**Tags:** xai, extended-reasoning, grok
+**Task Description:**
+Use vibe-tools to ask a complex analytical question using XAI provider with grok-4-latest model and high reasoning effort.
+
+Use this exact query: "Analyze the potential impact of quantum computing on blockchain technology. Discuss how quantum supremacy could affect current cryptographic methods, examine potential quantum-resistant blockchain solutions, and evaluate the timeline for when quantum computers might pose a real threat to existing blockchain networks like Bitcoin and Ethereum. Consider both the technical challenges and economic implications."
+
+**Expected Behavior:**
+
+- The AI agent should use the ask command with XAI provider, grok-4-latest model, and high reasoning effort
+- The response should include detailed analysis of quantum computing's impact on blockchain
+- The command should complete successfully without errors
+- The response should show evidence of deep reasoning (comprehensive analysis, technical details, timeline considerations)
+
+**Success Criteria:**
+
+- AI agent correctly uses ask command with XAI provider and grok-4-latest model
+- AI agent correctly sets the reasoning effort parameter to high
+- Response contains detailed analysis of quantum computing impact on blockchain
+- Response discusses quantum-resistant solutions and timeline considerations
+- Response shows evidence of thorough reasoning with technical depth
+- Console output includes a message about using reasoning effort (if debug mode is enabled)
+- No error messages are displayed
+- Command completes within a reasonable time

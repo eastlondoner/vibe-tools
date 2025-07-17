@@ -17,7 +17,7 @@ Use the following commands to get AI assistance:
 **Ask Command Options:**
 --provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, openrouter, xai, or groq)
 --model=<model>: Model to use (required for the ask command)
---reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3 models and Claude 4 Sonnet). Higher values produce more thorough responses for complex questions.
+--reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3 models, Claude 4 Sonnet, and XAI Grok models). Higher values produce more thorough responses for complex questions.
 --with-doc=<doc_url>: Fetch content from one or more document URLs and include it as context. Can be specified multiple times (e.g., \`--with-doc=<url1> --with-doc=<url2>\`).
 
 **Implementation Planning:**
@@ -35,14 +35,14 @@ The plan command uses multiple AI models to:
 --with-doc=<doc_url>: Fetch content from one or more document URLs and include it as context for both file identification and planning. Can be specified multiple times (e.g., \`--with-doc=<url1> --with-doc=<url2>\`).
 
 **Web Search:**
-\`vibe-tools web "<your question>"\` - Get answers from the web using a provider that supports web search (e.g., Perplexity models and Gemini Models either directly or from OpenRouter or ModelBox) (e.g., \`vibe-tools web "latest shadcn/ui installation instructions"\`)
+\`vibe-tools web "<your question>"\` - Get answers from the web using a provider that supports web search (e.g., Perplexity models, Gemini Models, and XAI Grok models either directly or from OpenRouter or ModelBox) (e.g., \`vibe-tools web "latest shadcn/ui installation instructions"\`)
 Note: web is a smart autonomous agent with access to the internet and an extensive up to date knowledge base. Web is NOT a web search engine. Always ask the agent for what you want using a proper sentence, do not just send it a list of keywords. In your question to web include the context and the goal that you're trying to acheive so that it can help you most effectively.
 when using web for complex queries suggest writing the output to a file somewhere like local-research/<query summary>.md.
 
 **IMPORTANT: Do NOT use the \`web\` command for specific URLs.** If a user provides a specific URL (documentation link, GitHub repo, article, etc.), you should always use commands that support the \`--with-doc\` parameter instead, such as \`repo\`, \`plan\`, \`doc\`, or \`ask\`. Using \`--with-doc\` ensures the exact content of the URL is processed correctly and completely.
 
 **Web Command Options:**
---provider=<provider>: AI provider to use (perplexity, gemini, modelbox, openrouter, or groq)
+--provider=<provider>: AI provider to use (perplexity, gemini, modelbox, openrouter, xai, or groq)
 
 **Repository Context:**
 \`vibe-tools repo "<your question>" [--subdir=<path>] [--from-github=<username/repo>] [--with-doc=<doc_url>...]\` - Get context-aware answers about this repository using Google Gemini (e.g., \`vibe-tools repo "explain authentication flow"\`)
@@ -118,7 +118,7 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 --max-tokens=<number>: Control response length
 --save-to=<file path>: Save command output to a file (in *addition* to displaying it)
 --debug: Show detailed logs and error information
---web: Enable web search capabilities for supported models (currently Gemini models) across all commands
+--web: Enable web search capabilities for supported models (Gemini models, XAI Grok models, Perplexity models, and ModelBox models) across all commands
 
 **Repository Command Options:**
 --provider=<provider>: AI provider to use (gemini, openai, openrouter, perplexity, modelbox, anthropic, xai, or groq)
@@ -186,6 +186,8 @@ If people say "ask Gemini" or "ask Perplexity" or "ask Stagehand" they mean to u
 - MCP commands require \`ANTHROPIC_API_KEY\` or \`OPENROUTER_API_KEY\`
 - **Remember:** You're part of a team of superhuman expert AIs. Work together to solve complex problems.
 - **Repomix Configuration:** You can customize which files are included/excluded during repository analysis by creating a \`repomix.config.json\` file in your project root. This file will be automatically detected by \`repo\`, \`plan\`, and \`doc\` commands.
+
+**Authentication and API Keys**: vibe-tools automatically loads API keys from ~/.vibe-tools/.env files, environment variables, and Doppler secrets when running in a folder that has a doppler project configured. Disable Doppler loading by adding \`"disableDoppler": true\` to \`vibe-tools.config.json\`. 
 
 <!-- vibe-tools-version: ${VIBE_TOOLS_RULES_VERSION} -->`;
 

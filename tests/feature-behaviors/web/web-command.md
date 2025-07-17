@@ -27,6 +27,7 @@ Use vibe-tools to search the web for the same information using each supported p
 - Perplexity (primary web search provider)
 - Gemini (supports web search)
 - ModelBox (supports web search via Gemini models)
+- XAI (supports web search via Grok models)
 
 **Note:** Not all providers support web search. Anthropic, OpenAI do not currently support web search capabilities and will return an error message if used with the web command.
 

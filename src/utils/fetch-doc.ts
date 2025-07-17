@@ -1,3 +1,6 @@
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { writeFileSync } from 'fs';
 import { OpenCommand } from '../commands/browser/open.ts';
 import type { CommandGenerator, CommandOptions } from '../types';
@@ -12,12 +15,41 @@ import { ensurePlaywright, ensurePlaywrightBrowsers } from '../commands/browser/
  * @returns A promise that resolves with the extracted text content of the page.
  * @throws If fetching fails after retries or if content validation fails.
  */
-export async function fetchDocContent(url: string, debug: boolean): Promise<string> {
+export async function fetchDocContent(urlOrPath: string, debug: boolean): Promise<string> {
+  // 1.  Detect local file -------------------------------------------------
+  let localPath: string | null = null;
+
+  if (urlOrPath.startsWith('file://')) {
+    localPath = fileURLToPath(urlOrPath); // node:url
+  } else if (urlOrPath.startsWith('http')) {
+    if (debug) console.log(`[fetch-doc] Detected http URL, skipping local file detection`);
+  } else {
+    try {
+      const resolved = resolve(urlOrPath);
+      if (existsSync(resolved)) {
+        localPath = resolved;
+      }
+    } catch {
+      // ignore errors for invalid paths
+    }
+  }
+
+  if (localPath) {
+    try {
+      const text = readFileSync(localPath, 'utf8');
+      if (debug) console.log(`[fetch-doc] Loaded local file ${localPath} (${text.length} chars)`);
+      return text;
+    } catch (e: any) {
+      console.error(`Error reading local file ${localPath}: ${e.message}`);
+      throw e;
+    }
+  }
+
   // Ensure Playwright and browsers are available before using browser commands
   await ensurePlaywright();
   await ensurePlaywrightBrowsers();
 
-  console.log(`Attempting to fetch document content from: ${url}`);
+  console.log(`Attempting to fetch document content from: ${urlOrPath}`);
 
   // No URL validation needed here, browser command handles it
 
@@ -41,7 +73,7 @@ export async function fetchDocContent(url: string, debug: boolean): Promise<stri
 
     try {
       // The execute method returns an async generator
-      const generator: CommandGenerator = openCommand.execute(url, options);
+      const generator: CommandGenerator = openCommand.execute(urlOrPath, options);
 
       // Collect the HTML output from the generator
       for await (const output of generator) {
@@ -104,7 +136,7 @@ export async function fetchDocContent(url: string, debug: boolean): Promise<stri
 
   // If all attempts failed
   throw new Error(
-    `Failed to fetch sufficient HTML content from document URL: ${url} after ${waitTimes.length} attempts.`
+    `Failed to fetch sufficient HTML content from document URL: ${urlOrPath} after ${waitTimes.length} attempts.`
   );
 }
 

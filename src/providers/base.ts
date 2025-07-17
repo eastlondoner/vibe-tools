@@ -129,7 +129,7 @@ export abstract class BaseProvider implements BaseModelProvider {
    */
   protected async getModel(options: ModelOptions | undefined): Promise<string> {
     if (!options?.model) {
-      throw new ModelNotFoundError(this.provider, await this.availableModels ?? null);
+      throw new ModelNotFoundError(this.provider, (await this.availableModels) ?? null);
     }
 
     // Handle token count if provided
@@ -187,10 +187,10 @@ export abstract class BaseProvider implements BaseModelProvider {
       throw new ModelNotFoundError(
         this.provider,
         new Set(similarModels.length > 0 ? similarModels : availableModels),
-          (this.constructor.name === 'ModelBoxProvider' ||
-          this.constructor.name === 'OpenRouterProvider'
-            ? " Note: This provider requires provider prefixes (e.g., 'openai/gpt-4.1' instead of just 'gpt-4.1')."
-            : '')
+        this.constructor.name === 'ModelBoxProvider' ||
+        this.constructor.name === 'OpenRouterProvider'
+          ? " Note: This provider requires provider prefixes (e.g., 'openai/gpt-4.1' instead of just 'gpt-4.1')."
+          : ''
       );
     }
 
@@ -202,10 +202,9 @@ export abstract class BaseProvider implements BaseModelProvider {
     throw new ModelNotFoundError(
       this.provider,
       new Set(recentModels),
-      (this.constructor.name === 'ModelBoxProvider' ||
-      this.constructor.name === 'OpenRouterProvider'
+      this.constructor.name === 'ModelBoxProvider' || this.constructor.name === 'OpenRouterProvider'
         ? " Note: This provider requires provider prefixes (e.g., 'openai/gpt-4.1' instead of just 'gpt-4.1')."
-        : '')
+        : ''
     );
   }
 
@@ -346,8 +345,9 @@ export abstract class BaseProvider implements BaseModelProvider {
   }
 
   protected getSystemPrompt(options?: ModelOptions): string | undefined {
-    return `Date: ${new Date().toISOString().split('T')[0]}\n` + (
-      options?.systemPrompt || 'You are a helpful assistant. Provide clear and concise responses.'
+    return (
+      `Date: ${new Date().toISOString().split('T')[0]}\n` +
+      (options?.systemPrompt || 'You are a helpful assistant. Provide clear and concise responses.')
     );
   }
 
@@ -515,8 +515,6 @@ abstract class OpenAIBase extends BaseProvider {
     };
   }
 
-
-
   async executePrompt(prompt: string, options: ModelOptions): Promise<string> {
     const model = await this.getModel(options);
     const maxTokens = options.maxTokens;
@@ -551,7 +549,7 @@ abstract class OpenAIBase extends BaseProvider {
               max_tokens: maxTokens,
             }),
       };
-      if(options.webSearch) {
+      if (options.webSearch) {
         requestParams = this.webSearchParameters(requestParams);
       }
 
@@ -567,9 +565,13 @@ abstract class OpenAIBase extends BaseProvider {
       this.debugLog(options, 'Model options:', this.truncateForLogging(options));
       // Log full request parameters in debug mode
       const url = `${client.baseURL ?? 'https://api.openai.com/v1'}/chat/completions`;
-      this.debugLog(options, 'Full request parameters:', this.truncateForLogging({url, ...requestParams}));
-      
-      // Uncomment to use plain fetch 
+      this.debugLog(
+        options,
+        'Full request parameters:',
+        this.truncateForLogging({ url, ...requestParams })
+      );
+
+      // Uncomment to use plain fetch
       // const responseRequest = await fetch(url, {
       //   method: 'POST',
       //   headers: {
@@ -583,7 +585,7 @@ abstract class OpenAIBase extends BaseProvider {
       //   throw new ProviderError(`${this.constructor.name} returned an error: ${responseRequest.statusText}\n${errorBody}`);
       // }
       // const response = await responseRequest.json();
-      
+
       const response = await client.chat.completions.create(requestParams);
 
       const endTime = Date.now();
@@ -603,9 +605,13 @@ abstract class OpenAIBase extends BaseProvider {
         throw new ProviderError(`${this.constructor.name} returned an empty response`);
       }
 
-      if('citations' in response) {
+      if ('citations' in response) {
         const citations = response.citations as Array<string>;
-        return content + '\n\n' + citations.map((citation: any, index: number) => `[${index + 1}] ${citation}`).join('\n');
+        return (
+          content +
+          '\n\n' +
+          citations.map((citation: any, index: number) => `[${index + 1}] ${citation}`).join('\n')
+        );
       }
       return content;
     } catch (error) {
@@ -613,7 +619,11 @@ abstract class OpenAIBase extends BaseProvider {
 
       // Check if this is a model not found error
       if (isModelNotFoundError(error)) {
-        throw new ModelNotFoundError(this.provider, await this.availableModels ?? null, `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new ModelNotFoundError(
+          this.provider,
+          (await this.availableModels) ?? null,
+          `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
 
       if (error instanceof ProviderError) {
@@ -726,7 +736,10 @@ export class GoogleVertexAIProvider extends BaseProvider {
   protected webSearchParameters<T extends Record<string, any>>(requestParams: T): T {
     return {
       ...requestParams,
-      tools: [...(requestParams.tools ?? []).filter((tool: any) => !('google_search' in tool)), { google_search: {} }],
+      tools: [
+        ...(requestParams.tools ?? []).filter((tool: any) => !('google_search' in tool)),
+        { google_search: {} },
+      ],
     };
   }
 
@@ -742,7 +755,7 @@ export class GoogleVertexAIProvider extends BaseProvider {
       const similarModels = getSimilarModels(model, availableModels);
       throw new ModelNotFoundError(
         this.provider,
-        new Set(similarModels.length > 0 ? similarModels : availableModels),
+        new Set(similarModels.length > 0 ? similarModels : availableModels)
       );
     }
 
@@ -879,7 +892,7 @@ export class GoogleVertexAIProvider extends BaseProvider {
           if (isModelNotFoundError(error)) {
             throw new ModelNotFoundError(
               this.provider,
-              await this.availableModels ?? null,
+              (await this.availableModels) ?? null,
               `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`
             );
           }
@@ -1187,10 +1200,15 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
     };
   }
 
-  protected webSearchParameters(requestParams: GoogleGenerativeLanguageRequestBody): GoogleGenerativeLanguageRequestBody {
+  protected webSearchParameters(
+    requestParams: GoogleGenerativeLanguageRequestBody
+  ): GoogleGenerativeLanguageRequestBody {
     return {
       ...requestParams,
-      tools: [...(requestParams.tools ?? []).filter((tool: any) => !('google_search' in tool)), { google_search: {} }],
+      tools: [
+        ...(requestParams.tools ?? []).filter((tool: any) => !('google_search' in tool)),
+        { google_search: {} },
+      ],
     };
   }
 
@@ -1273,8 +1291,10 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
             throw new ProviderError('Google Generative Language returned an unexpected response');
           }
           const content = data.candidates[0]?.content?.parts?.[0]?.text;
-          if(!content) {
-            console.log('Google Generative Language returned an empty response. This often happens when it spends all its output tokens on thinking. Increase the maxTokens parameter to get more output.');
+          if (!content) {
+            console.log(
+              'Google Generative Language returned an empty response. This often happens when it spends all its output tokens on thinking. Increase the maxTokens parameter to get more output.'
+            );
           }
           const grounding = data.candidates[0]?.groundingMetadata as GeminiGroundingMetadata;
           const webSearchQueries = grounding?.webSearchQueries;
@@ -1355,7 +1375,7 @@ export class GoogleGenerativeLanguageProvider extends BaseProvider {
           if (isModelNotFoundError(error)) {
             throw new ModelNotFoundError(
               this.provider,
-              await this.availableModels ?? null,
+              (await this.availableModels) ?? null,
               `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`
             );
           }
@@ -1667,7 +1687,7 @@ export class OpenAIProvider extends OpenAIBase {
         if (isModelNotFoundError(error)) {
           throw new ModelNotFoundError(
             this.provider,
-            await this.availableModels ?? null,
+            (await this.availableModels) ?? null,
             `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`
           );
         }
@@ -1831,7 +1851,7 @@ export class OpenRouterProvider extends OpenAIBase {
       if (isModelNotFoundError(error)) {
         throw new ModelNotFoundError(
           this.provider,
-          await this.availableModels ?? null,
+          (await this.availableModels) ?? null,
           `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`
         );
       }
@@ -1966,7 +1986,7 @@ export class PerplexityProvider extends BaseProvider {
           if (isModelNotFoundError(error)) {
             throw new ModelNotFoundError(
               this.provider,
-              await this.availableModels ?? null,
+              (await this.availableModels) ?? null,
               `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`
             );
           }
@@ -2208,10 +2228,9 @@ export class ModelBoxProvider extends OpenAIBase {
     } catch (error) {
       this.debugLog(options, 'ModelBox Provider: Error during API call:', error);
 
-      
       // Check if this is a model not found error
       if (isModelNotFoundError(error)) {
-        throw new ModelNotFoundError(this.provider, await this.availableModels ?? null);
+        throw new ModelNotFoundError(this.provider, (await this.availableModels) ?? null);
       }
 
       if (error instanceof ProviderError || error instanceof NetworkError) {
@@ -2442,7 +2461,7 @@ export class AnthropicProvider extends BaseProvider {
       if (isModelNotFoundError(error)) {
         throw new ModelNotFoundError(
           this.provider,
-          await this.availableModels ?? null,
+          (await this.availableModels) ?? null,
           `You requested: ${model}\n\nError details: ${error instanceof Error ? error.message : 'Unknown error'}`
         );
       }
@@ -2481,9 +2500,7 @@ export class XAIProvider extends OpenAIBase {
     super(apiKey, 'https://api.x.ai/v1');
 
     // X.AI doesn't have a public model list API yet, so hardcode known models.
-    this.availableModels = Promise.resolve(
-      new Set(['grok-4-latest', 'grok-3-mini-latest'])
-    );
+    this.availableModels = Promise.resolve(new Set(['grok-4-latest', 'grok-3-mini-latest']));
   }
 
   protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
@@ -2496,7 +2513,7 @@ export class XAIProvider extends OpenAIBase {
   protected doesModelSupportReasoningEffort(model: string): boolean {
     return model.includes('grok-3');
   }
-  
+
   // X.AI API is OpenAI compatible and supports web search via its own parameter
   async supportsWebSearch(
     modelName: string
@@ -2515,9 +2532,9 @@ export class GroqProvider extends OpenAIBase {
     if (!apiKey) {
       throw new ApiKeyMissingError('Groq');
     }
-    
+
     super(apiKey, 'https://api.groq.com/openai/v1');
-    
+
     // Initialize the promise in constructor
     this.availableModels = this.initializeModels();
     this.availableModels.catch((error) => {
@@ -2584,7 +2601,15 @@ export class GroqProvider extends OpenAIBase {
 
 // Factory function to create providers
 export function createProvider(
-  provider: 'gemini' | 'openai' | 'openrouter' | 'perplexity' | 'modelbox' | 'anthropic' | 'xai' | 'groq'
+  provider:
+    | 'gemini'
+    | 'openai'
+    | 'openrouter'
+    | 'perplexity'
+    | 'modelbox'
+    | 'anthropic'
+    | 'xai'
+    | 'groq'
 ): BaseModelProvider {
   switch (provider) {
     case 'gemini': {

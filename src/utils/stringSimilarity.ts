@@ -1,4 +1,4 @@
-import { Provider } from "../types";
+import { Provider } from '../types';
 
 /**
  * Calculate Levenshtein distance between two strings
@@ -76,7 +76,10 @@ export function getSimilarModels(model: string, availableModels: Set<string>): s
     .slice(0, 5); // Return top 5 most similar models
 }
 
-export function getSimilarProviders(provider: string, availableProviders: Set<Provider>): Provider[] {
+export function getSimilarProviders(
+  provider: string,
+  availableProviders: Set<Provider>
+): Provider[] {
   const providerParts = provider.split('/');
   const providerName = providerParts.length > 1 ? providerParts[1] : provider;
 

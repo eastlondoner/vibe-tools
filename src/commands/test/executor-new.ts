@@ -180,19 +180,23 @@ export async function executeScenario(
   // Create a temporary directory for this test scenario
   const tempDir = await TestEnvironmentManager.createTempDirectory(scenarioId);
   appendToBuffer(`Created temporary directory: ${await realpath(tempDir)}`);
-  
+
   // Register cleanup task
   const cleanupId = `test-${scenarioId}-${Date.now()}`;
-  globalCleanupRegistry.register(cleanupId, async () => {
-    // Clean up client
-    if (client) {
-      await client.stopMCP();
-    }
-    
-    console.log('Cleaning up temp directory', tempDir);
-    // Clean up temp directory
-    await TestEnvironmentManager.cleanup(tempDir);
-  }, 10); // High priority
+  globalCleanupRegistry.register(
+    cleanupId,
+    async () => {
+      // Clean up client
+      if (client) {
+        await client.stopMCP();
+      }
+
+      console.log('Cleaning up temp directory', tempDir);
+      // Clean up temp directory
+      await TestEnvironmentManager.cleanup(tempDir);
+    },
+    10
+  ); // High priority
 
   // Copy assets and update task description with new references
   const modifiedTaskDescription = await TestEnvironmentManager.copyAssets(scenario, tempDir, debug);
@@ -300,7 +304,10 @@ ${jsonResponseInstructions}
         const messages = await Promise.race([
           client.processQuery(prompt, systemPrompt),
           new Promise<never>((_, reject) => {
-            timeoutId = setTimeout(() => reject(new TestTimeoutError(scenarioId, timeout)), timeout * 1000);
+            timeoutId = setTimeout(
+              () => reject(new TestTimeoutError(scenarioId, timeout)),
+              timeout * 1000
+            );
           }),
         ]);
         if (timeoutId) {
@@ -390,7 +397,10 @@ ${jsonResponseInstructions}
           result: parsedResponse.status,
           executionTime: executionTime,
           attempts,
-          explanation: parsedResponse.error && parsedResponse.summary ? parsedResponse.summary + '\n' + parsedResponse.error : parsedResponse.error || parsedResponse.summary,
+          explanation:
+            parsedResponse.error && parsedResponse.summary
+              ? parsedResponse.summary + '\n' + parsedResponse.error
+              : parsedResponse.error || parsedResponse.summary,
         };
       } catch (error) {
         console.error(`Error on attempt ${attempts}:`, error);
@@ -516,7 +526,7 @@ ${jsonResponseInstructions}
       // Execute registered cleanup and then unregister
       await globalCleanupRegistry.cleanupTask(cleanupId);
       globalCleanupRegistry.unregister(cleanupId);
-      
+
       if (debug) {
         console.log(`Cleaned up resources for scenario ${scenarioId}`);
       }

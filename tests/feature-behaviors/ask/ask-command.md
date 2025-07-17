@@ -101,7 +101,7 @@ When the command fails follow up by asking the question again with one of the pr
 ### Scenario 5: Query with Missing API Key (Error Handling)
 
 **Task Description:**
-Attempt to use vibe-tools to ask a question using a provider for which no API key is configured. To do this set the API key env var to an empty string.
+Attempt to use vibe-tools to ask a question using a provider for which no API key is configured. To do this set the API key env var to an empty string like this: `<PROVIDER>_API_KEY="" vibe-tools ask <params and query>`. Repeat this for 3 providers.
 
 **Expected Behavior:**
 
