@@ -161,6 +161,7 @@ Users can ask for these tools using nicknames
 Gemini is a nickname for vibe-tools repo
 Perplexity is a nickname for vibe-tools web
 Stagehand is a nickname for vibe-tools browser
+Grok (with a k) is a nickname for the xAI Grok model. If asked to use Grok, use the \`--provider=xai\` flag.
 If people say "ask Gemini" or "ask Perplexity" or "ask Stagehand" they mean to use the \`vibe-tools\` command with the \`repo\`, \`web\`, or \`browser\` commands respectively.
 
 **Xcode Commands:**

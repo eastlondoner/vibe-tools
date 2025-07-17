@@ -204,22 +204,58 @@ function _loadEnv(): void {
 
   try {
     console.log('[Doppler] Attempting detection');
-    const output = execSync('doppler configure --json', { env: process.env }).toString().trim();
+    let workingDir = process.cwd();
+    let output = execSync('doppler configure --json', { env: process.env }).toString().trim();
     console.log(
       '[Doppler] Configure output (redacted):',
       output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"')
     );
-    const configJson = JSON.parse(output);
-    const cwd = process.cwd();
-    const dirConfig = configJson[cwd];
+    let configJson = JSON.parse(output);
+    let dirConfig = configJson[workingDir];
+
+    // If current directory isn't configured, search up to 4 parent levels that
+    // contain a .git folder and retry detection from that directory.
+    if (!dirConfig || !dirConfig['enclave.project'] || !dirConfig['enclave.config']) {
+      console.log('[Doppler] Directory not configured, searching parent directories for .git');
+      let searchDir = workingDir;
+      for (let depth = 1; depth <= 4; depth++) {
+        const parentDir = dirname(searchDir);
+        if (parentDir === searchDir) break; // reached filesystem root
+        searchDir = parentDir;
+
+        // Skip if no .git folder in this parent directory
+        if (!existsSync(join(searchDir, '.git'))) continue;
+
+        try {
+          output = execSync('doppler configure --json', { env: process.env, cwd: searchDir })
+            .toString()
+            .trim();
+          console.log(
+            '[Doppler] Parent configure output (redacted):',
+            output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"')
+          );
+          configJson = JSON.parse(output);
+          dirConfig = configJson[searchDir];
+          if (dirConfig && dirConfig['enclave.project'] && dirConfig['enclave.config']) {
+            workingDir = searchDir;
+            console.log('[Doppler] Found configured directory:', workingDir);
+            break;
+          }
+        } catch (err) {
+          console.warn(`[Doppler] Configure failed in ${searchDir}: ${(err as Error).message}`);
+        }
+      }
+    }
+
     if (!dirConfig || !dirConfig['enclave.project'] || !dirConfig['enclave.config']) {
       console.log('[Doppler] Skipped: directory not configured');
       return;
     }
+
     console.log('[Doppler] Directory configured for project:', dirConfig['enclave.project']);
 
     console.log('[Doppler] Fetching secrets');
-    const secretsOutput = execSync('doppler secrets --json', { env: process.env })
+    const secretsOutput = execSync('doppler secrets --json', { env: process.env, cwd: workingDir })
       .toString()
       .trim();
     const secrets = JSON.parse(secretsOutput);
