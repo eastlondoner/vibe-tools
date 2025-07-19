@@ -76,7 +76,7 @@ export class ConnectCommand implements Command {
     const clientId = process.env.LINEAR_CLIENT_ID ||
       await consola.prompt('Linear OAuth Client ID', { type: 'text' });
     const clientSecret = process.env.LINEAR_CLIENT_SECRET ||
-      await consola.prompt('Linear OAuth Client Secret', { type: 'password' });
+      await consola.prompt('Linear OAuth Client Secret', { type: 'text' });
 
     // PKCE
     const verifier = crypto.randomBytes(32).toString('base64url');
@@ -87,7 +87,7 @@ export class ConnectCommand implements Command {
     authUrl.search = new URLSearchParams({
       response_type: 'code',
       scope: 'read',   // broaden if needed
-      client_id: clientId,
+      client_id: String(clientId),
       redirect_uri: REDIRECT_URI,
       code_challenge: challenge,
       code_challenge_method: 'S256',
@@ -111,8 +111,8 @@ export class ConnectCommand implements Command {
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      client_id: clientId,
-      client_secret: clientSecret,
+      client_id: String(clientId),
+      client_secret: String(clientSecret),
       redirect_uri: REDIRECT_URI,
       code_verifier: verifier,
     });
