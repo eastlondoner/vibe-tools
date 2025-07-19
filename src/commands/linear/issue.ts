@@ -36,13 +36,13 @@ export class IssueCommand implements Command {
       headers: getLinearHeaders(),
       body: JSON.stringify({ query, variables: vars }),
     });
-    
+
     const json = await res.json();
-    
+
     if (!res.ok) {
       throw new Error(`Linear API error ${res.status} ${res.statusText}: ${JSON.stringify(json)}`);
     }
-    
+
     if (json.errors?.length) {
       throw new Error(`GraphQL errors: ${JSON.stringify(json.errors, null, 2)}`);
     }
@@ -57,7 +57,10 @@ export class IssueCommand implements Command {
 
   async *execute(raw: string): CommandGenerator {
     const arg = raw.trim();
-    if (!arg) { yield 'Usage: vibe-tools linear get-issue <identifier|id>'; return; }
+    if (!arg) {
+      yield 'Usage: vibe-tools linear get-issue <identifier|id>';
+      return;
+    }
 
     yield `Fetching ${arg} …\n`;
     const id = await this.resolveIdentifier(arg);
@@ -115,4 +118,4 @@ export class IssueCommand implements Command {
     yield `Created: ${formatDate(issue.createdAt)}\n`;
     yield `Updated: ${formatDate(issue.updatedAt)}\n`;
   }
-} 
+}
