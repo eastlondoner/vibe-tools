@@ -87,7 +87,7 @@ export class ConnectCommand implements Command {
     authUrl.search = new URLSearchParams({
       response_type: 'code',
       scope: 'read',   // broaden if needed
-      client_id: String(clientId),
+      client_id: clientId,
       redirect_uri: REDIRECT_URI,
       code_challenge: challenge,
       code_challenge_method: 'S256',
@@ -111,7 +111,7 @@ export class ConnectCommand implements Command {
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      client_id: String(clientId),
+      client_id: clientId,
       client_secret: String(clientSecret),
       redirect_uri: REDIRECT_URI,
       code_verifier: verifier,
