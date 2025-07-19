@@ -49,6 +49,7 @@ const commonBuildOptions = {
     'http',
     'https',
     'node:*',
+    'open',
     'os',
     'path',
     'playwright',
