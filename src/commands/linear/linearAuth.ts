@@ -1,8 +1,6 @@
 import { loadEnv } from '../../config';
 
-const TOKEN_ENV = 'LINEAR_API_KEY';           // Access- or Personal-token
-const CLIENT_ID_ENV = 'LINEAR_CLIENT_ID';     // For OAuth flow reuse
-const CLIENT_SECRET_ENV = 'LINEAR_CLIENT_SECRET';
+const TOKEN_ENV = 'LINEAR_API_KEY'; // Access- or Personal-token
 
 export function getLinearToken(): string | undefined {
   loadEnv();
@@ -12,9 +10,7 @@ export function getLinearToken(): string | undefined {
 export function getLinearHeaders(extra?: Record<string, string>) {
   const token = getLinearToken();
   if (!token) {
-    throw new Error(
-      'No Linear access token found. Run `vibe-tools linear connect` first.'
-    );
+    throw new Error('No Linear access token found. Run `vibe-tools linear connect` first.');
   }
   return {
     Authorization: token,
@@ -25,8 +21,9 @@ export function getLinearHeaders(extra?: Record<string, string>) {
 
 /* Small helper exported for OAuth exchange */
 export async function saveLinearToken(token: string, scope: 'local' | 'global') {
-  const { writeKeysToFile, LOCAL_ENV_PATH, VIBE_HOME_ENV_PATH } =
-      await import('../../utils/installUtils');
+  const { writeKeysToFile, LOCAL_ENV_PATH, VIBE_HOME_ENV_PATH } = await import(
+    '../../utils/installUtils'
+  );
   const path = scope === 'local' ? LOCAL_ENV_PATH : VIBE_HOME_ENV_PATH;
   writeKeysToFile(path, { [TOKEN_ENV]: token });
-} 
+}

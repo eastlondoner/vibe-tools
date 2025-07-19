@@ -5,8 +5,8 @@ import { IssueCommand } from './linear/issue';
 export class LinearCommand implements Command {
   private subcommands: CommandMap = {
     connect: new ConnectCommand(),
-    'get-issue': new IssueCommand(),      // exact name requested
-    issue: new IssueCommand(),            // alias for consistency with other integrations
+    'get-issue': new IssueCommand(), // exact name requested
+    issue: new IssueCommand(), // alias for consistency with other integrations
   };
 
   async *execute(query: string, options: CommandOptions): CommandGenerator {
@@ -23,4 +23,4 @@ export class LinearCommand implements Command {
       yield `Unknown subcommand: ${sub}. Available: connect, get-issue`;
     }
   }
-} 
+}
