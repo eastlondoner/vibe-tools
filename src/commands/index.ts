@@ -11,6 +11,7 @@ import { AskCommand } from './ask.ts';
 import { MCPCommand } from './mcp/mcp.ts';
 import { XcodeCommand } from './xcode/xcode.ts';
 import { ClickUpCommand } from './clickup.ts';
+import { LinearCommand } from './linear.ts';
 import TestCommand from './test/index.ts';
 import YouTubeCommand from './youtube/index.ts';
 import { WaitCommand } from './wait.ts';
@@ -27,6 +28,7 @@ export const commands: CommandMap = {
   mcp: new MCPCommand(),
   xcode: new XcodeCommand(),
   clickup: new ClickUpCommand(),
+  linear: new LinearCommand(),
   test: new TestCommand(),
   youtube: new YouTubeCommand(),
   wait: new WaitCommand(),

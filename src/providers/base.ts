@@ -388,7 +388,8 @@ export abstract class BaseProvider implements BaseModelProvider {
 
     const str = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
     if (str.length <= effectiveMaxLength) return str;
-    const keys = typeof obj === 'object' && !Array.isArray(obj) ? Object.keys(obj).join(', ') : null;
+    const keys =
+      typeof obj === 'object' && !Array.isArray(obj) ? Object.keys(obj).join(', ') : null;
     return str.slice(0, effectiveMaxLength) + '... (truncated)]' + (keys ? '\nKeys: ' + keys : '');
   }
 

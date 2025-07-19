@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.64.0] - 2025-01-20
+
+### Added
+
+- **Linear Integration**: Added comprehensive Linear support for accessing issues directly from the command line with rich formatting and full context.
+  - **Commands**: 
+    - `vibe-tools linear connect` - Interactive authentication setup supporting both personal API keys and OAuth2 PKCE flow
+    - `vibe-tools linear get-issue <identifier>` - Display detailed Linear issue information
+    - `vibe-tools linear issue <identifier>` - Alternative command name for issue retrieval
+  - **Authentication Methods**:
+    - Personal API Key: Simple setup with guided browser navigation to Linear settings
+    - OAuth2 with PKCE: Secure browser-based authentication with automatic token management
+    - Environment variable support: `LINEAR_API_KEY` in `.vibe-tools.env` files
+  - **Issue Details**: Complete issue information including title, description, status, priority, assignee, creator, timestamps
+  - **Comments & Discussion**: Full discussion thread with timestamps and author information
+  - **Attachments**: List of attached files with direct links
+  - **Flexible Identifiers**: Support for both Linear identifiers (e.g., `ITE-123`) and UUID format
+  - **GraphQL Integration**: Direct Linear GraphQL API integration for comprehensive data retrieval
+
 ## [0.63.0] - 2025-07-17
 
 ### Added

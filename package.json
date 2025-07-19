@@ -74,6 +74,7 @@
     "dotenv": "17.2.0",
     "eventsource-client": "1.1.4",
     "google-auth-library": "^10.1.0",
+    "open": "^10.2.0",
     "playwright": "1.54.1",
     "playwright-core": "1.54.1",
     "punycode": "^2.3.1",

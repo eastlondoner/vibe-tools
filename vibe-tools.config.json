@@ -5,9 +5,9 @@
   },
   "plan": {
     "fileProvider": "gemini",
-    "thinkingProvider": "anthropic",
+    "thinkingProvider": "openai",
     "fileModel": "gemini-2.5-flash",
-    "thinkingModel": "claude-opus-4-20250514"
+    "thinkingModel": "o3"
   },
   "repo": {
     "provider": "gemini",

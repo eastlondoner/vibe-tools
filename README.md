@@ -55,6 +55,7 @@
   - [YouTube Video Analysis](#youtube-video-analysis)
 - [Skills](#skills)
   - [GitHub Integration](#github-integration)
+  - [Linear Integration](#linear-integration)
   - [Xcode Tools](#xcode-tools)
   - [Documentation Generation](#documentation-generation-uses-gemini-20)
   - [Wait Command](#wait-command)
@@ -94,6 +95,7 @@
 ### New Skills for your existing Agent
 
 - Work with GitHub Issues and Pull Requests
+- Access Linear issues with full context and comments
 - Generate local agent-accessible documentation for external dependencies
 - Analyze YouTube videos to extract insights, summaries, and implementation plans
 
@@ -312,6 +314,16 @@ Note: in most cases you can say "generate documentation" instead of "use vibe-to
 
 Note: in most cases you can say "fetch issue 123" or "fetch PR 321" instead of "use vibe-tools github" and it will work the same.
 
+### Use linear integration
+
+"Use vibe-tools linear to set up authentication with Linear"
+
+"Use vibe-tools linear to fetch issue ITE-123 and provide a summary of the current status"
+
+"Use vibe-tools linear to get issue ABC-456 and explain what the team is discussing in the comments"
+
+Note: in most cases you can say "fetch Linear issue ITE-123" or "get Linear issue ABC-456" instead of "use vibe-tools linear" and it will work the same.
+
 ### Use browser automation
 
 "Use vibe-tools to open the users page and check the error in the console logs, fix it"
@@ -355,6 +367,7 @@ Note: The ask command requires both --provider and --model parameters to be spec
    XAI_API_KEY="your-xai-api-key" # Optional, for xAI Grok models
    GROQ_API_KEY="your-groq-api-key" # Optional, for Groq models
    GITHUB_TOKEN="your-github-token"  # Optional, for enhanced GitHub access
+   LINEAR_API_KEY="your-linear-api-key" # Optional, for Linear integration
    ```
    - At least one of `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY` must be provided to use the `mcp` commands.
 
@@ -717,6 +730,65 @@ With authentication:
 
 - Public repositories: 5,000 requests per hour
 - Private repositories: Full access (with appropriate token scopes)
+
+### Linear Integration
+
+Access Linear issues directly from the command line with rich formatting and full context:
+
+```bash
+# Set up authentication (interactive prompts)
+vibe-tools linear connect
+
+# View specific issue with full details
+vibe-tools linear get-issue ITE-123
+vibe-tools linear issue ABC-456  # Alternative command name
+```
+
+The Linear commands provide:
+
+- **Authentication Setup**: Support for both personal API keys and OAuth2 flow with PKCE
+- **Issue Details**: Complete issue information including:
+  - Issue title, description, and status
+  - Priority level and assignee information
+  - Creation and update timestamps
+  - Creator information
+- **Comments**: Full discussion thread with timestamps and authors
+- **Attachments**: List of attached files with links
+- **Flexible Identifiers**: Support for both Linear identifiers (e.g., `ITE-123`) and UUID format
+
+**Authentication Methods:**
+
+The Linear integration supports two authentication approaches:
+
+1. **Personal API Key** (Recommended for individual use):
+   - Simple setup with guided browser navigation
+   - Direct API key entry for existing keys
+   - Choice of local or global storage
+
+2. **OAuth2 with PKCE** (Recommended for organizational use):
+   - Secure browser-based authentication flow
+   - Automatic token management
+   - Enhanced security with PKCE (Proof Key for Code Exchange)
+
+**Authentication Setup:**
+
+Run the interactive setup command:
+```bash
+vibe-tools linear connect
+```
+
+This will guide you through:
+- Choosing between personal API key or OAuth authentication
+- Setting up browser access to Linear (if needed)
+- Configuring token storage (project-local vs global)
+
+**Environment Variable:**
+Alternatively, you can set the `LINEAR_API_KEY` environment variable in your `.vibe-tools.env` file:
+```env
+LINEAR_API_KEY="your-linear-api-key"
+```
+
+**Note:** Linear personal API keys should be used directly without a "Bearer" prefix when set as environment variables.
 
 ### Xcode Tools
 
@@ -1267,6 +1339,22 @@ vibe-tools repo "Check compatibility with main branch" --with-diff --base=main
 
 # Combine diff with external documentation for comprehensive review
 vibe-tools repo "Does my implementation follow the API specification?" --with-diff --with-doc=./local-api-spec.md
+```
+
+#### Linear Integration Examples
+
+```bash
+# Set up authentication interactively
+vibe-tools linear connect
+
+# View specific Linear issue by identifier
+vibe-tools linear get-issue ITE-1850
+
+# View issue using alternative command name
+vibe-tools linear issue ABC-123
+
+# View issue by UUID (also supported)
+vibe-tools linear get-issue 0b906a8e-f8a8-477d-9c98-0986b09ac5f9
 ```
 
 #### Xcode Command Examples
