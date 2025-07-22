@@ -408,6 +408,17 @@ Note: The ask command requires both --provider and --model parameters to be spec
    - Doppler secrets are only loaded if the variable is *not already defined* in the environment, so explicit environment variables always win.
    - The integration is read-only: secrets are never written back to Doppler or logged.
 
+5. **Environment Variable Precedence with VIBE_TOOLS_ Prefix**
+   - You can prefix any environment variable with `VIBE_TOOLS_` to ensure it takes precedence over all other sources
+   - Example: `VIBE_TOOLS_OPENAI_API_KEY` will override `OPENAI_API_KEY` from any source (environment, .env files, or Doppler)
+   - This works for all API keys and configuration variables
+   - Useful for CI/CD environments or when you want different API keys specifically for vibe-tools
+   - **Example usage:**
+     ```bash
+     # This will use the prefixed key instead of the regular one
+     VIBE_TOOLS_OPENAI_API_KEY="vibe-specific-key" OPENAI_API_KEY="regular-key" vibe-tools ask "Hello"
+     ```
+
 4. **Application Default Credentials (ADC) for Gemini models (Recommended for Google Cloud Environments)**
    - **Note:** This is an _alternative_ to setting the `GEMINI_API_KEY` environment variable for Gemini models.
    - ADC is ideal when running `vibe-tools` within Google Cloud environments (e.g., Compute Engine, Kubernetes Engine) or for local development using `gcloud`.

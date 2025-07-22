@@ -195,6 +195,8 @@ If people say "ask Gemini" or "ask Perplexity" or "ask Stagehand" they mean to u
 
 **Authentication and API Keys**: vibe-tools automatically loads API keys from ~/.vibe-tools/.env files, environment variables, and Doppler secrets when running in a folder that has a doppler project configured. Disable Doppler loading by adding \`"disableDoppler": true\` to \`vibe-tools.config.json\`. 
 
+**Environment Variable Precedence**: You can prefix any environment variable with \`VIBE_TOOLS_\` to ensure it takes precedence over other sources (e.g., \`VIBE_TOOLS_OPENAI_API_KEY\` overrides \`OPENAI_API_KEY\`). This is useful for CI/CD environments or when you want to use different API keys specifically for vibe-tools. 
+
 <!-- vibe-tools-version: ${VIBE_TOOLS_RULES_VERSION} -->`;
 
 // Generate rules for different IDEs
