@@ -229,7 +229,9 @@ export class OpenCommand implements Command {
           });
           yield `Page loaded, waiting for networkidle...`;
           try {
-            await page.waitForLoadState('networkidle', { timeout: options.timeout ?? this.config.browser?.timeout ?? 30000 });
+            await page.waitForLoadState('networkidle', {
+              timeout: options.timeout ?? this.config.browser?.timeout ?? 30000,
+            });
           } catch (error) {
             debug('Error waiting for networkidle', error);
             yield `Timed out waiting for networkidle, continuing with page as it is`;
@@ -241,7 +243,9 @@ export class OpenCommand implements Command {
         if (options.wait) {
           try {
             const waitConfig = parseWaitParameter(options.wait);
-            console.log(`Waiting for ${waitConfig.type === 'time' ? `${waitConfig.value}ms` : `selector "${waitConfig.value}"`}...`);
+            console.log(
+              `Waiting for ${waitConfig.type === 'time' ? `${waitConfig.value}ms` : `selector "${waitConfig.value}"`}...`
+            );
 
             if (waitConfig.type === 'time') {
               await new Promise((resolve) => setTimeout(resolve, waitConfig.value as number));

@@ -85,16 +85,17 @@ export async function fetchDocContent(urlOrPath: string, debug: boolean): Promis
       // Clean up potential extra newlines (less critical for HTML, but keep for consistency)
       htmlContent = htmlContent.trim();
 
+      if (debug) {
+        // save the extracted text to a file
+        writeFileSync('.vibe-tools-fetched-doc.html', htmlContent);
+        console.log(`[DEBUG] HTML content saved to .vibe-tools-fetched-doc.html`);
+      }
+
       // Check if significant content was fetched (using original threshold)
       if (htmlContent && htmlContent.length > 500) {
         console.log(
           `Successfully fetched document content (length: ${htmlContent.length}) on attempt ${i + 1}`
         );
-
-        if (debug) {
-          // save the extracted text to a file
-          writeFileSync('.vibe-tools-fetched-doc.html', htmlContent);
-        }
 
         // Extract text from the HTML content
         const extractedText = extractTextFromHtml(htmlContent, debug);
