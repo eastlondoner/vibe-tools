@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.64.0] - 2025-01-20
+## [0.63.3] - 2025-07-22
 
 ### Added
 
@@ -19,7 +19,8 @@ All notable changes to this project will be documented in this file.
   - **Comments & Discussion**: Full discussion thread with timestamps and author information
   - **Attachments**: List of attached files with direct links
   - **Flexible Identifiers**: Support for both Linear identifiers (e.g., `ITE-123`) and UUID format
-  - **GraphQL Integration**: Direct Linear GraphQL API integration for comprehensive data retrieval
+
+- **GitHub Command Improvements**: Added GitHub command parameters (`--review-only`, `--discussion-only`, `--metadata-only`, `--no-links`, `--hide-resolved`).
 
 ## [0.63.0] - 2025-07-17
 

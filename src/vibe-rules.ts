@@ -145,6 +145,11 @@ The \`search\` command helps you discover servers in the MCP Marketplace and on 
 
 **GitHub Command Options:**
 --from-github=<GitHub username>/<repository name>[@<branch>]: Access PRs/issues from a specific GitHub repository
+--review-only: Show only code review comments section (PRs only)
+--discussion-only: Show only discussion comments section
+--metadata-only: Show only PR/issue metadata (labels, assignees, etc.)
+--no-links: Hide all "View in GitHub" links from output
+--hide-resolved: Filter out resolved code review comments (PRs only)
 
 **Browser Command Options (for 'open', 'act', 'observe', 'extract'):**
 --console: Capture browser console logs (enabled by default, use --no-console to disable)
