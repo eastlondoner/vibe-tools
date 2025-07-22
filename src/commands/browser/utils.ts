@@ -1,4 +1,5 @@
 import { consola } from 'consola';
+import { once } from '../../utils/once';
 
 /**
  * Checks if Playwright is available and returns its version information
@@ -52,7 +53,7 @@ export async function checkPlaywright(): Promise<{
  * Ensures Playwright is available before proceeding
  * @returns true if Playwright is available, throws error if not
  */
-export async function ensurePlaywright(): Promise<boolean> {
+export const ensurePlaywright = once(async (): Promise<boolean> => {
   const { available, version, error } = await checkPlaywright();
 
   if (!available) {
@@ -70,14 +71,14 @@ export async function ensurePlaywright(): Promise<boolean> {
     console.log(`Using Playwright: ${version}`);
   }
   return true;
-}
+});
 
 /**
  * Ensures Playwright browsers (specifically Chromium) are installed
  * Uses the programmatic API to avoid version mismatches
  * @returns true if installation was successful, false otherwise
  */
-export async function ensurePlaywrightBrowsers(): Promise<boolean> {
+export const ensurePlaywrightBrowsers = once(async (): Promise<boolean> => {
   try {
     consola.start('Installing Playwright Chromium browser (one-time setup)...');
 
@@ -97,4 +98,4 @@ export async function ensurePlaywrightBrowsers(): Promise<boolean> {
     consola.warn(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return false;
   }
-}
+});

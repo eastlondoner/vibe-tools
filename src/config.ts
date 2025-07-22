@@ -5,6 +5,16 @@ import { homedir } from 'node:os';
 import dotenv from 'dotenv';
 import { once } from './utils/once';
 import { execSync } from 'child_process';
+import { applyVibePrefixedOverrides } from './utils/envUtils';
+
+const VIBE_TOOLS_PREFIX = 'VIBE_TOOLS_';
+
+// Debug logging function - only logs when --debug is in process arguments
+const debugLog = (...args: any[]): void => {
+  if (process.argv.includes('--debug')) {
+    console.log(...args);
+  }
+};
 
 export const defaultMaxTokens = 21000;
 export const defaultConfig: Config = {
@@ -155,7 +165,7 @@ export function applyEnvUnset(): void {
     // Parse comma-separated list of keys to unset
     const keysToUnset = envUnset.split(',').map((key) => key.trim());
     if (keysToUnset.length > 0) {
-      console.log(`Unsetting environment variables: ${keysToUnset.join(', ')}`);
+      debugLog(`Unsetting environment variables: ${keysToUnset.join(', ')}`);
       // Unset each key
       for (const key of keysToUnset) {
         delete process.env[key];
@@ -168,25 +178,25 @@ function _loadEnv(): void {
   // Try loading from current directory first
   const localEnvPath = join(process.cwd(), '.vibe-tools.env');
   if (existsSync(localEnvPath)) {
-    console.log('Local .env file found, loading env from', localEnvPath);
+    debugLog('Local .env file found, loading env from', localEnvPath);
     dotenv.config({ path: localEnvPath });
   } else {
     // If local env doesn't exist, try home directory
     const homeEnvPath = join(homedir(), '.vibe-tools', '.env');
     if (existsSync(homeEnvPath)) {
-      console.log('Home .env file found, loading env from', homeEnvPath);
+      debugLog('Home .env file found, loading env from', homeEnvPath);
       dotenv.config({ path: homeEnvPath });
     } else {
       // If neither env file exists, continue without loading
-      console.log('No .env file found in local or home directories.', localEnvPath, homeEnvPath);
+      debugLog('No .env file found in local or home directories.', localEnvPath, homeEnvPath);
     }
   }
 
   // Doppler integration - runs regardless of .env file presence
-  console.log('[Doppler] Starting integration check');
+  debugLog('[Doppler] Starting integration check');
   const config = loadConfig();
   if (config.disableDoppler) {
-    console.log('[Doppler] Skipped: disabled in config');
+    debugLog('[Doppler] Skipped: disabled in config');
     return;
   }
 
@@ -198,17 +208,17 @@ function _loadEnv(): void {
     hasDoppler = false;
   }
   if (!hasDoppler) {
-    console.log(
-      '[Doppler] Skipped: CLI not found on PATH - Check if Doppler CLI is installed with `doppler --version`'
-    );
+    debugLog('[Doppler] Skipped: CLI not found on PATH');
+    // Still apply VIBE_TOOLS_ overrides even when Doppler CLI is not found
+    applyVibePrefixedOverrides();
     return;
   }
 
   try {
-    console.log('[Doppler] Attempting detection');
+    debugLog('[Doppler] Attempting detection');
     let workingDir = process.cwd();
     let output = execSync('doppler configure --json', { env: process.env }).toString().trim();
-    console.log(
+    debugLog(
       '[Doppler] Configure output (redacted):',
       output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"')
     );
@@ -218,7 +228,7 @@ function _loadEnv(): void {
     // If current directory isn't configured, search up to 4 parent levels that
     // contain a .git folder and retry detection from that directory.
     if (!dirConfig || !dirConfig['enclave.project'] || !dirConfig['enclave.config']) {
-      console.log('[Doppler] Directory not configured, searching parent directories for .git');
+      debugLog('[Doppler] Directory not configured, searching parent directories for .git');
       let searchDir = workingDir;
       for (let depth = 1; depth <= 4; depth++) {
         const parentDir = dirname(searchDir);
@@ -232,7 +242,7 @@ function _loadEnv(): void {
           output = execSync('doppler configure --json', { env: process.env, cwd: searchDir })
             .toString()
             .trim();
-          console.log(
+          debugLog(
             '[Doppler] Parent configure output (redacted):',
             output.replace(/"token":"[^"]+"/g, '"token":"[REDACTED]"')
           );
@@ -240,7 +250,7 @@ function _loadEnv(): void {
           dirConfig = configJson[searchDir];
           if (dirConfig && dirConfig['enclave.project'] && dirConfig['enclave.config']) {
             workingDir = searchDir;
-            console.log('[Doppler] Found configured directory:', workingDir);
+            debugLog('[Doppler] Found configured directory:', workingDir);
             break;
           }
         } catch (err) {
@@ -250,40 +260,57 @@ function _loadEnv(): void {
     }
 
     if (!dirConfig || !dirConfig['enclave.project'] || !dirConfig['enclave.config']) {
-      console.log('[Doppler] Skipped: directory not configured');
+      debugLog('[Doppler] Skipped: directory not configured');
+      // Still apply VIBE_TOOLS_ overrides even when Doppler is not configured
+      applyVibePrefixedOverrides();
       return;
     }
 
-    console.log('[Doppler] Directory configured for project:', dirConfig['enclave.project']);
+    debugLog('[Doppler] Directory configured for project:', dirConfig['enclave.project']);
 
-    console.log('[Doppler] Fetching secrets');
+    debugLog('[Doppler] Fetching secrets');
     const secretsOutput = execSync('doppler secrets --json', { env: process.env, cwd: workingDir })
       .toString()
       .trim();
     const secrets = JSON.parse(secretsOutput);
-    console.log('[Doppler] Fetched', Object.keys(secrets).length, 'secrets');
+    debugLog('[Doppler] Fetched', Object.keys(secrets).length, 'secrets');
 
     // Set environment variables if not already set
     let loadedCount = 0;
     for (const key of Object.keys(secrets)) {
+      const value = secrets[key]?.computed;
+      if (!value) continue;
+
+      // Prefixed secret?
+      if (key.startsWith(VIBE_TOOLS_PREFIX)) {
+        const target = key.slice(VIBE_TOOLS_PREFIX.length);
+        process.env[key] = value; // keep original for transparency
+        process.env[target] = value; // always overwrite
+        loadedCount++;
+        continue;
+      }
+
+      // Normal secret
       if (key.endsWith('_API_KEY') && !process.env[key]) {
-        // Extract the computed value from the nested structure
-        const secretValue = secrets[key]?.computed;
-        if (secretValue) {
-          process.env[key] = secretValue;
-          loadedCount++;
-        }
+        process.env[key] = value;
+        loadedCount++;
       }
     }
 
     console.log(
       `Loaded ${loadedCount} secrets from Doppler for project ${dirConfig['enclave.project']}.`
     );
-    console.log('[Doppler] Loaded', loadedCount, 'new environment variables');
+    debugLog('[Doppler] Loaded', loadedCount, 'new environment variables');
   } catch (error) {
     console.warn(`[Doppler] Fetch failed: ${(error as Error).message}. Skipping.`);
-    console.log('[Doppler] Error details:', error);
+    console.error('[Doppler] Error details:', error);
+    // Still apply VIBE_TOOLS_ overrides even when Doppler execution fails
+    applyVibePrefixedOverrides();
+    return;
   }
+
+  // Finally, ensure VIBE_TOOLS_ overrides take precedence
+  applyVibePrefixedOverrides();
 }
 
 export const loadEnv = once(() => {
