@@ -4,6 +4,13 @@
 
 <div align=center><h1>Give AI Agents an AI team and advanced skills</h1></div>
 
+<div align="center">
+<em>
+AI teammates wait<br/>
+Code flows through digital minds<br/>
+Tools bridge human dreams
+</em>
+</div>
 
 | Summary | Prompt it |
 |---------|-----------|
