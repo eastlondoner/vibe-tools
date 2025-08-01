@@ -18,6 +18,26 @@
 | Example usage | [![](https://b.lmpify.com/examples)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fvibe-rules.ts%26pathPatterns%3DREADME.md%26pathPatterns%3DCONFIGURATION.md%0A%0ACan%20you%20show%20me%20some%20examples%20of%20how%20to%20use%20vibe-tools%20commands%20effectively%3F) |
 
 
+## A Sonnet for the Digital Age
+
+*When silicon minds and human thoughts align,*  
+*Through vibe-tools' bridge, we craft tomorrow's code,*  
+*Where Perplexity's search and Gemini's design*  
+*Unite with Stagehand on the browser road.*  
+
+*No longer bound by single agent's view,*  
+*We summon teams of AI to our aid,*  
+*Each specialized skill brings something new—*  
+*A symphony of intelligence displayed.*  
+
+*From GitHub's depths to Linear's bright domain,*  
+*Through YouTube's wisdom and the web's vast store,*  
+*These digital companions ease our strain*  
+*And open up each previously locked door.*  
+
+*So let us code with artificial friends,*  
+*Where human creativity transcends.*  
+
 ## Table of Contents
 
 - [The AI Team](#the-ai-team)
