@@ -4,6 +4,13 @@
 
 <div align=center><h1>Give AI Agents an AI team and advanced skills</h1></div>
 
+<div align=center>
+<em>
+AI agents unite,<br>
+Perplexity, Gemini flow—<br>
+Code dreams come alive.
+</em>
+</div>
 
 | Summary | Prompt it |
 |---------|-----------|
