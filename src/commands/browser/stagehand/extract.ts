@@ -58,6 +58,7 @@ export class ExtractCommand implements Command {
     try {
       const videoDir = await setupVideoRecording(options);
       const config = {
+        experimental: true,
         env: 'LOCAL',
         localBrowserLaunchOptions: {
           headless: options?.headless ?? stagehandConfig.headless,

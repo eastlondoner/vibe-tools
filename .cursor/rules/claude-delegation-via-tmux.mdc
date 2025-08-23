@@ -1,0 +1,278 @@
+---
+alwaysApply: true
+---
+
+# Claude Delegation via tmux MCP Server
+
+## Overview
+
+This guide explains how to delegate tasks to Claude Code (claude-yolo) using the tmux MCP server. You MUST use claude-yolo, this is a version of Claude Code that automatically performs many tasks in the background without needing as much user interaction as regular claude code (claude). This setup allows you to run Claude in a persistent tmux session and communicate with it programmatically through MCP server tools.
+
+## Prerequisites
+
+### Required Software
+- **tmux**: Terminal multiplexer for persistent sessions
+- **claude-yolo**: Claude Code CLI tool
+- **Node.js/npm**: For running the tmux MCP server
+- **Cursor IDE**: With MCP server support
+
+### MCP Server Configuration
+
+#### ~/.cursor/mcp.json or ./cursor/mcp.json Configuration
+
+Add a tmux MCP server to your MCP configuration.
+
+```json
+{
+  "mcpServers": {
+    "tmux": {
+      "command": "npx",
+      "args": ["-y", "tmux-mcp@latest"]
+    }
+  }
+}
+```
+
+## Step-by-Step Setup
+
+### Step 1: Install Required Tools
+
+1. **Install tmux** (if not already installed):
+   ```bash
+   # macOS
+   brew install tmux
+
+   # Ubuntu/Debian
+   sudo apt-get install tmux
+
+   # CentOS/RHEL
+   sudo yum install tmux
+   ```
+
+2. **Install claude-yolo**:
+   ```bash
+   # Install claude-yolo CLI
+   npm install -g claude-yolo
+   ```
+
+3. **Verify installations**:
+   ```bash
+   tmux -V
+   claude-yolo --version
+   ```
+
+### Step 2: Configure MCP Servers
+
+1. **Create ~/.cursor/mcp.json** with the configuration shown above
+2. **Create .claude/settings.local.json** in your project root with the permissions shown above
+3. **Restart Cursor IDE** to load the new MCP server configurations
+
+### Step 3: Start Your First Session
+
+Use the MCP tools to create and manage your tmux session:
+
+```javascript
+// Create a new tmux session
+mcp_tmux_create-session({
+  name: "claude-session"
+})
+
+// Create a window in the session
+mcp_tmux_create-window({
+  sessionId: "$0",  // Use the session ID returned above
+  name: "claude-window"
+})
+
+// Start claude-yolo in the session with isolated config
+mcp_tmux_execute-command({
+  paneId: "%0",  // Use the pane ID
+  command: "cd /path/to/your/project && CLAUDE_CONFIG_DIR=/Users/andy/.claude-project-isolated claude-yolo",
+  rawMode: true
+})
+```
+
+At this point BEFORE passing instructions to Claude you must always open the tmux screen in a backgrounded terminal command so that the user can see the Claude session:
+bash({
+  command: "tmux attach-session -t claude-session"
+})
+
+// use bash to sleep for 10 seconds to let claude-yolo start
+bash({
+  command: "sleep 10"
+})
+
+
+
+## Communication Protocol
+
+### Sending Messages to Claude
+
+1. **Send the message content**:
+   ```
+   mcp_tmux_execute-command({
+     paneId: "%0",
+     command: "Your message to Claude here",
+     rawMode: true
+   })
+   ```
+
+2. **Submit the message** (send empty string):
+   ```
+   mcp_tmux_execute-command({
+     paneId: "%0",
+     command: "",  // Empty string to submit
+     rawMode: true
+   })
+   ```
+You MUST always send the empty string to submit the message if you want Claude to actually do something.
+
+### Receiving Responses from Claude
+
+1. **Check for responses**:
+   ```
+   mcp_tmux_capture-pane({
+     paneId: "%0",
+     lines: 30  // Number of lines to capture. Generally 30 is enough.
+   })
+   ```
+
+You may sometimes see output like this from capture-pane:
+```
+╭─────────────────────────────────────────────────────────────────────────────────────╮
+│ > [Pasted text #1 +35 lines]                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────╯
+```
+The Pasted Text section is how Claude Code represents long messages. This indicates that a long message has been entered into the claude code input but most crucially this shows that the message has not been submitted yet - if you see this then you should send the empty string to submit the message for claude to work on.
+
+2. **Monitor ongoing execution**:
+   - Look for status indicators like "Incubating…", "Smooshing…", etc.
+   - Wait for completion indicators or prompts
+
+## Example Workflow
+
+### Bootstrapping the Session
+
+// Check for existing tmux session
+mcp_tmux_list-sessions()
+
+// If no session exists, create one
+// Note: Creating a session automatically creates one window (@0) and one pane (%0)
+mcp_tmux_create-session({
+  name: "claude-session"
+})
+
+// Check for existing pane in the default window
+mcp_tmux_list-panes({ windowId: "@0" })
+
+// Note: We don't need to create additional windows or panes
+// The session comes with one window (@0) and one pane (%0) by default
+
+// check if claude-yolo is already running using capture-pane and start it if it is not running
+mcp_tmux_capture-pane({
+  paneId: "%0",
+  lines: 30
+})
+
+mcp_tmux_execute-command({
+  paneId: "%0",
+  command: "cd /path/to/your/project && CLAUDE_CONFIG_DIR=/Users/andy/.claude-project-isolated claude-yolo", // ALWAYS cd to the project root first!
+  rawMode: true
+})
+
+Once you have a pane running claude-yolo, you must ALWAYS open the tmux screen in a backgrounded terminal command so that the user can see the Claude session:
+bash({
+  command: "tmux attach-session -t claude-session"
+})
+
+Once you have a session running you can skip to just using capture-pane to check that it's still running.
+// Wait for completion (UI tests take longer)
+mcp_tmux_capture-pane({
+  paneId: "%0",
+  lines: 30
+})
+### Running Unit Tests
+
+```
+// Populate the instructions for claude
+mcp_tmux_execute-command({
+  paneId: "%0",
+  command: "Run the unit tests using the XCodeBuild MCP server",
+  rawMode: true
+})
+
+// Submit the instructions
+mcp_tmux_execute-command({
+  paneId: "%0",
+  command: "",
+  rawMode: true
+})
+
+// Wait for execution to complete
+// Check every 5-10 seconds
+mcp_tmux_capture-pane({
+  paneId: "%0",
+  lines: 30
+})
+```
+
+### Running UI Tests
+
+```javascript
+// Populate the instructions for claude
+mcp_tmux_execute-command({
+  paneId: "%0",
+  command: "Run the UI tests using the XCodeBuild MCP server",
+  rawMode: true
+})
+
+// Submit the instructions
+mcp_tmux_execute-command({
+  paneId: "%0",
+  command: "",
+  rawMode: true
+})
+
+// Wait for completion (UI tests take longer)
+mcp_tmux_capture-pane({
+  paneId: "%0",
+  lines: 30
+})
+```
+
+## Best Practices
+
+### Session Management
+
+1. **Use descriptive session names**: `claude-session`, `dev-session`, etc.
+2. **Use the default window** that comes with the session (no need to create additional windows)
+3. **Keep sessions persistent** - don't kill them unnecessarily
+4. **Monitor session status** regularly
+
+### Communication Patterns
+
+1. **Be specific in requests**: "Run unit tests" vs "Run all tests in the UnitTests.xctestplan"
+2. **Wait for completion**: Don't send new requests while Claude is processing
+3. **Check status frequently**: Use capture-pane to monitor progress
+4. **Handle timeouts**: Some operations may take time, be patient
+
+
+## Troubleshooting
+
+### Debug Commands
+
+```javascript
+// Get session info
+mcp_tmux_list-sessions({ random_string: "dummy" })
+
+// Get window info (session creates one window by default)
+mcp_tmux_list-windows({ sessionId: "$0" })
+
+// Get pane info (default window has one pane by default)
+mcp_tmux_list-panes({ windowId: "@0" })
+
+// Capture full pane content for debugging
+mcp_tmux_capture-pane({
+  paneId: "%0",
+  lines: 1000
+})
+```

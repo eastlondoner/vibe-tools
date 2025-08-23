@@ -203,6 +203,7 @@ export class PlanCommand implements Command {
 
       // Get file listing
       let packedRepo: string;
+      let contextTokens: number = 0; // Initialize contextTokens outside try block
       try {
         yield 'Running repomix to get file listing...\n';
 
@@ -224,9 +225,12 @@ export class PlanCommand implements Command {
 
         yield `Found ${repomixResult.totalFiles} files, approx ${repomixResult.totalTokens} tokens.\n`;
 
+        // Store context tokens for use in file identification
+        contextTokens = repomixResult.totalTokens;
+
         // Track total packed repo context tokens
         options?.trackTelemetry?.({
-          contextTokens: repomixResult.totalTokens,
+          contextTokens: contextTokens,
         });
 
         if (options?.debug) {
@@ -299,6 +303,7 @@ export class PlanCommand implements Command {
           debug: options?.debug,
           reasoningEffort: options?.reasoningEffort ?? this.config.reasoningEffort,
           webSearch: options?.webSearch,
+          tokenCount: contextTokens, // Pass context tokens for 1M beta activation
         };
 
         yield `Asking ${fileProviderName} to identify relevant files using model: ${fileModel} with max tokens: ${effectiveFileMaxTokens}...\n`;
@@ -481,6 +486,7 @@ async function getRelevantFiles(
   docContent: string
 ): Promise<string[]> {
   console.log('Getting relevant files using:', options.model);
+  console.log('File phase tokenCount:', options.tokenCount);
   const systemPrompt = `
 Your job is to identify the most relevant files in the codebase to the following user query and respond with a newline-separated list of all files in the codebase that are relevant to the user query.
 If there are files that show examples of how certain relevant things are done in the codebase then include those as well, even if the files themselves are not relevant to the user query.

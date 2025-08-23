@@ -13,18 +13,29 @@ interface ProviderInfo {
 const DEFAULT_MODELS: Record<Provider, string> = {
   perplexity: 'sonar-pro',
   gemini: 'gemini-2.5-pro',
-  openai: 'gpt-4.1', // largest context window (1M tokens) so best chance of working
+  openai: 'gpt-5', // largest context window (1M tokens) so best chance of working
   anthropic: 'claude-sonnet-4-20250514',
   openrouter: 'google/gemini-2.5-pro', // largest context window (1M tokens) so best chance of working
   modelbox: 'google/gemini-2.5-pro', // largest context window (1M tokens) so best chance of working
   xai: 'grok-4-latest',
   groq: 'moonshotai/kimi-k2-instruct',
+  cerebras: 'gpt-oss-120b',
 };
 
 // Provider preference order for each command type
 export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
   web: ['perplexity', 'gemini', 'modelbox', 'openrouter', 'xai', 'groq'],
-  repo: ['gemini', 'modelbox', 'openrouter', 'openai', 'perplexity', 'anthropic', 'xai', 'groq'],
+  repo: [
+    'gemini',
+    'modelbox',
+    'openrouter',
+    'openai',
+    'perplexity',
+    'anthropic',
+    'xai',
+    'groq',
+    'cerebras',
+  ],
   plan_file: [
     'gemini',
     'modelbox',
@@ -34,6 +45,7 @@ export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
     'xai',
     'anthropic',
     'groq',
+    'cerebras',
   ],
   plan_thinking: [
     'openai',
@@ -41,13 +53,34 @@ export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
     'gemini',
     'xai',
     'groq',
+    'cerebras',
     'openrouter',
     'modelbox',
     'perplexity',
   ],
-  doc: ['gemini', 'openai', 'modelbox', 'openrouter', 'perplexity', 'xai', 'anthropic', 'groq'],
-  ask: ['openai', 'modelbox', 'openrouter', 'gemini', 'xai', 'anthropic', 'perplexity', 'groq'],
-  browser: ['anthropic', 'openai', 'gemini'],
+  doc: [
+    'gemini',
+    'openai',
+    'modelbox',
+    'openrouter',
+    'perplexity',
+    'xai',
+    'anthropic',
+    'groq',
+    'cerebras',
+  ],
+  ask: [
+    'openai',
+    'modelbox',
+    'openrouter',
+    'gemini',
+    'xai',
+    'anthropic',
+    'perplexity',
+    'groq',
+    'cerebras',
+  ],
+  browser: ['anthropic', 'openai', 'gemini', 'xai', 'groq', 'cerebras'],
 };
 
 export function getDefaultModel(provider: Provider): string {
@@ -95,6 +128,11 @@ export function getAllProviders(): ProviderInfo[] {
       provider: 'groq',
       available: !!process.env.GROQ_API_KEY,
       defaultModel: DEFAULT_MODELS.groq,
+    },
+    {
+      provider: 'cerebras',
+      available: !!process.env.CEREBRAS_API_KEY,
+      defaultModel: DEFAULT_MODELS.cerebras,
     },
   ];
 }

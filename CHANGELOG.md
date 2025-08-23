@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.64.2] - 2025-08-23
+
+### Added
+
+- **Anthropic 1M Token Context Window**: Added automatic support for Anthropic's 1M token context window feature for `claude-sonnet-4-20250514`
+  - **Automatic Detection**: When using Claude Sonnet 4 with repositories over 200k tokens, the system automatically enables the 1M context window
+  - **Beta Header Integration**: Seamlessly adds the required `context-1m-2025-08-07` beta header when needed
+  - **Dynamic Limits**: Smart token limit detection (1M for Claude Sonnet 4, 200k for other models)
+  - **Enhanced Error Messages**: Context-aware error messages that guide users toward using the optimal model for their repository size
+  - **Backward Compatibility**: Existing behavior preserved for all other Claude models and smaller repositories
+  - **Enterprise Ready**: Enables analysis of large codebases up to 1M tokens (5x larger than previous limit)
+
 ## [0.63.3] - 2025-07-22
 
 ### Added

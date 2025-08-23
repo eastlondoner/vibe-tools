@@ -19,6 +19,7 @@ const DEFAULT_WEB_MODELS: Record<Provider, string> = {
   xai: 'grok-4-latest',
   anthropic: 'NO WEB SUPPORT',
   groq: 'NO WEB SUPPORT',
+  cerebras: 'NO WEB SUPPORT',
 };
 
 export class WebCommand implements Command {

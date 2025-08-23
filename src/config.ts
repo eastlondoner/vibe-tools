@@ -47,6 +47,7 @@ export const defaultConfig: Config = {
     verbose: false,
     debugDom: false,
     enableCaching: true,
+    model: 'anthropic/claude-sonnet-4-20250514',
   },
   tokenCount: {
     encoding: 'o200k_base',

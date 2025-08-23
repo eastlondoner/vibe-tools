@@ -10,7 +10,8 @@ export type Provider =
   | 'modelbox'
   | 'anthropic'
   | 'xai'
-  | 'groq';
+  | 'groq'
+  | 'cerebras';
 
 // Zod schema for reasoning effort
 export const reasoningEffortSchema = z.enum(['low', 'medium', 'high']);
@@ -114,10 +115,11 @@ export interface Config {
     timeout?: number; // Default navigation timeout in milliseconds
   };
   stagehand?: {
-    provider: 'anthropic' | 'openai';
+    provider: 'anthropic' | 'openai' | 'gemini' | 'xai' | 'groq' | 'cerebras';
     verbose?: boolean;
     debugDom?: boolean;
     enableCaching?: boolean;
+    model?: string;
   };
   web?: {
     provider?: Provider;

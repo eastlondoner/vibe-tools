@@ -30,7 +30,7 @@ export function stagehandLogger(
   verbose: boolean
 ): ((message: LogLine) => void | Promise<void>) | undefined {
   return (message) => {
-    // fs.appendFileSync("stagehand-debug.log", JSON.stringify(message, null, 2));
+    fs.appendFileSync('stagehand-debug.log', JSON.stringify(message, null, 2));
     if (dumbMessages.has(message.message)) {
       // append these messages to a debug.log file
       // fs.appendFileSync("stagehand-debug.log", JSON.stringify(message, null, 2));
@@ -47,16 +47,20 @@ export function stagehandLogger(
     if (message.message === 'response') {
       const value = message?.auxiliary?.response?.value;
       if (value) {
-        const completionResponse = JSON.parse(value);
-        const content = completionResponse?.content;
-        if (Array.isArray(content)) {
-          for (const chunk of content) {
-            const text = chunk?.text;
-            if (text) {
-              console.log('Stagehand: ', text);
+        try {
+          const completionResponse = JSON.parse(value);
+          const content = completionResponse?.content;
+          if (Array.isArray(content)) {
+            for (const chunk of content) {
+              const text = chunk?.text;
+              if (text) {
+                console.log('Stagehand: ', text);
+              }
             }
+            return;
           }
-          return;
+        } catch (e) {
+          console.error('Error parsing response:', e);
         }
       }
     }
@@ -266,6 +270,7 @@ const oldInit = Stagehand.prototype.init;
 // --- FIX FOR STAGEHAND ---
 export const patchStagehand = once(async () => {
   const tempStagehand = new Stagehand({
+    experimental: true,
     env: 'LOCAL',
     modelClientOptions: {
       apiKey: 'test',

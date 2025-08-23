@@ -253,9 +253,9 @@ You can also set a default model in your `vibe-tools.config.json` file under the
 If no model is specified (either on the command line or in the config), a default model will be used based on your configured provider:
 
 - **OpenAI:** `o3-mini`
-- **Anthropic:** `claude-sonnet-4-20250514`
+- **Anthropic:** `claude-sonnet-4-20250514` (supports 1M token context windows for large repositories)
 
-Available models depend on your configured provider (OpenAI or Anthropic) in `vibe-tools.config.json` and your API key.
+Available models depend on your configured provider (OpenAI or Anthropic) in `vibe-tools.config.json` and your API key. The `claude-sonnet-4-20250514` model automatically enables 1M token context when handling repositories over 200k tokens.
 
 ## Cursor Configuration
 

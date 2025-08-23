@@ -4,10 +4,8 @@
     "model": "sonar-pro"
   },
   "plan": {
-    "fileProvider": "gemini",
-    "thinkingProvider": "openai",
-    "fileModel": "gemini-2.5-flash",
-    "thinkingModel": "o3"
+    "fileProvider": "anthropic",
+    "thinkingProvider": "anthropic"
   },
   "repo": {
     "provider": "gemini",

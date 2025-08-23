@@ -50,14 +50,15 @@ export class AskCommand implements Command {
     if (!model) {
       // Default models for each provider
       const defaultModels: Record<Provider, string> = {
-        openai: 'gpt-4.1',
+        openai: 'gpt-5',
         anthropic: 'claude-sonnet-4-20250514',
         gemini: 'gemini-2.5-pro',
         perplexity: 'sonar-pro',
-        openrouter: 'openai/gpt-4.1',
-        modelbox: 'openai/gpt-4.1',
+        openrouter: 'openai/gpt-5',
+        modelbox: 'openai/gpt-5',
         xai: 'grok-4-latest',
         groq: 'moonshotai/kimi-k2-instruct',
+        cerebras: 'gpt-oss-120b',
       };
 
       model = defaultModels[providerName] || 'gpt-4.1';

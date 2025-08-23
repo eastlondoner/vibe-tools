@@ -1894,6 +1894,29 @@ export class OpenRouterProvider extends OpenAIBase {
   }
 }
 
+// Cerebras provider implementation
+export class CerebrasProvider extends OpenAIBase {
+  provider = 'cerebras' as const;
+
+  constructor() {
+    const apiKey = process.env.CEREBRAS_API_KEY;
+    if (!apiKey) {
+      throw new ApiKeyMissingError('Cerebras');
+    }
+    super(apiKey, 'https://api.cerebras.ai/v1');
+  }
+
+  protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
+    return requestParams;
+  }
+
+  async supportsWebSearch(
+    modelName: string
+  ): Promise<{ supported: boolean; model?: string; error?: string }> {
+    return { supported: false, error: 'Cerebras does not support web search capabilities' };
+  }
+}
+
 // Perplexity provider implementation
 export class PerplexityProvider extends BaseProvider {
   provider = 'perplexity' as const;
@@ -2262,6 +2285,7 @@ export class ModelBoxProvider extends OpenAIBase {
 export class AnthropicProvider extends BaseProvider {
   provider = 'anthropic' as const;
   private client: Anthropic;
+  private pendingModelName?: string;
 
   protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
     return requestParams;
@@ -2278,16 +2302,25 @@ export class AnthropicProvider extends BaseProvider {
     });
   }
 
+  protected async getModel(options: ModelOptions | undefined): Promise<string> {
+    // Set pendingModelName BEFORE calling super.getModel() so it's available in handleLargeTokenCount()
+    this.pendingModelName = options?.model;
+    const model = await super.getModel(options);
+    return model;
+  }
+
   protected handleLargeTokenCount(tokenCount: number): { model?: string; error?: string } {
-    // Example: Claude models might have limits like 200k or higher
-    const limit = 200_000; // Adjust based on typical Claude limits
-    if (tokenCount >= limit) {
+    // Dynamic limits based on the model
+    const isSonnet4 = this.pendingModelName?.includes('claude-sonnet-4');
+    const limit = isSonnet4 ? 1_000_000 : 200_000;
+
+    if (tokenCount > limit) {
       return {
         error:
-          `Repository content (${tokenCount} tokens) may be too large for the selected Anthropic model (limit often ~${limit} tokens, but varies by model).\n` +
+          `Repository content (${tokenCount} tokens) exceeds ${limit} token limit${isSonnet4 ? ' for Claude Sonnet 4' : ' (200k for most models, 1M for Claude Sonnet 4)'}.\n` +
           `Please reduce the context size by creating a '.repomixignore' file in your repository root and adding patterns for files/directories to exclude.\n` +
           `You can also try:\n` +
-          `1. Selecting a model known to support larger contexts (like Claude 3 models) via the --model flag.\n` +
+          `1. ${!isSonnet4 ? 'Selecting Claude Sonnet 4 for 1M token context via the --model flag, or s' : 'S'}electing a model known to support larger contexts.\n` +
           `2. Using a more specific query or the --subdir flag.`,
       };
     }
@@ -2331,7 +2364,16 @@ export class AnthropicProvider extends BaseProvider {
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: [{ role: 'user' as const, content: prompt }],
+        betas: undefined as string[] | undefined,
       };
+
+      // NEW: opt-in to 1M context when required
+      if (options.tokenCount && options.tokenCount > 200_000 && model.includes('claude-sonnet-4')) {
+        if (!requestParams.betas) {
+          requestParams.betas = [];
+        }
+        requestParams.betas.push('context-1m-2025-08-07');
+      }
 
       // Add extended thinking if supported by the model and reasoningEffort is set
       if (this.doesModelSupportReasoningEffort(model) && options?.reasoningEffort) {
@@ -2377,7 +2419,7 @@ export class AnthropicProvider extends BaseProvider {
           console.log('Full request body:', JSON.stringify(requestParamsWithThinking, null, 2));
         }
 
-        const response = await this.client.messages.create(requestParamsWithThinking);
+        const response = await this.client.beta.messages.create(requestParamsWithThinking);
 
         const endTime = Date.now();
         this.debugLog(options, `API call completed in ${endTime - startTime}ms`);
@@ -2436,7 +2478,7 @@ export class AnthropicProvider extends BaseProvider {
           console.log('Full request body:', JSON.stringify(requestParams, null, 2));
         }
 
-        const response = await this.client.messages.create(requestParams);
+        const response = await this.client.beta.messages.create(requestParams);
 
         const endTime = Date.now();
         this.debugLog(options, `API call completed in ${endTime - startTime}ms`);
@@ -2612,6 +2654,7 @@ export function createProvider(
     | 'anthropic'
     | 'xai'
     | 'groq'
+    | 'cerebras'
 ): BaseModelProvider {
   switch (provider) {
     case 'gemini': {
@@ -2645,6 +2688,8 @@ export function createProvider(
       return new XAIProvider();
     case 'groq':
       return new GroqProvider();
+    case 'cerebras':
+      return new CerebrasProvider();
     default:
       throw exhaustiveMatchGuard(
         provider,

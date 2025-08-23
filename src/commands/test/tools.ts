@@ -28,7 +28,11 @@ export function cleanupAllProcesses() {
 async function execWithTracking(
   command: string,
   options: child_process.ExecOptions
-): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+): Promise<{
+  stdout: string | Buffer<ArrayBufferLike>;
+  stderr: string | Buffer<ArrayBufferLike>;
+  exitCode: number;
+}> {
   return new Promise((resolve, reject) => {
     const child = child_process.exec(command, options, (error, stdout, stderr) => {
       // Remove from active processes when done
@@ -36,7 +40,7 @@ async function execWithTracking(
 
       if (error) {
         console.error('Error executing command:', error);
-        resolve({ stdout, stderr, exitCode: error.code || 1 });
+        resolve({ stdout, stderr: stderr, exitCode: error.code || 1 });
       } else {
         resolve({ stdout, stderr, exitCode: 0 });
       }
@@ -213,8 +217,8 @@ export function createCommandExecutionTool(options: {
         try {
           const { stdout, stderr, exitCode } = await execWithTracking(fullCommand, execOptions);
 
-          const output = stdout.trim();
-          const errorOutput = stderr.trim();
+          const output = stdout.toString().trim();
+          const errorOutput = stderr.toString().trim();
 
           appendToBuffer(`Command output: ${output}\n`);
           if (errorOutput) {
@@ -314,12 +318,17 @@ export function createCommandExecutionTool(options: {
           return {
             success: exitCode === 0,
             output:
-              stdout ||
+              stdout?.toString() ||
               (exitCode === 0
                 ? 'Command executed successfully with no output'
                 : 'Command execution failed with exit code ' + exitCode),
             ...(stderr
-              ? { error: { message: 'Warning: stderr output was present', details: { stderr } } }
+              ? {
+                  error: {
+                    message: 'Warning: stderr output was present',
+                    details: { stderr: stderr.toString() },
+                  },
+                }
               : {}),
           };
         } catch (error) {

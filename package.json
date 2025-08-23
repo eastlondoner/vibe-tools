@@ -8,7 +8,7 @@
     "ai",
     "assistant"
   ],
-  "version": "0.63.3",
+  "version": "0.64.1",
   "type": "module",
   "main": "./dist/index.mjs",
   "bin": {
@@ -45,35 +45,35 @@
     "url": "https://github.com/eastlondoner/cursor-tools/issues"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.56.0",
+    "@anthropic-ai/sdk": "^0.60.0",
     "@browserbasehq/sdk": "^2.6.0",
-    "@browserbasehq/stagehand": "^2.4.1",
-    "@eslint/js": "^9.31.0",
-    "@modelcontextprotocol/sdk": "^1.15.1",
+    "@browserbasehq/stagehand": "^2.4.3",
+    "@eslint/js": "^9.33.0",
+    "@modelcontextprotocol/sdk": "^1.17.4",
     "@playwright/test": "1.54.1",
-    "@types/bun": "^1.2.18",
-    "@types/node": "^24.0.14",
-    "@typescript-eslint/eslint-plugin": "^8.37.0",
-    "@typescript-eslint/parser": "^8.37.0",
+    "@types/bun": "^1.2.20",
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.40.0",
+    "@typescript-eslint/parser": "^8.40.0",
     "consola": "^3.4.2",
-    "esbuild": "^0.25.6",
-    "eslint": "^9.31.0",
+    "esbuild": "^0.25.9",
+    "eslint": "^9.33.0",
     "fast-glob": "^3.3.3",
     "formdata-node": "^6.0.3",
     "globals": "^16.3.0",
-    "openai": "^5.9.2",
+    "openai": "^5.15.0",
     "p-queue": "^8.1.0",
     "prettier": "^3.6.2",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
-    "vibe-rules": "^0.3.50",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2",
+    "vibe-rules": "^0.3.91",
     "vitest": "^3.2.4",
-    "zod": "4.0.5"
+    "zod": "3.25.7"
   },
   "dependencies": {
     "dotenv": "17.2.0",
     "eventsource-client": "1.1.4",
-    "google-auth-library": "^10.1.0",
+    "google-auth-library": "^10.2.1",
     "open": "^10.2.0",
     "playwright": "1.54.1",
     "playwright-core": "1.54.1",
@@ -84,6 +84,7 @@
     "node": ">=18.0.0"
   },
   "overrides": {
+    "ai": "4.3.12",
     "punycode": "^2.3.1",
     "playwright-core": "1.54.1",
     "@playwright/test": "1.54.1",
@@ -94,6 +95,7 @@
       "esbuild"
     ],
     "overrides": {
+      "ai": "4.3.12",
       "playwright-core": "1.54.1",
       "@playwright/test": "1.54.1",
       "playwright": "1.54.1"

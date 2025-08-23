@@ -318,7 +318,9 @@ HOWEVER if the server details show that you cannot run with uvx or npx, or if yo
               env,
             },
             maxTokens: 8192,
-            logger: (message) => yield message,
+            logger: function* (message) {
+              yield message;
+            },
           });
 
           // Start the MCP client and initialize tools

@@ -73,6 +73,7 @@ export class ActCommand implements Command {
       });
 
       const config = {
+        experimental: true,
         env: 'LOCAL',
         localBrowserLaunchOptions: {
           headless: options?.headless ?? stagehandConfig.headless,

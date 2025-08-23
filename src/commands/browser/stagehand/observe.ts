@@ -68,6 +68,7 @@ export class ObserveCommand implements Command {
     const timeouts: ReturnType<typeof setTimeout>[] = [];
     try {
       const config = {
+        experimental: true,
         env: 'LOCAL',
         localBrowserLaunchOptions: {
           headless: options?.headless ?? stagehandConfig.headless,

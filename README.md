@@ -87,10 +87,10 @@
 
 ### The AI Team
 
-- Perplexity to search the web and perform deep research
-- Gemini 2.0 for huge whole-codebase context window, search grounding and reasoning
-- Stagehand for browser operation to test and debug web apps (uses Anthropic, OpenAI, Gemini, or OpenRouter models)
-- OpenRouter for access to a variety of models through a unified API (for MCP commands)
+- Web Search Agent: An agent equipped with web search (choose from Perplexity, Gemini, xAI or Groq models)
+- Repository Context Agent: A large-context agent equipped with the entire codebase as context (choose from Anthropic, OpenAI, Gemini, xAI, Groq, Cerebras, OpenRouter, or ModelBox models)
+- Browser Automation Agent: An agent equipped with browser operation to test and debug web apps (choose from Anthropic, OpenAI, Gemini, xAI, Groq, or Cerebras models)
+- MCP Agent: An agent that can perform delegated tasks using MCP servers (choose from Anthropic, OpenAI, OpenRouter, or ModelBox models)
 
 ### New Skills for your existing Agent
 
@@ -226,7 +226,9 @@ In non-interactive mode, vibe-tools will:
   - Playwright browsers are automatically installed during `vibe-tools install`
   - OpenAI API key or Anthropic API key (for `act`, `extract`, and `observe` commands)
 
-`vibe-tools` uses Gemini-2.5 models by default, which provide excellent performance with large context windows up to 2 million tokens - enough to handle an entire codebase in one shot. Available Gemini models include `gemini-2.5-flash` (default for speed), `gemini-2.5-pro` (default for quality), and `gemini-2.5-flash-lite-preview-06-17` (lightweight option). Gemini models are currently free to use on Google and you need a Google Cloud project to create an API key.
+`vibe-tools` uses Gemini-2.5 models by default, which provide excellent performance with large context windows up to 2 million tokens - enough to handle an entire codebase in one shot. Available Gemini models include `gemini-2.5-flash` (for speed), `gemini-2.5-pro` (default for quality), and `gemini-2.5-flash-lite-preview-06-17` (lightweight option). Gemini models are currently free to use on Google and you need a Google Cloud project to create an API key.
+
+For Anthropic users, `claude-sonnet-4-20250514` now supports 1M token context windows automatically when needed - perfect for large codebases that exceed the standard 200k token limit. This feature is automatically enabled for repositories over 200k tokens when using Claude Sonnet 4.
 
 `vibe-tools` uses Perplexity because Perplexity has the best web search api and indexes and it does not hallucinate. Perplexity Pro users can get an API key with their pro account and recieve $5/month of free credits (at time of writing). Support for Google search grounding is coming soon but so far testing has shown it still frequently hallucinates things like APIs and libraries that don't exist.
 
@@ -338,9 +340,9 @@ Note: in most cases you can say "Use Stagehand" instead of "use vibe-tools" and 
 
 "Use vibe-tools ask to compare how different models answer this question: 'What are the key differences between REST and GraphQL?'"
 
-"Ask OpenAI's o3-mini model to explain the concept of dependency injection."
+"Ask OpenAI's gpt-5 model to explain the concept of dependency injection."
 
-"Use vibe-tools ask to analyze this complex algorithm with high reasoning effort: 'Explain the time and space complexity of the Boyer-Moore string search algorithm' --provider openai --model o3-mini --reasoning-effort high"
+"Use vibe-tools ask to analyze this complex algorithm with high reasoning effort: 'Explain the time and space complexity of the Boyer-Moore string search algorithm' --provider openai --model gpt-5 --reasoning-effort high"
 
 Note: The ask command requires both --provider and --model parameters to be specified. This command is generally less useful than other commands like `repo` or `plan` because it does not include any context from your codebase or repository.
 
@@ -359,16 +361,17 @@ Note: The ask command requires both --provider and --model parameters to be spec
 1. **Interactive Setup**: Run `vibe-tools install` and follow the prompts
 2. **Manual Setup**: Create `~/.vibe-tools/.env` in your home directory or `.vibe-tools.env` in your project root:
    ```env
-   PERPLEXITY_API_KEY="your-perplexity-api-key"
-   GEMINI_API_KEY="your-gemini-api-key"
-   OPENAI_API_KEY="your-openai-api-key"  # Optional, for Stagehand
-   ANTHROPIC_API_KEY="your-anthropic-api-key" # Optional, for Stagehand and MCP
-   OPENROUTER_API_KEY="your-openrouter-api-key" # Optional, for MCP
-   XAI_API_KEY="your-xai-api-key" # Optional, for xAI Grok models
-   GROQ_API_KEY="your-groq-api-key" # Optional, for Groq models
-   GITHUB_TOKEN="your-github-token"  # Optional, for enhanced GitHub access
-   LINEAR_API_KEY="your-linear-api-key" # Optional, for Linear integration
-   ```
+PERPLEXITY_API_KEY="your-perplexity-api-key"
+GEMINI_API_KEY="your-gemini-api-key"
+OPENAI_API_KEY="your-openai-api-key"  # Optional, for Stagehand
+ANTHROPIC_API_KEY="your-anthropic-api-key" # Optional, for Stagehand and MCP
+OPENROUTER_API_KEY="your-openrouter-api-key" # Optional, for MCP
+XAI_API_KEY="your-xai-api-key" # Optional, for xAI Grok models
+GROQ_API_KEY="your-groq-api-key" # Optional, for Groq models
+CEREBRAS_API_KEY="your-cerebras-api-key" # Optional, for Cerebras models
+GITHUB_TOKEN="your-github-token"  # Optional, for enhanced GitHub access
+LINEAR_API_KEY="your-linear-api-key" # Optional, for Linear integration
+```
    - At least one of `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY` must be provided to use the `mcp` commands.
 
 **CI/CD Environments**: In non-interactive mode (automatically detected in CI environments), vibe-tools uses only environment variables for API keys and skips writing them to filesystem for enhanced security.
@@ -460,7 +463,7 @@ The plan command uses multiple AI models to:
 
 1. Identify relevant files in your codebase (using Gemini by default)
 2. Extract content from those files
-3. Generate a detailed implementation plan (using o3-mini by default)
+3. Generate a detailed implementation plan (using gpt-5 by default)
 
 **Plan Command Options:**
 
@@ -481,7 +484,7 @@ The Gemini 2.0 Pro context limit is 2M tokens, you can add filters to .repomixig
 
 ### Stagehand: Browser Automation
 
-Automate browser interactions for web scraping, testing, and debugging:
+Automate browser interactions for web scraping, testing, and debugging with support for 6+ AI providers:
 
 **Note:** Playwright browsers are automatically installed when you run `vibe-tools install`. No additional setup is required for browser commands.
 
@@ -915,11 +918,11 @@ Here is an example of a typical vibe-tools.config.json file, showing some of the
   // Providers
   "stagehand": {
     "model": "claude-sonnet-4-20250514", // For Anthropic provider
-    "provider": "anthropic", // or "openai"
+    "provider": "anthropic", // or "openai", "gemini", "xai", "groq", "cerebras"
     "timeout": 90000
   },
   "openai": {
-    "model": "gpt-4o"
+    "model": "gpt-5"
   }
   //...
 }
@@ -1025,18 +1028,37 @@ If both a .repomixignore and an ignore section in `repomix.config.json` are pres
 
 The `browser` commands support different AI models for processing from multiple providers (Anthropic, OpenAI, Gemini, OpenRouter). You can select the model using the `--model` option:
 
+**Latest Models Available:**
+- **OpenAI GPT-5**: `gpt-5` (flagship model), `gpt-5-mini` (faster, cost-effective)
+- **Anthropic Claude 4.1 Opus**: `claude-opus-4-1` (newest, most capable model)
+
 ```bash
-# Use gpt-4o
-vibe-tools browser act "Click Login" --url "https://example.com" --model=gpt-4o
+# Use gpt-5
+vibe-tools browser act "Click Login" --url "https://example.com" --provider openai --model=gpt-5
 
 # Use Claude 4 Sonnet
-vibe-tools browser act "Click Login" --url "https://example.com" --model=claude-sonnet-4-20250514
+vibe-tools browser act "Click Login" --url "https://example.com" --provider anthropic --model=claude-sonnet-4-20250514
 
 # Use Gemini model
-vibe-tools browser act "Click Login" --url "https://example.com" --model=gemini-2.5-flash
+vibe-tools browser act "Click Login" --url "https://example.com" --provider gemini --model=google/gemini-2.5-flash
 
-# Use OpenRouter model
-vibe-tools browser act "Click Login" --url "https://example.com" --model=groq-llama-3.3-70b-versatile
+# Use xAI Grok model
+vibe-tools browser act "Click Login" --url "https://example.com" --provider xai --model grok-4-latest
+
+# Use Groq model
+vibe-tools browser act "Click Login" --url "https://example.com" --provider groq --model groq/moonshotai/kimi-k2-instruct
+
+# Use Cerebras model
+vibe-tools browser act "Click Login" --url "https://example.com" --provider cerebras --model gpt-oss-120b
+
+# Use OpenAI's newest GPT-5 model
+vibe-tools browser act "Navigate to the search page and find articles about AI" --url "https://example.com" --provider openai --model gpt-5
+
+# Use OpenAI's GPT-5 Mini for faster browser automation
+vibe-tools browser act "Fill out the contact form" --url "https://example.com/contact" --provider openai --model gpt-5-mini
+
+# Use Anthropic's newest Claude 4.1 Opus model
+vibe-tools browser act "Analyze the page content and summarize the main topics" --url "https://example.com" --provider anthropic --model claude-opus-4-1
 ```
 
 You can set a default provider in your `vibe-tools.config.json` file under the `stagehand` section:
@@ -1057,7 +1079,7 @@ You can also set a default model in your `vibe-tools.config.json` file under the
 {
   "stagehand": {
     "provider": "openai", // "anthropic", "gemini", or "openrouter"
-    "model": "gpt-4o"
+    "model": "gpt-5"
   }
 }
 ```
@@ -1065,9 +1087,13 @@ You can also set a default model in your `vibe-tools.config.json` file under the
 If no model is specified (either on the command line or in the config), a default model will be used based on your configured provider:
 
 - **Anthropic:** `anthropic/claude-sonnet-4-20250514`
-- **OpenAI:** `o3-mini`
-- **Gemini:** `gemini-2.5-flash`
-- **OpenRouter:** `groq-llama-3.3-70b-versatile`
+- **OpenAI:** `gpt-5`
+- **Gemini:** `google/gemini-2.5-flash`
+- **OpenRouter:** `google/gemini-2.5-pro`
+- **xAI:** `xai/grok-4-latest`
+- **Groq:** `moonshotai/kimi-k2-instruct`
+- **Cerebras:** `gpt-oss-120b`
+- **Perplexity:** `sonar-pro`
 
 Available models depend on your configured provider (OpenAI or Anthropic) in `vibe-tools.config.json` and your API key.
 
@@ -1287,10 +1313,10 @@ vibe-tools repo "Help me implement useState in my component" --with-doc=https://
 
 ```bash
 # Basic question
-vibe-tools ask "What is the capital of France?" --provider openai --model o3-mini
+vibe-tools ask "What is the capital of France?" --provider openai --model gpt-5
 
 # Complex algorithm explanation with high reasoning effort
-vibe-tools ask "Explain the quicksort algorithm and analyze its time complexity in different scenarios" --provider openai --model o3-mini --reasoning-effort high
+vibe-tools ask "Explain the quicksort algorithm and analyze its time complexity in different scenarios" --provider openai --model gpt-5 --reasoning-effort high
 
 # Comparative analysis with Claude model and enhanced reasoning
 vibe-tools ask "Compare and contrast microservices vs monolithic architecture" --provider anthropic --model claude-sonnet-4-20250514 --reasoning-effort medium
@@ -1299,13 +1325,22 @@ vibe-tools ask "Compare and contrast microservices vs monolithic architecture" -
 vibe-tools ask "Analyze the philosophical implications of artificial general intelligence" --provider xai --model grok-4-latest --reasoning-effort high
 
 # Ask with context from multiple documents
-vibe-tools ask "Based on these specs, what is the main goal?" --provider openai --model o3-mini --with-doc=./specA.txt --with-doc=https://example.com/specB.txt
+vibe-tools ask "Based on these specs, what is the main goal?" --provider openai --model gpt-5 --with-doc=./specA.txt --with-doc=https://example.com/specB.txt
 
 # Ask Groq's moonshotai/kimi-k2-instruct model
 vibe-tools ask "Explain quantum computing" --provider groq --model moonshotai/kimi-k2-instruct
 
-# Ask Groq's qwen/qwen3-32b model
-vibe-tools ask "Summarize the history of AI" --provider groq --model qwen/qwen3-32b
+# Ask Groq's moonshotai/kimi-k2-instruct model
+vibe-tools ask "Summarize the history of AI" --provider groq --model moonshotai/kimi-k2-instruct
+
+# Ask OpenAI's newest GPT-5 model
+vibe-tools ask "Explain the latest developments in quantum computing" --provider openai --model gpt-5
+
+# Ask OpenAI's GPT-5 Mini for faster responses
+vibe-tools ask "Give me a quick summary of machine learning" --provider openai --model gpt-5-mini
+
+# Ask Anthropic's newest Claude 4.1 Opus model
+vibe-tools ask "Write a detailed analysis of climate change solutions" --provider anthropic --model claude-opus-4-1
 ```
 
 #### Documentation Examples
@@ -1432,14 +1467,25 @@ vibe-tools browser open "https://example.com" --no-headless
 ##### `act`, `extract`, `observe` subcommands examples:
 
 ```bash
-# AI-powered action
+# AI-powered action with different providers
 vibe-tools browser act "Click on 'Sign Up'" --url "https://example.com"
+vibe-tools browser act "Click on 'Sign Up'" --url "https://example.com" --provider xai --model xai/grok-4-latest
+vibe-tools browser act "Click on 'Sign Up'" --url "https://example.com" --provider groq --model groq/moonshotai/kimi-k2-instruct
 
 # AI-powered extraction
 vibe-tools browser extract "Get the main content" --url "https://example.com/blog"
+vibe-tools browser extract "Get the main content" --url "https://example.com/blog" --provider cerebras --model cerebras/gpt-oss-120b
 
 # AI-powered observation
 vibe-tools browser observe "What can I do on this page?" --url "https://example.com"
+vibe-tools browser observe "What can I do on this page?" --url "https://example.com" --provider groq --model groq/moonshotai/kimi-k2-instruct
+
+# Multi-step workflows with new providers
+vibe-tools browser act "Navigate to login | Enter credentials | Submit form" --url "https://example.com" --provider groq
+vibe-tools browser act "Search for products | Filter by price | Add to cart" --url "https://store.example.com" --provider cerebras
+
+# Record videos of interactions with new providers
+vibe-tools browser act "Complete checkout process" --url "https://store.example.com" --provider groq --model groq/moonshotai/kimi-k2-instruct --video="./recordings"
 ```
 
 #### YouTube Command Examples

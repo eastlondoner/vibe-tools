@@ -1,24 +1,20 @@
 import { z } from 'zod';
-import { exhaustiveMatchGuard } from '../../../utils/exhaustiveMatchGuard';
 
-// Define available models
-export const availableModels = z.enum([
-  'claude-3-7-sonnet-latest',
-  'o3',
-  'o3-mini',
-  'o4-mini',
-  'gpt-4o',
-  'gpt-4.1',
-  'gpt-4.1-mini',
-  'gemini-2.5-flash',
-  'groq-llama-3.3-70b-versatile',
-  'anthropic/claude-sonnet-4-20250514',
-]);
+// Flexible model validation function to support all Stagehand providers
+export function isValidStagehandModel(model: string): boolean {
+  // Allow either provider/model format or standalone model names
+  return /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9._-]+$/.test(model) || /^[a-zA-Z0-9._-]+$/.test(model);
+}
+
+// Use flexible validation instead of restrictive enum
+export const availableModels = z.string().refine(isValidStagehandModel, {
+  message: "Model must be in provider/model format (e.g., 'xai/grok-4-latest') or standalone name",
+});
 
 export type AvailableModel = z.infer<typeof availableModels>;
 
 export interface StagehandConfig {
-  provider: 'anthropic' | 'openai' | 'gemini' | 'openrouter';
+  provider: 'anthropic' | 'openai' | 'gemini' | 'xai' | 'groq' | 'cerebras';
   headless: boolean;
   verbose: boolean;
   debugDom: boolean;
@@ -56,42 +52,60 @@ export function loadStagehandConfig(config: Config): StagehandConfig {
   const debugDom = stagehandConfig.debugDom ?? false;
   const enableCaching = stagehandConfig.enableCaching ?? false;
   const timeout = stagehandConfig.timeout ?? 120000;
-  let provider: 'anthropic' | 'openai' | undefined = stagehandConfig.provider?.toLowerCase() as any;
+  let provider = stagehandConfig.provider?.toLowerCase() as StagehandConfig['provider'];
+
+  // Define all supported providers for easy reference
+  const supportedProviders: StagehandConfig['provider'][] = [
+    'anthropic',
+    'openai',
+    'gemini',
+    'xai',
+    'groq',
+    'cerebras',
+  ];
 
   if (!provider) {
-    // Set provider based on available API keys
-    if (process.env.ANTHROPIC_API_KEY) {
-      provider = 'anthropic';
-      if (process.env.OPENAI_API_KEY) {
-        console.log('Defaulting to anthropic as AI provider for Stagehand');
+    // Set provider based on available API keys in preference order
+    const providerKeys: Array<{ provider: StagehandConfig['provider']; key: string }> = [
+      { provider: 'anthropic', key: 'ANTHROPIC_API_KEY' },
+      { provider: 'openai', key: 'OPENAI_API_KEY' },
+      { provider: 'gemini', key: 'GEMINI_API_KEY' },
+      { provider: 'xai', key: 'XAI_API_KEY' },
+      { provider: 'groq', key: 'GROQ_API_KEY' },
+      { provider: 'cerebras', key: 'CEREBRAS_API_KEY' },
+    ];
+
+    for (const { provider: p, key } of providerKeys) {
+      if (process.env[key]) {
+        provider = p;
+        if (p !== 'anthropic') {
+          console.log(`Defaulting to ${p} as AI provider for Stagehand`);
+        }
+        break;
       }
-    } else if (process.env.OPENAI_API_KEY) {
-      provider = 'openai';
-    } else {
+    }
+
+    if (!provider) {
       throw new Error(
-        'Either ANTHROPIC_API_KEY or OPENAI_API_KEY is required for Stagehand. Please set one in your environment or add it to ~/.vibe-tools/.env file.'
+        'No supported API key found for Stagehand. Please set one of the following in your environment or ~/.vibe-tools/.env file:\n' +
+          providerKeys.map(({ key }) => `  - ${key}`).join('\n')
       );
     }
   } else {
-    switch (provider) {
-      case 'anthropic': {
-        if (!process.env.ANTHROPIC_API_KEY) {
-          throw new Error(
-            'ANTHROPIC_API_KEY is required for when Stagehand is configured to use Anthropic. Please set one in your environment or add it to ~/.vibe-tools/.env file.'
-          );
-        }
-        break;
-      }
-      case 'openai': {
-        if (!process.env.OPENAI_API_KEY) {
-          throw new Error(
-            'OPENAI_API_KEY is required for when Stagehand is configured to use OpenAI. Please set one in your environment or add it to ~/.vibe-tools/.env file.'
-          );
-        }
-        break;
-      }
-      default:
-        throw exhaustiveMatchGuard(provider, 'Unrecognized AI provider for stagehand');
+    // Validate that the specified provider is supported
+    if (!supportedProviders.includes(provider)) {
+      throw new Error(
+        `Unrecognized AI provider "${provider}" for Stagehand. Supported providers are:\n` +
+          supportedProviders.join(', ')
+      );
+    }
+
+    // Validate that the API key exists for the specified provider
+    try {
+      getStagehandApiKey({ provider });
+    } catch (error) {
+      console.error('error getting API key for stagehand provider', provider, error);
+      throw error; // Re-throw with the specific error message from getStagehandApiKey
     }
   }
 
@@ -111,46 +125,49 @@ export function validateStagehandConfig(config: StagehandConfig): void {
     throw new Error('Stagehand configuration is missing');
   }
 
-  if (!config.provider || !['anthropic', 'openai'].includes(config.provider)) {
-    throw new Error('Invalid Stagehand provider. Must be either "anthropic" or "openai".');
+  // Validate that the provider is supported
+  const supportedProviders: StagehandConfig['provider'][] = [
+    'anthropic',
+    'openai',
+    'gemini',
+    'xai',
+    'groq',
+    'cerebras',
+  ];
+
+  if (!config.provider || !supportedProviders.includes(config.provider)) {
+    throw new Error(
+      `Invalid Stagehand provider "${config.provider}". Supported providers are:\n` +
+        supportedProviders.join(', ')
+    );
   }
 
-  // Check for required API key based on provider
-  const requiredKey = config.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY';
-  if (!process.env[requiredKey]) {
-    throw new Error(
-      `${requiredKey} is required for Stagehand ${config.provider} provider. ` +
-        `Please set it in your .vibe-tools.env file.`
-    );
+  // Check for required API key using the unified getStagehandApiKey function
+  try {
+    getStagehandApiKey(config);
+  } catch (error) {
+    console.error('error validating stagehand config', config, error);
+    throw error; // Re-throw with the specific error message from getStagehandApiKey
   }
 }
 
 export function getStagehandApiKey(config: Pick<StagehandConfig, 'provider'>): string {
-  let apiKey: string | undefined;
-  switch (config.provider) {
-    case 'anthropic': {
-      apiKey = process.env.ANTHROPIC_API_KEY;
-      break;
-    }
-    case 'openai': {
-      apiKey = process.env.OPENAI_API_KEY;
-      break;
-    }
-    case 'gemini': {
-      apiKey = process.env.GEMINI_API_KEY;
-      break;
-    }
-    case 'openrouter': {
-      apiKey = process.env.OPENROUTER_API_KEY;
-      break;
-    }
-  }
+  const keyMap: Record<StagehandConfig['provider'], string> = {
+    anthropic: 'ANTHROPIC_API_KEY',
+    openai: 'OPENAI_API_KEY',
+    gemini: 'GEMINI_API_KEY',
+    xai: 'XAI_API_KEY',
+    groq: 'GROQ_API_KEY',
+    cerebras: 'CEREBRAS_API_KEY',
+  };
+
+  const envVar = keyMap[config.provider];
+  const apiKey = process.env[envVar];
 
   if (!apiKey) {
     throw new Error(
-      `API key not found for ${config.provider} provider. ` +
-        `Please set ${config.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : config.provider === 'openai' ? 'OPENAI_API_KEY' : config.provider === 'gemini' ? 'GEMINI_API_KEY' : 'OPENROUTER_API_KEY'} ` +
-        `in your .vibe-tools.env file.`
+      `${envVar} is required for Stagehand ${config.provider} provider. ` +
+        `Please set it in your .vibe-tools.env file.`
     );
   }
 
@@ -192,19 +209,23 @@ export function getStagehandModel(
     return modelToUse as AvailableModel;
   }
 
+  // Default models for all supported providers
+  const DEFAULT_MODELS: Record<StagehandConfig['provider'], string> = {
+    anthropic: 'anthropic/claude-sonnet-4-20250514',
+    openai: 'openai/gpt-5',
+    gemini: 'google/gemini-2.5-flash',
+    xai: 'xai/grok-4-latest',
+    groq: 'groq/moonshotai/kimi-k2-instruct',
+    cerebras: 'cerebras/gpt-oss-120b',
+  };
+
   // Otherwise use defaults based on provider
-  switch (options?.provider ?? config.provider) {
-    case 'anthropic': {
-      return 'anthropic/claude-sonnet-4-20250514';
-    }
-    case 'openai': {
-      return 'o3-mini';
-    }
-    case 'gemini': {
-      return 'gemini-2.5-flash';
-    }
-    case 'openrouter': {
-      return 'groq-llama-3.3-70b-versatile';
-    }
+  const provider = options?.provider ?? config.provider;
+  const defaultModel = DEFAULT_MODELS[provider];
+
+  if (!defaultModel) {
+    throw new Error(`No default model configured for provider "${provider}"`);
   }
+
+  return defaultModel;
 }
