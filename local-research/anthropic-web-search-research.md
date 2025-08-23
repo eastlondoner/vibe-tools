@@ -1,0 +1,15 @@
+Querying perplexity using sonar-pro for: Anthropic's new support for web search as a built-in tool with maxTokens: 8000
+Anthropic has launched **built-in web search capabilities** for its Claude models via the Anthropic API, enabling Claude to access and synthesize current information from the web as part of its reasoning and response workflow[1][2][3][4]. This feature empowers developers to build AI-powered applications that provide up-to-date answers with **real-time sourcing and citations**[1][2][3][4].
+
+Key features and context:
+- **Dynamic Web Search Integration:** When enabled, Claude assesses each request to determine if it requires updated or specialized information. If so, it generates search queries, retrieves results, analyses them, and delivers a structured, cited answer[1][2][3].
+- **Agentic Search and Reasoning:** Claude can perform multiple, progressive searches in a single session, refining queries based on prior results to conduct “light research” and generate comprehensive responses. Developers can control the number of sequential searches using the `max_uses` parameter[1][2][4].
+- **Contextual Configuration:** Admins and devs can fine-tune search behavior by restricting searches to specific domains (`allowed_domains`), blocking others (`blocked_domains`), and localizing search results by user location[4]. Domain-level control and organizational toggles help manage privacy and data access[3][4].
+- **Extensible to Claude Code:** Web search is also available in Claude Code, allowing developers to pull current API documentation, technical articles, and other up-to-date resources directly into coding workflows[2][3].
+- **Pricing Model:** Usage starts at $10 per 1,000 searches, available across Claude 3.5 Haiku, Claude 3.5 Sonnet, and Claude 3.7 Sonnet models[2].
+- **Citation and Accuracy:** Responses from web search always include source citations, bolstering trust and enabling users to verify facts. This approach is designed to reduce AI hallucinations and improve answer relevance and reliability[1][3][4].
+
+**Industry Impact:**
+- This move signals a growing trend where AI assistants provide *conversationally distilled answers* rather than just lists of links, shifting user expectations away from traditional search engines[5]. According to recent consumer studies, roughly 19% of users already prefer AI-based search over conventional engines for its convenience and context[5].
+
+Anthropic’s web search tool can be leveraged across many domains—finance (real-time data), legal (recent rulings/news), development (up-to-date documentation), and productivity (company reports, industry intelligence)[3][4]. The feature marks a significant step toward integrating **real-time web intelligence into AI workflows** without the need to operate independent search infrastructures[1][2][3].

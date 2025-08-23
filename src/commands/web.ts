@@ -17,7 +17,7 @@ const DEFAULT_WEB_MODELS: Record<Provider, string> = {
   openrouter: 'google/gemini-2.5-pro',
   modelbox: 'google/gemini-2.5-pro',
   xai: 'grok-4-latest',
-  anthropic: 'NO WEB SUPPORT',
+  anthropic: 'claude-sonnet-4-20250514',
   groq: 'NO WEB SUPPORT',
   cerebras: 'NO WEB SUPPORT',
 };

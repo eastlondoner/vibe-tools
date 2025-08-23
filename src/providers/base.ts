@@ -2,7 +2,7 @@ import type { Config, Provider } from '../types';
 import type { VideoAnalysisOptions } from '../types';
 import { loadConfig, loadEnv } from '../config';
 import OpenAI, { BadRequestError } from 'openai';
-import { ApiKeyMissingError, ModelNotFoundError, NetworkError, ProviderError } from '../errors';
+import { ApiKeyMissingError, ModelNotFoundError, NetworkError, ProviderError, WebSearchError } from '../errors';
 import { exhaustiveMatchGuard } from '../utils/exhaustiveMatchGuard';
 import { chunkMessage } from '../utils/messageChunker';
 import Anthropic from '@anthropic-ai/sdk';
@@ -13,6 +13,7 @@ import { execSync } from 'child_process';
 import { once } from '../utils/once';
 import { getAllProviders } from '../utils/providerAvailability';
 import { isModelNotFoundError } from './notFoundErrors';
+import { BetaMessageDeltaUsage, BetaRawContentBlockDelta, BetaRawContentBlockDeltaEvent } from '@anthropic-ai/sdk/resources/beta/messages/messages.mjs';
 
 const TEN_MINUTES = 600000;
 // Interfaces for Gemini response types
@@ -2287,6 +2288,66 @@ export class AnthropicProvider extends BaseProvider {
   private client: Anthropic;
   private pendingModelName?: string;
 
+  // TODO: Update tool type if Anthropic changes from web_search_20250305
+  private static readonly WEB_SEARCH_TOOL_TYPE = 'web_search_20250305';
+
+  private dedupeCitations(citations: any[]): any[] {
+    const seen = new Set<string>();
+    return citations.filter(citation => {
+      const key = citation.id || citation.title || citation.cited_text || citation.source?.data || '';
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  private formatCitations(citations: any[]): string {
+    if (citations.length === 0) return '';
+    
+    const formatted = citations.map((citation, index) => {
+      const title = citation.title;
+      const sourceData = citation.source?.data;
+      const citedText = citation.cited_text;
+      
+      // If source.data looks like a URL, use that; otherwise use cited_text
+      let display = '';
+      if (sourceData && (sourceData.startsWith('http') || sourceData.startsWith('www'))) {
+        display = sourceData;
+      } else if (title) {
+        display = title;
+      } else if (citedText) {
+        display = citedText;
+      } else {
+        display = 'Unknown source';
+      }
+      
+      return `[${index + 1}] ${display}`;
+    });
+    
+    return '\n\nCitations:\n' + formatted.join('\n');
+  }
+
+  protected buildWebSearchTools(existing: Record<string, any>): Record<string, any> {
+    const cfg = (this.config.anthropic as any)?.webSearch || {};
+    
+    // Clamp maxUses to 1-20, default 5
+    const maxUses = Math.max(1, Math.min(20, cfg.maxUses ?? 10));
+    
+    const tool = {
+      type: AnthropicProvider.WEB_SEARCH_TOOL_TYPE,
+      name: 'web_search',
+      max_uses: maxUses,
+      ...(cfg.allowedDomains?.length ? { allowed_domains: cfg.allowedDomains } : {}),
+      ...(cfg.blockedDomains?.length ? { blocked_domains: cfg.blockedDomains } : {}),
+      // Note: localization not supported by API as of August 2025
+    };
+
+    return {
+      ...existing,
+      tools: [...(existing.tools || []), tool],
+    };
+  }
+
   protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
     return requestParams;
   }
@@ -2330,10 +2391,24 @@ export class AnthropicProvider extends BaseProvider {
   async supportsWebSearch(
     modelName: string
   ): Promise<{ supported: boolean; model?: string; error?: string }> {
-    return {
-      supported: false,
-      error: 'Anthropic does not support web search capabilities',
-    };
+    const webSearchModels = [
+      'claude-3-5-haiku',
+      'claude-3-5-sonnet', 
+      'claude-3-7-sonnet',
+      'claude-sonnet-4-20250514',
+    ];
+    const normalized = (modelName || '').toLowerCase();
+    const supported = webSearchModels.some((m) => normalized.includes(m));
+    
+    if (supported) {
+      return { supported: true };
+    } else {
+      // Allow fallback with warning for explicit --web requests
+      return { 
+        supported: false, 
+        error: `Model ${modelName} may not support web search. Supported models: ${webSearchModels.join(', ')}` 
+      };
+    }
   }
 
   async executePrompt(prompt: string, options: ModelOptions): Promise<string> {
@@ -2350,6 +2425,7 @@ export class AnthropicProvider extends BaseProvider {
       'https://api.anthropic.com/v1/messages'
     );
 
+    let requestParams: any;
     try {
       // Debug logging for reasoning effort support
       const supportsReasoningEffort = this.doesModelSupportReasoningEffort(model);
@@ -2359,13 +2435,31 @@ export class AnthropicProvider extends BaseProvider {
       }
 
       // Create base message parameters according to Anthropic SDK requirements
-      const requestParams = {
+      requestParams = {
         model,
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: [{ role: 'user' as const, content: prompt }],
         betas: undefined as string[] | undefined,
       };
+
+      // Add web search tool if requested
+      if (options.webSearch) {
+        requestParams = this.buildWebSearchTools(requestParams);
+        
+        // Enable citations by default when web search is active unless explicitly disabled
+        const citationsEnabled = (this.config.anthropic as any)?.webSearch?.citations?.enabled !== false;
+        if (citationsEnabled) {
+          requestParams.citations = { enabled: true };
+          if (options.debug) {
+            console.log('[AnthropicProvider] Citations enabled for web search');
+          }
+        }
+        
+        if (options.debug) {
+          console.log('[AnthropicProvider] Web search enabled:', requestParams.tools?.find((t: any) => t.type === AnthropicProvider.WEB_SEARCH_TOOL_TYPE));
+        }
+      }
 
       // NEW: opt-in to 1M context when required
       if (options.tokenCount && options.tokenCount > 200_000 && model.includes('claude-sonnet-4')) {
@@ -2419,7 +2513,78 @@ export class AnthropicProvider extends BaseProvider {
           console.log('Full request body:', JSON.stringify(requestParamsWithThinking, null, 2));
         }
 
-        const response = await this.client.beta.messages.create(requestParamsWithThinking);
+        const responseStream = await this.client.beta.messages.stream(requestParamsWithThinking);
+        let contentArray: BetaRawContentBlockDelta[] = [];
+        const citations: any[] = [];
+        let response: { usage: BetaMessageDeltaUsage } = {
+          usage: {
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            input_tokens: 0,
+            output_tokens: 0,
+            server_tool_use: {
+              web_search_requests: 0,
+            }
+          },
+        };
+        for await (const chunk of responseStream) {
+          switch (chunk.type) {
+            // "message_start" | "message_delta" | "message_stop" | "content_block_start" | "content_block_delta" | "content_block_stop"
+            case 'content_block_start':
+              // skip it
+              break;
+            case 'content_block_delta':
+              contentArray.push(chunk.delta);
+              // Handle citations_delta events
+              if (chunk.delta?.type === 'citations_delta' && chunk.delta.citation) {
+                citations.push(chunk.delta.citation);
+              }
+              break;
+            case 'message_start':
+              // skip it
+              break;
+            case 'message_delta':
+              if ('usage' in chunk) {
+                // accumulate usage
+                if(!response.usage.cache_creation_input_tokens) {
+                  response.usage.cache_creation_input_tokens = chunk.usage.cache_creation_input_tokens ?? 0;
+                } else {
+                  response.usage.cache_creation_input_tokens += chunk.usage.cache_creation_input_tokens ?? 0;
+                }
+                if(!response.usage.cache_read_input_tokens) {
+                  response.usage.cache_read_input_tokens = chunk.usage.cache_read_input_tokens ?? 0;
+                } else {
+                  response.usage.cache_read_input_tokens += chunk.usage.cache_read_input_tokens ?? 0;
+                }
+                if(!response.usage.input_tokens) {
+                  response.usage.input_tokens = chunk.usage.input_tokens ?? 0;
+                } else {
+                  response.usage.input_tokens += chunk.usage.input_tokens ?? 0;
+                }
+                if(!response.usage.output_tokens) {
+                  response.usage.output_tokens = chunk.usage.output_tokens ?? 0;
+                } else {
+                  response.usage.output_tokens += chunk.usage.output_tokens ?? 0;
+                }
+                if(!response.usage.server_tool_use) {
+                  response.usage.server_tool_use = {
+                    web_search_requests: chunk.usage.server_tool_use?.web_search_requests ?? 0,
+                  };
+                } else {
+                  response.usage.server_tool_use.web_search_requests += chunk.usage.server_tool_use?.web_search_requests ?? 0;
+                }
+              }
+              break;
+            case 'message_stop':
+              // skip it
+              break;
+            case 'content_block_stop':
+              // skip it
+              break;
+            default:
+              exhaustiveMatchGuard(chunk);
+          }
+        }
 
         const endTime = Date.now();
         this.debugLog(options, `API call completed in ${endTime - startTime}ms`);
@@ -2432,15 +2597,15 @@ export class AnthropicProvider extends BaseProvider {
 
         // Handle response with thinking content blocks
         let content;
-        if (response.content && Array.isArray(response.content)) {
+        if (contentArray.length > 0) {
           // Log the thinking blocks if available and debug is enabled
           if (options?.debug) {
-            const thinkingBlocks = response.content.filter(
-              (block) => block.type === 'thinking' || block.type === 'redacted_thinking'
+            const thinkingBlocks = contentArray.filter(
+              (block) => block.type === 'thinking_delta'
             );
             if (thinkingBlocks.length > 0) {
               console.log(`Found ${thinkingBlocks.length} thinking blocks in response`);
-              if (thinkingBlocks[0].type === 'thinking') {
+              if (thinkingBlocks[0].type === 'thinking_delta') {
                 console.log(
                   'First thinking block:',
                   thinkingBlocks[0].thinking?.substring(0, 200) + '...'
@@ -2452,9 +2617,17 @@ export class AnthropicProvider extends BaseProvider {
           }
 
           // Filter for text blocks only (ignoring thinking blocks)
-          const textBlocks = response.content.filter((block) => block.type === 'text');
-          if (textBlocks.length > 0 && textBlocks[0].type === 'text') {
-            content = textBlocks[0].text;
+          let contentText = '';
+          for (const block of contentArray) {
+            if (block.type === 'text_delta') {
+              contentText += block.text;
+            }
+          }
+          if (contentText.length > 0) {
+            content = contentText;
+            // Append citations if any were collected
+            const dedupedCitations = this.dedupeCitations(citations);
+            content += this.formatCitations(dedupedCitations);
           } else {
             console.error('Anthropic returned no text blocks:', response);
             throw new ProviderError('Anthropic returned no text blocks');
@@ -2478,8 +2651,78 @@ export class AnthropicProvider extends BaseProvider {
           console.log('Full request body:', JSON.stringify(requestParams, null, 2));
         }
 
-        const response = await this.client.beta.messages.create(requestParams);
-
+        const responseStream = await this.client.beta.messages.stream(requestParams);
+        let contentArray: BetaRawContentBlockDelta[] = [];
+        const citations: any[] = [];
+        let response: { usage: BetaMessageDeltaUsage } = {
+          usage: {
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            input_tokens: 0,
+            output_tokens: 0,
+            server_tool_use: {
+              web_search_requests: 0,
+            }
+          },
+        };
+        for await (const chunk of responseStream) {
+          switch (chunk.type) {
+            // "message_start" | "message_delta" | "message_stop" | "content_block_start" | "content_block_delta" | "content_block_stop"
+            case 'content_block_start':
+              // skip it
+              break;
+            case 'content_block_delta':
+              contentArray.push(chunk.delta);
+              // Handle citations_delta events
+              if (chunk.delta?.type === 'citations_delta' && chunk.delta.citation) {
+                citations.push(chunk.delta.citation);
+              }
+              break;
+            case 'message_start':
+              // skip it
+              break;
+            case 'message_delta':
+              if ('usage' in chunk) {
+                // accumulate usage
+                if(!response.usage.cache_creation_input_tokens) {
+                  response.usage.cache_creation_input_tokens = chunk.usage.cache_creation_input_tokens ?? 0;
+                } else {
+                  response.usage.cache_creation_input_tokens += chunk.usage.cache_creation_input_tokens ?? 0;
+                }
+                if(!response.usage.cache_read_input_tokens) {
+                  response.usage.cache_read_input_tokens = chunk.usage.cache_read_input_tokens ?? 0;
+                } else {
+                  response.usage.cache_read_input_tokens += chunk.usage.cache_read_input_tokens ?? 0;
+                }
+                if(!response.usage.input_tokens) {
+                  response.usage.input_tokens = chunk.usage.input_tokens ?? 0;
+                } else {
+                  response.usage.input_tokens += chunk.usage.input_tokens ?? 0;
+                }
+                if(!response.usage.output_tokens) {
+                  response.usage.output_tokens = chunk.usage.output_tokens ?? 0;
+                } else {
+                  response.usage.output_tokens += chunk.usage.output_tokens ?? 0;
+                }
+                if(!response.usage.server_tool_use) {
+                  response.usage.server_tool_use = {
+                    web_search_requests: chunk.usage.server_tool_use?.web_search_requests ?? 0,
+                  };
+                } else {
+                  response.usage.server_tool_use.web_search_requests += chunk.usage.server_tool_use?.web_search_requests ?? 0;
+                }
+              }
+              break;
+            case 'message_stop':
+              // skip it
+              break;
+            case 'content_block_stop':
+              // skip it
+              break;
+            default:
+              exhaustiveMatchGuard(chunk);
+          }
+        }
         const endTime = Date.now();
         this.debugLog(options, `API call completed in ${endTime - startTime}ms`);
         this.debugLog(options, 'Response:', this.truncateForLogging(response));
@@ -2490,13 +2733,22 @@ export class AnthropicProvider extends BaseProvider {
         }
 
         // Handle regular response without thinking
-        const content = response.content?.[0];
-        if (!content || content.type !== 'text') {
+        let contentText = '';
+        for (const block of contentArray) {
+          if (block.type === 'text_delta') {
+            contentText += block.text;
+          }
+        }
+        if (contentText.length === 0) {
           console.error('Anthropic returned an invalid response:', response);
           throw new ProviderError('Anthropic returned an invalid response');
         }
 
-        return content.text;
+        // Append citations if any were collected
+        const dedupedCitations = this.dedupeCitations(citations);
+        contentText += this.formatCitations(dedupedCitations);
+
+        return contentText;
       }
     } catch (error) {
       this.debugLog(options, 'Error executing Anthropic prompt:', error);
@@ -2510,7 +2762,38 @@ export class AnthropicProvider extends BaseProvider {
         );
       }
 
-      if (error instanceof ProviderError || error instanceof NetworkError) {
+      // Handle web search specific errors
+      if (options.webSearch && error instanceof Error && /web[_-]?search|tool/i.test(error.message)) {
+        if (options.debug) {
+          console.log('[AnthropicProvider] Web search error detected, attempting fallback without web search');
+        }
+        // Fallback: retry without web search
+        try {
+          const fallbackParams = {
+            model,
+            max_tokens: maxTokens,
+            system: systemPrompt,
+            messages: [{ role: 'user' as const, content: prompt }],
+            betas: requestParams.betas,
+          };
+          const fallbackResponse = await this.client.beta.messages.create(fallbackParams);
+          const fallbackContentBlocks = (fallbackResponse as any)?.content ?? [];
+          const fallbackText = Array.isArray(fallbackContentBlocks)
+            ? fallbackContentBlocks
+                .map((b: any) => (b?.type === 'text' && typeof b?.text === 'string' ? b.text : ''))
+                .join('')
+            : '';
+          if (!fallbackText) {
+            throw new WebSearchError(this.provider, 'Web search failed and fallback returned no text');
+          }
+          return fallbackText;
+        } catch (fallbackError) {
+          const fbMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError ?? 'unknown');
+          throw new WebSearchError(this.provider, `Web search failed and fallback failed: ${fbMessage}`);
+        }
+      }
+
+      if (error instanceof ProviderError || error instanceof NetworkError || error instanceof WebSearchError) {
         throw error;
       }
       if (error instanceof BadRequestError) {

@@ -264,6 +264,7 @@ function sanitizeOptions(options: Record<string, any>): Record<string, any> {
     'network',
     'reasoningEffort',
     'timeout',
+    'webSearch',
   ];
 
   for (const key of safeOptions) {

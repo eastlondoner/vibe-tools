@@ -44,7 +44,7 @@ const DEFAULT_THINKING_MODELS: Record<ThinkingProvider, string> = {
   perplexity: 'r1-1776',
   openrouter: 'openai/o3',
   modelbox: 'anthropic/claude-sonnet-4-20250514',
-  anthropic: 'claude-sonnet-4-20250514',
+  anthropic: 'claude-opus-4-1-20250805',
 };
 
 // Helper function to infer provider from model name

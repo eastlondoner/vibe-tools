@@ -732,7 +732,7 @@ export class InstallCommand implements Command {
             hint: 'recommended',
           },
           {
-            value: 'anthropic:claude-opus-4-20250514',
+            value: 'anthropic:claude-opus-4-1-20250805',
             label: 'Claude 4 Opus',
             hint: 'expensive',
           },

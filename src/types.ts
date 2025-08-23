@@ -86,6 +86,19 @@ export interface Config {
     model?: string;
     maxTokens?: number;
   };
+  anthropic?: {
+    model?: string;
+    maxTokens?: number;
+    webSearch?: {
+      maxUses?: number;
+      allowedDomains?: string[];
+      blockedDomains?: string[];
+      localization?: string;
+      citations?: {
+        enabled?: boolean;
+      };
+    };
+  };
   plan?: {
     fileProvider: Provider;
     thinkingProvider: Provider;

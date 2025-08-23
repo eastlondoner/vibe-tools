@@ -59,7 +59,7 @@ export class ModelNotFoundError extends ProviderError {
           message += '\nSuggested models:\n- gpt-4o\n- o3';
           break;
         case 'anthropic':
-          message += '\nSuggested models:\n- claude-opus-4-20250514\n- claude-sonnet-4-20250514';
+          message += '\nSuggested models:\n- claude-opus-4-1-20250805\n- claude-sonnet-4-20250514';
           break;
         case 'gemini':
           message +=
@@ -108,6 +108,14 @@ export class NetworkError extends ProviderError {
   constructor(message: string, details?: unknown) {
     super(`Network error: ${message}`, details);
     this.name = 'NetworkError';
+  }
+}
+
+export class WebSearchError extends ProviderError {
+  constructor(provider: Provider, details?: unknown) {
+    const message = details instanceof Error ? details.message : String(details ?? 'unknown error');
+    super(`Web search error with ${provider}: ${message}`, details);
+    this.name = 'WebSearchError';
   }
 }
 

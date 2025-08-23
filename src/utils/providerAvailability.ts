@@ -24,7 +24,7 @@ const DEFAULT_MODELS: Record<Provider, string> = {
 
 // Provider preference order for each command type
 export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
-  web: ['perplexity', 'gemini', 'modelbox', 'openrouter', 'xai', 'groq'],
+  web: ['perplexity', 'anthropic', 'gemini', 'modelbox', 'openrouter', 'xai', 'groq'],
   repo: [
     'gemini',
     'modelbox',
