@@ -4,6 +4,13 @@
 
 <div align=center><h1>Give AI Agents an AI team and advanced skills</h1></div>
 
+<div align="center">
+<em>
+Agents awakened<br/>
+Web search, code review, browser—<br/>
+Intelligence blooms
+</em>
+</div>
 
 | Summary | Prompt it |
 |---------|-----------|
