@@ -18,6 +18,12 @@
 | Example usage | [![](https://b.lmpify.com/examples)](https://lmpify.com?q=https%3A%2F%2Fuuithub.com%2Feastlondoner%2Fcursor-tools%2Ftree%2Fmain%3FpathPatterns%3Dsrc%252Fvibe-rules.ts%26pathPatterns%3DREADME.md%26pathPatterns%3DCONFIGURATION.md%0A%0ACan%20you%20show%20me%20some%20examples%20of%20how%20to%20use%20vibe-tools%20commands%20effectively%3F) |
 
 
+## A Haiku for the Digital Age
+
+*AI teams unite,*  
+*Code flows through silicon minds—*  
+*Friendship powers all.*  
+
 ## Table of Contents
 
 - [The AI Team](#the-ai-team)
