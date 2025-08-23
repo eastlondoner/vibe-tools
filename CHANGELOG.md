@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.64.3] - 2025-08-23
+
+### Added
+
+- Anthropic Web Search support in the `web` command and via `--web` across commands
+  - Use Claude models (e.g. `claude-sonnet-4-20250514`) for up-to-date answers
+  - Citations are included at the end of responses when available
+  - New configuration under `anthropic.webSearch` (e.g. `maxUses`, `allowedDomains`, `blockedDomains`, `citations.enabled`)
+
+### Changed
+
+- Updated provider preference for web search to include Anthropic
+- Improved model suggestions and defaults for Anthropic
+
 ## [0.64.2] - 2025-08-23
 
 ### Added

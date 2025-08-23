@@ -288,6 +288,38 @@ When using vibe-tools with Cursor Composer, you can use these nicknames:
 
 Note: in most cases you can say "ask Perplexity" instead of "use vibe-tools web" and it will work the same.
 
+#### Anthropic Web Search (new)
+
+- You can now use Anthropic (Claude) as a web search provider in the `web` command or by passing `--web` to supported commands.
+- Citations are included in the response automatically when available.
+
+Examples:
+
+```bash
+# Use Anthropic for web search
+vibe-tools web "Latest AI safety updates" --provider anthropic --model claude-sonnet-4-20250514
+
+# With debug output
+vibe-tools web "Compare React vs Vue benchmarks" --provider anthropic --model claude-sonnet-4-20250514 --debug
+```
+
+Configuration snippet (`vibe-tools.config.json`):
+
+```json
+{
+  "anthropic": {
+    "model": "claude-sonnet-4-20250514",
+    "maxTokens": 21000,
+    "webSearch": {
+      "maxUses": 5,
+      "allowedDomains": ["example.com"],
+      "blockedDomains": ["untrusted.com"],
+      "citations": { "enabled": true }
+    }
+  }
+}
+```
+
 ### Use repo search
 
 "Let's refactor our User class to allow multiple email aliases per user. Use vibe-tools repo to ask for a plan including a list of all files that need to be changed."
