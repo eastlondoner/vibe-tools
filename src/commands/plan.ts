@@ -302,7 +302,6 @@ export class PlanCommand implements Command {
           maxTokens: effectiveFileMaxTokens,
           debug: options?.debug,
           reasoningEffort: options?.reasoningEffort ?? this.config.reasoningEffort,
-          webSearch: options?.webSearch,
           tokenCount: contextTokens, // Pass context tokens for 1M beta activation
         };
 
