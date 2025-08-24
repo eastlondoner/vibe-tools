@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.64.4] - 2025-08-24
+
+### Added
+
+- Local inference via Ollama provider
+  - Use `--provider=ollama` with commands like `ask`, `repo`, and `doc`
+  - macOS auto-install (Homebrew) and auto-start of the Ollama daemon when needed
+  - Automatic on-demand model download
+- New `ollama` command for local model management
+  - `vibe-tools ollama status` – check daemon and installed models
+  - `vibe-tools ollama list` – list installed models
+  - `vibe-tools ollama pull <model>` – download models with progress and validation
+- Documentation updates
+  - README: “Local Inference with Ollama” quickstart and examples
+  - CONFIGURATION.md: Ollama configuration and environment variables
+  - Manual QA guide at `tests/manual/ollama-qa.md`
+
+### Changed
+
+- Default Ollama model and examples updated to use model:tag format (`gpt-oss:20b`)
+- Model name validation added to prevent common mistakes (e.g., hyphen vs colon)
+
 ## [0.64.3] - 2025-08-23
 
 ### Added
