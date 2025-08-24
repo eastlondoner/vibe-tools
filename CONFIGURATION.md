@@ -24,6 +24,7 @@ ANTHROPIC_API_KEY="your-anthropic-api-key"      # For browser commands with Anth
 OPENROUTER_API_KEY="your-openrouter-api-key"    # For MCP commands with OpenRouter and web search
 GITHUB_TOKEN="your-github-token"                # For enhanced GitHub access
 GROQ_API_KEY="your-groq-api-key"                # For Groq LLM access
+OLLAMA_HOST="http://localhost:11434"            # Ollama server host (default: localhost:11434)
 
 # Configuration Options
 USE_LEGACY_CURSORRULES="true"                   # Use legacy .cursorrules file (default: false)
@@ -84,6 +85,13 @@ Create this file in your project root to customize behavior. Here's a comprehens
   "groq": {
     "model": "llama-3.3-70b-versatile",
     "maxTokens": 16384
+  },
+  "ollama": {
+    "model": "gpt-oss:20b", // Default model for local inference
+    "maxTokens": 4096, // Maximum tokens for responses
+    "host": "http://localhost:11434", // Ollama server host
+    "autoDownload": true, // Auto-download missing models
+    "defaultModels": ["gpt-oss:20b"] // Preferred models list
   }
 }
 ```
@@ -138,6 +146,62 @@ Create this file in your project root to customize behavior. Here's a comprehens
 - `encoding`: Method used for counting tokens
   - `o200k_base`: Optimized for Gemini (default)
   - `gpt2`: Traditional GPT-2 encoding
+
+### Ollama Settings (Local Inference)
+
+Ollama provides local AI inference without requiring cloud API keys. On macOS, vibe-tools can automatically install and manage Ollama for you.
+
+**Configuration Options:**
+- `model`: Default model for local inference (default: "gpt-oss:20b")
+- `maxTokens`: Maximum tokens in responses (default: 4096)
+- `host`: Ollama server host URL (default: "http://localhost:11434")
+- `autoDownload`: Automatically download missing models (default: true)
+- `defaultModels`: List of preferred models for auto-download suggestions
+
+**Environment Variables:**
+- `OLLAMA_HOST`: Override the server host (e.g., "http://192.168.1.100:11434")
+- `OLLAMA_ENABLED`: Hint that Ollama is available on non-macOS systems
+- `OLLAMA_KEEP_ALIVE`: Server keep-alive duration (default: "180" seconds)
+
+**Automatic Installation (macOS):**
+On macOS, vibe-tools automatically detects and installs Ollama via Homebrew when needed:
+```bash
+# Check installation status
+vibe-tools ollama status
+
+# Manual installation (optional)
+vibe-tools ollama install
+```
+
+**Model Management:**
+```bash
+# Download a specific model
+vibe-tools ollama pull gpt-oss:20b
+
+# List installed models
+vibe-tools ollama list
+
+# Pull model with validation (prevents common mistakes)
+vibe-tools ollama pull llama3.3-8b    # Will suggest llama3.3:8b instead
+```
+
+**Usage Examples:**
+```bash
+# Use with default model (gpt-oss:20b)
+vibe-tools ask "Hello world" --provider=ollama
+
+# Specify a different model
+vibe-tools repo "Explain the architecture" --provider=ollama --model=llama3.2
+
+# Auto-download missing models
+vibe-tools ask "Hello" --provider=ollama --model=new-model:7b
+```
+
+**Model Name Validation:**
+vibe-tools validates Ollama model names and suggests corrections for common mistakes:
+- `gpt-oss-20b` → `gpt-oss:20b` (hyphen to colon)
+- `llama3.3_8b` → `llama3.3:8b` (underscore to colon)
+- `model-name-size` → `model-name:size` (size separation)
 
 ## GitHub Authentication
 

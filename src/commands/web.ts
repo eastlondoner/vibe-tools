@@ -20,6 +20,7 @@ const DEFAULT_WEB_MODELS: Record<Provider, string> = {
   anthropic: 'claude-sonnet-4-20250514',
   groq: 'NO WEB SUPPORT',
   cerebras: 'NO WEB SUPPORT',
+  ollama: 'gpt-oss:20b',
 };
 
 export class WebCommand implements Command {

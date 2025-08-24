@@ -60,6 +60,12 @@ export const defaultConfig: Config = {
     model: 'moonshotai/kimi-k2-instruct',
     maxTokens: 8192,
   },
+  ollama: {
+    maxTokens: 4096,
+    host: 'http://localhost:11434',
+    autoDownload: true,
+    defaultModels: ['gpt-oss:20b'],
+  },
   reasoningEffort: 'medium', // Default reasoning effort for all commands
   disableDoppler: false,
 

@@ -2,7 +2,13 @@ import type { Config, Provider } from '../types';
 import type { VideoAnalysisOptions } from '../types';
 import { loadConfig, loadEnv } from '../config';
 import OpenAI, { BadRequestError } from 'openai';
-import { ApiKeyMissingError, ModelNotFoundError, NetworkError, ProviderError, WebSearchError } from '../errors';
+import {
+  ApiKeyMissingError,
+  ModelNotFoundError,
+  NetworkError,
+  ProviderError,
+  WebSearchError,
+} from '../errors';
 import { exhaustiveMatchGuard } from '../utils/exhaustiveMatchGuard';
 import { chunkMessage } from '../utils/messageChunker';
 import Anthropic from '@anthropic-ai/sdk';
@@ -13,7 +19,12 @@ import { execSync } from 'child_process';
 import { once } from '../utils/once';
 import { getAllProviders } from '../utils/providerAvailability';
 import { isModelNotFoundError } from './notFoundErrors';
-import { BetaMessageDeltaUsage, BetaRawContentBlockDelta, BetaRawContentBlockDeltaEvent } from '@anthropic-ai/sdk/resources/beta/messages/messages.mjs';
+import { ensureOllamaServer } from '../utils/ollamaSetup';
+import {
+  BetaMessageDeltaUsage,
+  BetaRawContentBlockDelta,
+  BetaRawContentBlockDeltaEvent,
+} from '@anthropic-ai/sdk/resources/beta/messages/messages.mjs';
 
 const TEN_MINUTES = 600000;
 // Interfaces for Gemini response types
@@ -2293,8 +2304,9 @@ export class AnthropicProvider extends BaseProvider {
 
   private dedupeCitations(citations: any[]): any[] {
     const seen = new Set<string>();
-    return citations.filter(citation => {
-      const key = citation.id || citation.title || citation.cited_text || citation.source?.data || '';
+    return citations.filter((citation) => {
+      const key =
+        citation.id || citation.title || citation.cited_text || citation.source?.data || '';
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -2303,12 +2315,12 @@ export class AnthropicProvider extends BaseProvider {
 
   private formatCitations(citations: any[]): string {
     if (citations.length === 0) return '';
-    
+
     const formatted = citations.map((citation, index) => {
       const title = citation.title;
       const sourceData = citation.source?.data;
       const citedText = citation.cited_text;
-      
+
       // If source.data looks like a URL, use that; otherwise use cited_text
       let display = '';
       if (sourceData && (sourceData.startsWith('http') || sourceData.startsWith('www'))) {
@@ -2320,19 +2332,19 @@ export class AnthropicProvider extends BaseProvider {
       } else {
         display = 'Unknown source';
       }
-      
+
       return `[${index + 1}] ${display}`;
     });
-    
+
     return '\n\nCitations:\n' + formatted.join('\n');
   }
 
   protected buildWebSearchTools(existing: Record<string, any>): Record<string, any> {
     const cfg = (this.config.anthropic as any)?.webSearch || {};
-    
+
     // Clamp maxUses to 1-20, default 5
     const maxUses = Math.max(1, Math.min(20, cfg.maxUses ?? 10));
-    
+
     const tool = {
       type: AnthropicProvider.WEB_SEARCH_TOOL_TYPE,
       name: 'web_search',
@@ -2393,20 +2405,20 @@ export class AnthropicProvider extends BaseProvider {
   ): Promise<{ supported: boolean; model?: string; error?: string }> {
     const webSearchModels = [
       'claude-3-5-haiku',
-      'claude-3-5-sonnet', 
+      'claude-3-5-sonnet',
       'claude-3-7-sonnet',
       'claude-sonnet-4-20250514',
     ];
     const normalized = (modelName || '').toLowerCase();
     const supported = webSearchModels.some((m) => normalized.includes(m));
-    
+
     if (supported) {
       return { supported: true };
     } else {
       // Allow fallback with warning for explicit --web requests
-      return { 
-        supported: false, 
-        error: `Model ${modelName} may not support web search. Supported models: ${webSearchModels.join(', ')}` 
+      return {
+        supported: false,
+        error: `Model ${modelName} may not support web search. Supported models: ${webSearchModels.join(', ')}`,
       };
     }
   }
@@ -2446,18 +2458,22 @@ export class AnthropicProvider extends BaseProvider {
       // Add web search tool if requested
       if (options.webSearch) {
         requestParams = this.buildWebSearchTools(requestParams);
-        
+
         // Enable citations by default when web search is active unless explicitly disabled
-        const citationsEnabled = (this.config.anthropic as any)?.webSearch?.citations?.enabled !== false;
+        const citationsEnabled =
+          (this.config.anthropic as any)?.webSearch?.citations?.enabled !== false;
         if (citationsEnabled) {
           requestParams.citations = { enabled: true };
           if (options.debug) {
             console.log('[AnthropicProvider] Citations enabled for web search');
           }
         }
-        
+
         if (options.debug) {
-          console.log('[AnthropicProvider] Web search enabled:', requestParams.tools?.find((t: any) => t.type === AnthropicProvider.WEB_SEARCH_TOOL_TYPE));
+          console.log(
+            '[AnthropicProvider] Web search enabled:',
+            requestParams.tools?.find((t: any) => t.type === AnthropicProvider.WEB_SEARCH_TOOL_TYPE)
+          );
         }
       }
 
@@ -2524,7 +2540,7 @@ export class AnthropicProvider extends BaseProvider {
             output_tokens: 0,
             server_tool_use: {
               web_search_requests: 0,
-            }
+            },
           },
         };
         for await (const chunk of responseStream) {
@@ -2546,32 +2562,36 @@ export class AnthropicProvider extends BaseProvider {
             case 'message_delta':
               if ('usage' in chunk) {
                 // accumulate usage
-                if(!response.usage.cache_creation_input_tokens) {
-                  response.usage.cache_creation_input_tokens = chunk.usage.cache_creation_input_tokens ?? 0;
+                if (!response.usage.cache_creation_input_tokens) {
+                  response.usage.cache_creation_input_tokens =
+                    chunk.usage.cache_creation_input_tokens ?? 0;
                 } else {
-                  response.usage.cache_creation_input_tokens += chunk.usage.cache_creation_input_tokens ?? 0;
+                  response.usage.cache_creation_input_tokens +=
+                    chunk.usage.cache_creation_input_tokens ?? 0;
                 }
-                if(!response.usage.cache_read_input_tokens) {
+                if (!response.usage.cache_read_input_tokens) {
                   response.usage.cache_read_input_tokens = chunk.usage.cache_read_input_tokens ?? 0;
                 } else {
-                  response.usage.cache_read_input_tokens += chunk.usage.cache_read_input_tokens ?? 0;
+                  response.usage.cache_read_input_tokens +=
+                    chunk.usage.cache_read_input_tokens ?? 0;
                 }
-                if(!response.usage.input_tokens) {
+                if (!response.usage.input_tokens) {
                   response.usage.input_tokens = chunk.usage.input_tokens ?? 0;
                 } else {
                   response.usage.input_tokens += chunk.usage.input_tokens ?? 0;
                 }
-                if(!response.usage.output_tokens) {
+                if (!response.usage.output_tokens) {
                   response.usage.output_tokens = chunk.usage.output_tokens ?? 0;
                 } else {
                   response.usage.output_tokens += chunk.usage.output_tokens ?? 0;
                 }
-                if(!response.usage.server_tool_use) {
+                if (!response.usage.server_tool_use) {
                   response.usage.server_tool_use = {
                     web_search_requests: chunk.usage.server_tool_use?.web_search_requests ?? 0,
                   };
                 } else {
-                  response.usage.server_tool_use.web_search_requests += chunk.usage.server_tool_use?.web_search_requests ?? 0;
+                  response.usage.server_tool_use.web_search_requests +=
+                    chunk.usage.server_tool_use?.web_search_requests ?? 0;
                 }
               }
               break;
@@ -2600,9 +2620,7 @@ export class AnthropicProvider extends BaseProvider {
         if (contentArray.length > 0) {
           // Log the thinking blocks if available and debug is enabled
           if (options?.debug) {
-            const thinkingBlocks = contentArray.filter(
-              (block) => block.type === 'thinking_delta'
-            );
+            const thinkingBlocks = contentArray.filter((block) => block.type === 'thinking_delta');
             if (thinkingBlocks.length > 0) {
               console.log(`Found ${thinkingBlocks.length} thinking blocks in response`);
               if (thinkingBlocks[0].type === 'thinking_delta') {
@@ -2662,7 +2680,7 @@ export class AnthropicProvider extends BaseProvider {
             output_tokens: 0,
             server_tool_use: {
               web_search_requests: 0,
-            }
+            },
           },
         };
         for await (const chunk of responseStream) {
@@ -2684,32 +2702,36 @@ export class AnthropicProvider extends BaseProvider {
             case 'message_delta':
               if ('usage' in chunk) {
                 // accumulate usage
-                if(!response.usage.cache_creation_input_tokens) {
-                  response.usage.cache_creation_input_tokens = chunk.usage.cache_creation_input_tokens ?? 0;
+                if (!response.usage.cache_creation_input_tokens) {
+                  response.usage.cache_creation_input_tokens =
+                    chunk.usage.cache_creation_input_tokens ?? 0;
                 } else {
-                  response.usage.cache_creation_input_tokens += chunk.usage.cache_creation_input_tokens ?? 0;
+                  response.usage.cache_creation_input_tokens +=
+                    chunk.usage.cache_creation_input_tokens ?? 0;
                 }
-                if(!response.usage.cache_read_input_tokens) {
+                if (!response.usage.cache_read_input_tokens) {
                   response.usage.cache_read_input_tokens = chunk.usage.cache_read_input_tokens ?? 0;
                 } else {
-                  response.usage.cache_read_input_tokens += chunk.usage.cache_read_input_tokens ?? 0;
+                  response.usage.cache_read_input_tokens +=
+                    chunk.usage.cache_read_input_tokens ?? 0;
                 }
-                if(!response.usage.input_tokens) {
+                if (!response.usage.input_tokens) {
                   response.usage.input_tokens = chunk.usage.input_tokens ?? 0;
                 } else {
                   response.usage.input_tokens += chunk.usage.input_tokens ?? 0;
                 }
-                if(!response.usage.output_tokens) {
+                if (!response.usage.output_tokens) {
                   response.usage.output_tokens = chunk.usage.output_tokens ?? 0;
                 } else {
                   response.usage.output_tokens += chunk.usage.output_tokens ?? 0;
                 }
-                if(!response.usage.server_tool_use) {
+                if (!response.usage.server_tool_use) {
                   response.usage.server_tool_use = {
                     web_search_requests: chunk.usage.server_tool_use?.web_search_requests ?? 0,
                   };
                 } else {
-                  response.usage.server_tool_use.web_search_requests += chunk.usage.server_tool_use?.web_search_requests ?? 0;
+                  response.usage.server_tool_use.web_search_requests +=
+                    chunk.usage.server_tool_use?.web_search_requests ?? 0;
                 }
               }
               break;
@@ -2763,9 +2785,15 @@ export class AnthropicProvider extends BaseProvider {
       }
 
       // Handle web search specific errors
-      if (options.webSearch && error instanceof Error && /web[_-]?search|tool/i.test(error.message)) {
+      if (
+        options.webSearch &&
+        error instanceof Error &&
+        /web[_-]?search|tool/i.test(error.message)
+      ) {
         if (options.debug) {
-          console.log('[AnthropicProvider] Web search error detected, attempting fallback without web search');
+          console.log(
+            '[AnthropicProvider] Web search error detected, attempting fallback without web search'
+          );
         }
         // Fallback: retry without web search
         try {
@@ -2784,16 +2812,29 @@ export class AnthropicProvider extends BaseProvider {
                 .join('')
             : '';
           if (!fallbackText) {
-            throw new WebSearchError(this.provider, 'Web search failed and fallback returned no text');
+            throw new WebSearchError(
+              this.provider,
+              'Web search failed and fallback returned no text'
+            );
           }
           return fallbackText;
         } catch (fallbackError) {
-          const fbMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError ?? 'unknown');
-          throw new WebSearchError(this.provider, `Web search failed and fallback failed: ${fbMessage}`);
+          const fbMessage =
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : String(fallbackError ?? 'unknown');
+          throw new WebSearchError(
+            this.provider,
+            `Web search failed and fallback failed: ${fbMessage}`
+          );
         }
       }
 
-      if (error instanceof ProviderError || error instanceof NetworkError || error instanceof WebSearchError) {
+      if (
+        error instanceof ProviderError ||
+        error instanceof NetworkError ||
+        error instanceof WebSearchError
+      ) {
         throw error;
       }
       if (error instanceof BadRequestError) {
@@ -2926,6 +2967,244 @@ export class GroqProvider extends OpenAIBase {
   }
 }
 
+// Ollama provider interfaces
+interface OllamaMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface OllamaChatRequest {
+  model: string;
+  messages: OllamaMessage[];
+  options?: {
+    num_predict?: number;
+  };
+  stream?: boolean;
+}
+
+interface OllamaChatResponse {
+  message: {
+    role: string;
+    content: string;
+  };
+  done: boolean;
+}
+
+interface OllamaListResponse {
+  models: Array<{
+    name: string;
+    size: number;
+    digest: string;
+    modified_at: string;
+  }>;
+}
+
+// Ollama provider implementation
+export class OllamaProvider extends BaseProvider implements BaseModelProvider {
+  provider = 'ollama' as const;
+  private host: string;
+  private installedModels: Set<string> = new Set();
+  private modelsInitialized = false;
+
+  constructor() {
+    super();
+    this.host = this.getOllamaHost();
+    this.availableModels = this.initializeModels();
+    this.availableModels.catch((error) => {
+      if (process.env.DEBUG) {
+        console.error('[OllamaProvider] Error initializing models:', error);
+      }
+    });
+  }
+
+  private getOllamaHost(): string {
+    if (process.env.OLLAMA_HOST) {
+      return process.env.OLLAMA_HOST;
+    }
+
+    const config = loadConfig();
+    if (config.ollama?.host) {
+      return config.ollama.host;
+    }
+
+    return 'http://localhost:11434';
+  }
+
+  async executePrompt(prompt: string, options?: ModelOptions): Promise<string> {
+    // Ensure an Ollama daemon is available (mac-only auto-start if possible)
+    try {
+      await ensureOllamaServer(this.host);
+    } catch {
+      this.debugLog(options, 'Failed to ensure server, continuing anyway');
+    }
+    const model = options?.model || 'gpt-oss:20b';
+    const maxTokens = options?.maxTokens || 4096;
+    const systemPrompt = options?.systemPrompt;
+
+    await this.ensureModelAvailable(model);
+
+    const messages: OllamaMessage[] = [];
+
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+
+    messages.push({ role: 'user', content: prompt });
+
+    const requestBody: OllamaChatRequest = {
+      model,
+      messages,
+      options: {
+        num_predict: maxTokens,
+      },
+      stream: false,
+    };
+
+    const effectiveOptions: ModelOptions = {
+      model,
+      maxTokens,
+      debug: options?.debug,
+      systemPrompt,
+    };
+    this.logRequestStart(
+      effectiveOptions,
+      model,
+      maxTokens,
+      systemPrompt,
+      `${this.host}/api/chat`,
+      { 'Content-Type': 'application/json' }
+    );
+
+    try {
+      const response = await fetch(`${this.host}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new NetworkError(
+          `Ollama API request failed: ${response.status} ${response.statusText}`,
+          this.provider
+        );
+      }
+
+      const data: OllamaChatResponse = await response.json();
+
+      if (!data.message?.content) {
+        this.debugLog(options, 'Empty response from Ollama', data);
+        throw new ProviderError('Empty response from Ollama', this.provider);
+      }
+
+      return data.message.content;
+    } catch (error) {
+      if (error instanceof NetworkError || error instanceof ProviderError) {
+        throw error;
+      }
+      throw new NetworkError(
+        `Failed to connect to Ollama: ${(error as Error).message}`,
+        this.provider
+      );
+    }
+  }
+
+  async supportsWebSearch(
+    modelName: string
+  ): Promise<{ supported: boolean; model?: string; error?: string }> {
+    return { supported: false };
+  }
+
+  protected webSearchParameters(requestParams: Record<string, any>): Record<string, any> {
+    return requestParams;
+  }
+
+  getDefaultMaxTokens(): number {
+    return 4096;
+  }
+
+  private async initializeModels(): Promise<Set<string>> {
+    // Ensure server is up before querying tags
+    try {
+      await ensureOllamaServer(this.host);
+    } catch {
+      if (process.env.DEBUG) {
+        console.log('[OllamaProvider] Failed to ensure server for model listing');
+      }
+    }
+    if (this.modelsInitialized) {
+      return this.installedModels;
+    }
+
+    try {
+      const response = await fetch(`${this.host}/api/tags`);
+      if (!response.ok) {
+        console.log(`Failed to list Ollama models: ${response.status}`);
+        return new Set();
+      }
+
+      const data: OllamaListResponse = await response.json();
+      this.installedModels = new Set(data.models.map((model) => model.name));
+      this.modelsInitialized = true;
+
+      if (process.env.DEBUG) {
+        console.log(
+          `[OllamaProvider] Found ${this.installedModels.size} installed models:`,
+          Array.from(this.installedModels)
+        );
+      }
+
+      return this.installedModels;
+    } catch (error) {
+      console.log(`Failed to initialize Ollama models: ${(error as Error).message}`);
+      return new Set();
+    }
+  }
+
+  private async ensureModelAvailable(model: string): Promise<void> {
+    await this.initializeModels();
+
+    if (this.installedModels.has(model)) {
+      return;
+    }
+
+    console.log(`Model ${model} not found locally. Downloading...`);
+    await this.downloadModel(model);
+  }
+
+  private async downloadModel(model: string): Promise<void> {
+    try {
+      console.log(`Starting download of model: ${model}`);
+
+      const response = await fetch(`${this.host}/api/pull`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model, stream: false }),
+      });
+
+      if (!response.ok) {
+        throw new NetworkError(
+          `Failed to download model ${model}: ${response.status} ${response.statusText}`,
+          this.provider
+        );
+      }
+
+      await response.json();
+      console.log(`Successfully downloaded model: ${model}`);
+
+      this.installedModels.add(model);
+    } catch (error) {
+      throw new NetworkError(
+        `Failed to download model ${model}: ${(error as Error).message}`,
+        this.provider
+      );
+    }
+  }
+}
+
 // Factory function to create providers
 export function createProvider(
   provider:
@@ -2938,6 +3217,7 @@ export function createProvider(
     | 'xai'
     | 'groq'
     | 'cerebras'
+    | 'ollama'
 ): BaseModelProvider {
   switch (provider) {
     case 'gemini': {
@@ -2973,6 +3253,8 @@ export function createProvider(
       return new GroqProvider();
     case 'cerebras':
       return new CerebrasProvider();
+    case 'ollama':
+      return new OllamaProvider();
     default:
       throw exhaustiveMatchGuard(
         provider,

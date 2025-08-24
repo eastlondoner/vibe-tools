@@ -59,6 +59,7 @@ export class AskCommand implements Command {
         xai: 'grok-4-latest',
         groq: 'moonshotai/kimi-k2-instruct',
         cerebras: 'gpt-oss-120b',
+        ollama: 'gpt-oss:20b',
       };
 
       model = defaultModels[providerName] || 'gpt-4.1';

@@ -53,6 +53,7 @@
     - [Complex Actions](#complex-actions)
     - [Troubleshooting Browser Commands](#troubleshooting-browser-commands)
   - [YouTube Video Analysis](#youtube-video-analysis)
+  - [Local Inference with Ollama](#local-inference-with-ollama)
 - [Skills](#skills)
   - [GitHub Integration](#github-integration)
   - [Linear Integration](#linear-integration)
@@ -90,6 +91,7 @@
 - Web Search Agent: An agent equipped with web search (choose from Perplexity, Gemini, xAI or Groq models)
 - Repository Context Agent: A large-context agent equipped with the entire codebase as context (choose from Anthropic, OpenAI, Gemini, xAI, Groq, Cerebras, OpenRouter, or ModelBox models)
 - Browser Automation Agent: An agent equipped with browser operation to test and debug web apps (choose from Anthropic, OpenAI, Gemini, xAI, Groq, or Cerebras models)
+- Local Inference Agent: A privacy-focused agent running models locally on your machine (powered by Ollama with automatic installation and model management)
 - MCP Agent: An agent that can perform delegated tasks using MCP servers (choose from Anthropic, OpenAI, OpenRouter, or ModelBox models)
 
 ### New Skills for your existing Agent
@@ -732,6 +734,78 @@ The YouTube command leverages Gemini models' native ability to understand video 
 - `--type=<summary|transcript|plan|custom>`: Type of analysis to perform (default: summary)
 
 **Note:** The YouTube command requires a `GEMINI_API_KEY` to be set in your environment or .vibe-tools.env file as the Gemini API is currently the only interface that reliably supports YouTube video analysis.
+
+### Local Inference with Ollama
+
+Run AI models locally on your machine with automatic installation, model management, and privacy-first inference:
+
+```bash
+# Check Ollama status (auto-install on macOS if needed)
+vibe-tools ollama status
+
+# Install Ollama (macOS only - automatic Homebrew installation)
+vibe-tools ollama install
+
+# List available models
+vibe-tools ollama list
+
+# Download a model
+vibe-tools ollama pull llama3.2:1b
+vibe-tools ollama pull gpt-oss:20b
+
+# Use local inference for any command
+vibe-tools ask "What is machine learning?" --provider=ollama
+vibe-tools repo "Explain this codebase" --provider=ollama
+vibe-tools plan "Add user authentication" --thinkingProvider=ollama
+```
+
+**Key Features:**
+
+- **Zero Configuration**: Works out of the box with automatic daemon start
+- **Auto-Installation**: Automatically installs Ollama via Homebrew on macOS
+- **Smart Model Management**: Downloads models on-demand, caches for reuse
+- **Privacy First**: All inference happens locally on your machine
+- **No API Keys Required**: No external API calls or costs
+- **Seamless Integration**: Works with all vibe-tools commands (`ask`, `repo`, `plan`, etc.)
+
+**Supported Models:**
+
+Popular models that work well with vibe-tools:
+- `gpt-oss:20b` - High-quality chat model (default, 20B parameters)
+- `llama3.3:8b` - Fast, general-purpose model from Meta  
+- `mistral:7b` - Efficient and capable model
+- `codellama:7b` - Code-focused model for programming tasks
+
+**Configuration Options:**
+
+```json
+{
+  "ollama": {
+    "model": "gpt-oss:20b",
+    "maxTokens": 4096,
+    "host": "http://localhost:11434",
+    "autoDownload": true
+  }
+}
+```
+
+**Environment Variables:**
+- `OLLAMA_HOST`: Override the Ollama server URL
+- `OLLAMA_ENABLED=1`: Mark Ollama as available (for non-macOS systems)
+
+**Platform Support:**
+- **macOS**: Full automatic installation and setup via Homebrew
+- **Linux/Windows**: Manual installation required (visit [ollama.com](https://ollama.com))
+
+**Performance Notes:**
+- Works best on Apple Silicon Macs and modern GPUs
+- Models run efficiently with quantization
+- See [local inference research](local-research/mac-silicon-local-inference-research.md) for detailed performance analysis
+
+**Troubleshooting:**
+- Models not downloading? Check model name format: `model:tag` (e.g., `llama3.2:1b` not `llama3.2-1b`)
+- Connection issues? Verify daemon with `vibe-tools ollama status`
+- For comprehensive testing guide, see [tests/manual/ollama-qa.md](tests/manual/ollama-qa.md)
 
 ## Skills
 

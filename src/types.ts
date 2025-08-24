@@ -11,7 +11,8 @@ export type Provider =
   | 'anthropic'
   | 'xai'
   | 'groq'
-  | 'cerebras';
+  | 'cerebras'
+  | 'ollama';
 
 // Zod schema for reasoning effort
 export const reasoningEffortSchema = z.enum(['low', 'medium', 'high']);
@@ -165,6 +166,13 @@ export interface Config {
     defaultFormat?: 'markdown' | 'json' | 'text';
     maxRetries?: number;
     retryDelay?: number;
+  };
+  ollama?: {
+    model?: string;
+    maxTokens?: number;
+    host?: string;
+    autoDownload?: boolean;
+    defaultModels?: string[];
   };
   disableDoppler?: boolean;
 }

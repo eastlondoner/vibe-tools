@@ -20,11 +20,12 @@ const DEFAULT_MODELS: Record<Provider, string> = {
   xai: 'grok-4-latest',
   groq: 'moonshotai/kimi-k2-instruct',
   cerebras: 'gpt-oss-120b',
+  ollama: 'gpt-oss:20b',
 };
 
 // Provider preference order for each command type
 export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
-  web: ['perplexity', 'anthropic', 'gemini', 'modelbox', 'openrouter', 'xai', 'groq'],
+  web: ['perplexity', 'anthropic', 'gemini', 'modelbox', 'openrouter', 'xai', 'groq', 'ollama'],
   repo: [
     'gemini',
     'modelbox',
@@ -35,6 +36,7 @@ export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
     'xai',
     'groq',
     'cerebras',
+    'ollama',
   ],
   plan_file: [
     'gemini',
@@ -46,6 +48,7 @@ export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
     'anthropic',
     'groq',
     'cerebras',
+    'ollama',
   ],
   plan_thinking: [
     'openai',
@@ -57,6 +60,7 @@ export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
     'openrouter',
     'modelbox',
     'perplexity',
+    'ollama',
   ],
   doc: [
     'gemini',
@@ -68,6 +72,7 @@ export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
     'anthropic',
     'groq',
     'cerebras',
+    'ollama',
   ],
   ask: [
     'openai',
@@ -79,12 +84,22 @@ export const PROVIDER_PREFERENCE: Record<string, Provider[]> = {
     'perplexity',
     'groq',
     'cerebras',
+    'ollama',
   ],
-  browser: ['anthropic', 'openai', 'gemini', 'xai', 'groq', 'cerebras'],
+  browser: ['anthropic', 'openai', 'gemini', 'xai', 'groq', 'cerebras', 'ollama'],
 };
 
 export function getDefaultModel(provider: Provider): string {
   return DEFAULT_MODELS[provider];
+}
+
+function isOllamaAvailable(): boolean {
+  // On macOS we can auto-install/auto-start, so consider it available by default
+  if (process.platform === 'darwin') {
+    return true;
+  }
+  // Otherwise, mark available if explicit hints are set
+  return !!(process.env.OLLAMA_HOST || process.env.OLLAMA_ENABLED);
 }
 
 export function getAllProviders(): ProviderInfo[] {
@@ -133,6 +148,11 @@ export function getAllProviders(): ProviderInfo[] {
       provider: 'cerebras',
       available: !!process.env.CEREBRAS_API_KEY,
       defaultModel: DEFAULT_MODELS.cerebras,
+    },
+    {
+      provider: 'ollama',
+      available: isOllamaAvailable(),
+      defaultModel: DEFAULT_MODELS.ollama,
     },
   ];
 }
