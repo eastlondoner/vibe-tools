@@ -1,0 +1,6 @@
+{
+    "build": {
+        "context": "../docker",
+        "dockerfile": "../docker/Dockerfile"
+    }
+}
