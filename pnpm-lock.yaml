@@ -37,6 +37,9 @@ importers:
       repomix:
         specifier: 1.1.0
         version: 1.1.0
+      undici:
+        specifier: ^7.16.0
+        version: 7.16.0
     devDependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.56.0
@@ -2169,6 +2172,10 @@ packages:
 
   undici-types@7.8.0:
     resolution: {integrity: sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==}
+
+  undici@7.16.0:
+    resolution: {integrity: sha512-QEg3HPMll0o3t2ourKwOeUAZ159Kn9mx5pnzHRQO8+Wixmh88YdZRiIwat0iNzNNXn0yoEtXJqFpyW7eM8BV7g==}
+    engines: {node: '>=20.18.1'}
 
   unicorn-magic@0.3.0:
     resolution: {integrity: sha512-+QBBXBCvifc56fsbuxZQ6Sic3wqqc3WWaqxs58gvJrcOuN83HGTCwz3oS5phzU9LthRNE9VrJCFCLUgHeeFnfA==}
@@ -4462,6 +4469,8 @@ snapshots:
   undici-types@5.26.5: {}
 
   undici-types@7.8.0: {}
+
+  undici@7.16.0: {}
 
   unicorn-magic@0.3.0: {}
 

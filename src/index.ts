@@ -1,3 +1,4 @@
+import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import { commands } from './commands/index.ts';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -223,6 +224,21 @@ interface CLIOptions {
 }
 
 type CLIOptionKey = CLIStringOption | CLINumberOption | CLIBooleanOption;
+
+// Inject Proxy Support
+const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+if (proxyUrl) {
+  try {
+    const proxyAgent = new ProxyAgent(proxyUrl);
+    setGlobalDispatcher(proxyAgent);
+    // We check argv directly to avoid circular dependency with config/logging
+    if (process.argv.includes('--debug')) {
+      console.log(`[vibe-tools] Using Proxy: ${proxyUrl}`);
+    }
+  } catch (error) {
+    console.error(`[vibe-tools] Failed to configure proxy: ${(error as Error).message}`);
+  }
+}
 
 // Map of normalized keys to their option names in the options object
 const OPTION_KEYS: Record<string, CLIOptionKey> = {

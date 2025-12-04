@@ -78,7 +78,8 @@
     "playwright": "1.54.1",
     "playwright-core": "1.54.1",
     "punycode": "^2.3.1",
-    "repomix": "1.1.0"
+    "repomix": "1.1.0",
+    "undici": "^7.16.0"
   },
   "engines": {
     "node": ">=18.0.0"
