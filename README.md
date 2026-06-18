@@ -228,7 +228,7 @@ In non-interactive mode, vibe-tools will:
 
 `vibe-tools` uses Gemini-2.5 models by default, which provide excellent performance with large context windows up to 2 million tokens - enough to handle an entire codebase in one shot. Available Gemini models include `gemini-2.5-flash` (default for speed), `gemini-2.5-pro` (default for quality), and `gemini-2.5-flash-lite-preview-06-17` (lightweight option). Gemini models are currently free to use on Google and you need a Google Cloud project to create an API key.
 
-`vibe-tools` uses Perplexity because Perplexity has the best web search api and indexes and it does not hallucinate. Perplexity Pro users can get an API key with their pro account and recieve $5/month of free credits (at time of writing). Support for Google search grounding is coming soon but so far testing has shown it still frequently hallucinates things like APIs and libraries that don't exist.
+`vibe-tools` uses Perplexity because Perplexity has the best web search api and indexes and it does not hallucinate. Perplexity Pro users can get an API key with their pro account and receive $5/month of free credits (at time of writing). Support for Google search grounding is coming soon but so far testing has shown it still frequently hallucinates things like APIs and libraries that don't exist.
 
 ## Telemetry & Privacy
 
