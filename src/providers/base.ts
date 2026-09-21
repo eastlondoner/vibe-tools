@@ -1952,6 +1952,7 @@ export class PerplexityProvider extends BaseProvider {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${apiKey}`,
+              'X-Pplx-Integration': 'vibe-tools',
               'Content-Type': 'application/json',
               Accept: 'application/json',
             },
