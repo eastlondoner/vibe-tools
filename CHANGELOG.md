@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Keyless Web Search**: The web command uses Parallel Search MCP for unconfigured installations without web provider credentials. Select `--provider parallel` for free search excerpts or add `--url` to fetch page excerpts. Saved providers, explicit overrides and configured credentials retain their choices.
+
 ## [0.63.3] - 2025-07-22
 
 ### Added

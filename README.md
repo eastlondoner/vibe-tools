@@ -44,7 +44,7 @@
   - [Direct Model Queries](#use-direct-model-queries)
 - [Authentication and API Keys](#authentication-and-api-keys)
 - [AI Team Features](#ai-team-features)
-  - [Perplexity: Web Search & Research](#perplexity-web-search--research)
+  - [Web Search & Research](#web-search--research)
   - [Gemini 2.0: Repository Context & Planning](#gemini-20-repository-context--planning)
   - [Stagehand: Browser Automation](#stagehand-browser-automation)
     - [Browser Command Options](#browser-command-options)
@@ -436,13 +436,29 @@ Note: The ask command requires both --provider and --model parameters to be spec
 
 ## AI Team Features
 
-### Perplexity: Web Search & Research
+### Web Search & Research
 
-Use Perplexity AI to get up-to-date information directly within Cursor:
+Search with [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp)
+without an account or API key. Search uses Fast mode and returns source excerpts
+and URLs for your calling agent to read:
 
 ```bash
 vibe-tools web "What's new in TypeScript 5.7?"
+
+# Explicitly select Parallel, even when AI provider credentials are configured
+vibe-tools web "Node.js release schedule" --provider parallel
+
+# Fetch excerpts from a specific page
+vibe-tools web "Supported Node.js versions" --provider parallel --url https://nodejs.org/en/about/previous-releases
 ```
+
+An explicit `--provider` or saved `web.provider` takes precedence. Otherwise,
+configured AI providers keep their existing preference order; Parallel is used
+when none is configured. A failed AI provider does not trigger Parallel. Select
+`--provider perplexity` (with its API key) for a synthesized research answer.
+Parallel returns source content and does not accept `--model` or `--max-tokens`.
+It respects `--timeout` in milliseconds (default 60000). Anonymous usage has
+service rate limits; errors are returned without automatic retries.
 
 ### Gemini 2.0: Repository Context & Planning
 

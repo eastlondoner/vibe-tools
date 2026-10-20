@@ -19,9 +19,8 @@ const debugLog = (...args: any[]): void => {
 export const defaultMaxTokens = 21000;
 export const defaultConfig: Config = {
   ide: 'cursor', // Default IDE
-  web: {
-    provider: 'perplexity',
-  },
+  // Resolve unconfigured web search from available credentials, then anonymous Parallel.
+  web: {},
   plan: {
     fileProvider: 'gemini',
     thinkingProvider: 'openai',

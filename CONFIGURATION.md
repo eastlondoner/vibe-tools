@@ -15,7 +15,7 @@ Create `.vibe-tools.env` in your project root or `~/.vibe-tools/.env` in your ho
 
 ```env
 # Required API Keys
-PERPLEXITY_API_KEY="your-perplexity-api-key"    # Required for web search
+PERPLEXITY_API_KEY="your-perplexity-api-key"    # Optional, for Perplexity research answers
 GEMINI_API_KEY="your-gemini-api-key"            # Required for repository analysis
 
 # Optional API Keys
@@ -94,6 +94,30 @@ Create this file in your project root to customize behavior. Here's a comprehens
 
 - `model`: The AI model to use for web searches
 - `maxTokens`: Maximum tokens in responses
+
+### Web Search Settings
+
+With no saved `web.provider`, no `web.model` or explicit `--model`, and no web
+provider credentials, `vibe-tools web` uses free anonymous
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp).
+Configured credentials retain the existing provider preference order. Set
+`web.provider` to preserve a particular service, or override it with `--provider`:
+
+```json
+{
+  "web": { "provider": "parallel" }
+}
+```
+
+Parallel returns search excerpts with source URLs using Fast mode. Add
+`--url https://example.com` to fetch page excerpts instead. No model is run, so
+`--model` and `--max-tokens` are rejected. Existing AI providers remain available
+for synthesized answers. Saved providers and explicit overrides fail visibly if
+unavailable; they never silently switch to Parallel. `--timeout` bounds the
+whole Parallel request, including discovery (default 60000 milliseconds).
+Each command is a separate research run. The endpoint has anonymous rate limits;
+tool errors are reported without retries. Programmatic `WebCommand` callers can
+cancel with `signal` or disable network access with `webSearch: false`.
 
 ### Gemini Settings
 

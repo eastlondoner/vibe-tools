@@ -3,6 +3,7 @@ import type { Config } from '../types.ts';
 import { loadConfig, loadEnv } from '../config.ts';
 import { createProvider } from '../providers/base';
 import { ProviderError } from '../errors';
+import { parallelWebSearch } from '../utils/parallelWebSearch';
 import {
   getAllProviders,
   getNextAvailableProvider,
@@ -21,6 +22,10 @@ const DEFAULT_WEB_MODELS: Record<Provider, string> = {
   groq: 'NO WEB SUPPORT',
 };
 
+export type WebCommandOptions = Omit<CommandOptions, 'provider'> & {
+  provider?: Provider | 'parallel';
+};
+
 export class WebCommand implements Command {
   private config: Config;
 
@@ -29,25 +34,43 @@ export class WebCommand implements Command {
     this.config = loadConfig();
   }
 
-  async *execute(query: string, options: CommandOptions): CommandGenerator {
+  async *execute(query: string, options: WebCommandOptions): CommandGenerator {
     try {
-      // If provider is explicitly specified, try only that provider
-      if (options?.provider) {
-        const providerInfo = getAllProviders().find((p) => p.provider === options.provider);
+      if (!query.trim()) throw new Error('Query cannot be empty');
+      if (options.webSearch === false) throw new Error('Web search is disabled');
+      options.signal?.throwIfAborted();
+
+      // Saved settings and explicit choices must never silently select another service.
+      const selectedProvider: string | undefined = options.provider || this.config.web?.provider;
+      const parallelOptions = {
+        ...options,
+        model: options.model ?? this.config.web?.model,
+        maxTokens: options.maxTokens ?? this.config.web?.maxTokens,
+      };
+      if (selectedProvider === 'parallel') {
+        yield await parallelWebSearch(query, parallelOptions);
+        return;
+      }
+      if (selectedProvider) {
+        const providerInfo = getAllProviders().find((p) => p.provider === selectedProvider);
         if (!providerInfo?.available) {
           throw new ProviderError(
-            `Provider ${options.provider} is not available. Please check your API key configuration.`,
+            `Provider ${selectedProvider} is not available. Please check your API key configuration.`,
             `Try one of ${getAllProviders()
               .filter((p) => p.available)
               .join(', ')}`
           );
         }
-        yield* this.tryProvider(options.provider as Provider, query, options);
+        yield* this.tryProvider(providerInfo.provider, query, options);
         return;
       }
 
       // Otherwise try providers in preference order
       let currentProvider = getNextAvailableProvider('web');
+      if (!currentProvider && !options.model && !this.config.web?.model) {
+        yield await parallelWebSearch(query, parallelOptions);
+        return;
+      }
       while (currentProvider) {
         try {
           yield* this.tryProvider(currentProvider, query, options);
@@ -84,7 +107,7 @@ export class WebCommand implements Command {
   private async *tryProvider(
     provider: Provider,
     query: string,
-    options: CommandOptions
+    options: Omit<CommandOptions, 'provider'>
   ): CommandGenerator {
     const modelProvider = createProvider(provider);
     let model =
